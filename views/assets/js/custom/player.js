@@ -11,9 +11,9 @@ var currentState = new state('delayedPause', -1, -1, 0);
 //It is used on initial state sync to make sure that new peer syncs to the most actual state.
 var latestResponseTimestamp = -1;
 //delay to be applied before actual play/pause/seek to prevent possible microstutter
-//it is about to change, now testing 0
+//it is about to change
 //TODO: may be calculated depending on actual latency in future
-var magicDelay = 200;
+var magicDelay = 200; //200
 
 var player =
 {
@@ -57,7 +57,7 @@ var playerStateController =
 		//calculating state logic
 		//maybe ignore that
 		//maybe corrections with player.seek();
-		if (currentState.name !== 'delayedPlay' && timeIsSynced && canSendStates)
+		if (currentState.name !== 'delayedPlay' && timeIsSynced && canSendData)
 		{
 			currentState.name = "delayedPlay";
 			currentState.switchTimestamp = currentTimestamp();
@@ -69,7 +69,7 @@ var playerStateController =
 	},
 	onPlayerPause : function(playerTime)
 	{
-		if (currentState.name !== 'delayedPause' && timeIsSynced && canSendStates)
+		if (currentState.name !== 'delayedPause' && timeIsSynced && canSendData)
 		{
 			currentState.name = "delayedPause";
 			currentState.switchTimestamp = currentTimestamp();
@@ -81,7 +81,7 @@ var playerStateController =
 	},
 	onPlayerSeek : function(playerTime)
 	{
-		if (timeIsSynced && canSendStates)
+		if (timeIsSynced && canSendData)
 		{
 			currentState.timestamp = currentTimestamp();// + magicDelay;
 			currentState.playerTime = playerTime;

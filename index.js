@@ -53,13 +53,15 @@ server.on('joinRoom', function(req, res)
 				}
 				else
 				{
+					res.json({type:'joined', peers:rooms[roomID]}); // return all current peers and add new peer
+					
 					peers[peerID] = roomID;
 					rooms[roomID].push(peerID);
 					/*rooms[roomID].forEach(function(item, i, arr)
 					{
 						console.log( i + ": " + item + " (массив:" + arr + ")" );
 					});*/
-					res.json({type:'joined', peers:rooms[roomID]});
+					
 					console.log('joined');
 				}
 			}

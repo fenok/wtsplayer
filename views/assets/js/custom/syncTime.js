@@ -1,25 +1,35 @@
-var currentTimestamp = function(){return -1;};
+//Function to be used to get synced timestamp
+//Can't be used when !timeIsSynced
+var currentTimestamp = function()
+{
+	return -1;
+};
+//--
+
+//Flag to know whether the time was synced
 var timeIsSynced = false;
-var onCanRecieveStates = new Event('onCanRecieveStates');
-//fires when time has been synchronized and currentTimestamp() becomes usable
-//that means we can apply the latest saved state to player and apply new states immediately
-document.addEventListener('onCanRecieveStates', function(e)
+//--
+
+//Fires when time has been synchronized and currentTimestamp() becomes usable
+//That means we can apply the latest saved state to player and apply new states immediately
+var onCanRecieveStates = new Event( 'onCanRecieveStates' );
+document.addEventListener( 'onCanRecieveStates', function( e )
 {
 	timeIsSynced = true;
 	currentTimestamp = ts.now;
-	//alert("can!");
-})
-var ts = timesync.create(
-						{
-							server: '/timesync',
-							interval: null
-						});
+	outputSystemMessage("Time synced");
+} )
+//--
+
+var ts = timesync.create(	{
+								server: '/timesync',
+								interval: null
+							} );
 ts.sync();
-ts.on('sync', function (state)
+ts.on( 'sync', function (state)
 {
-	if (state=='end')
+	if ( state === 'end' )
 	{
-		document.dispatchEvent(onCanRecieveStates);
-		//alert('Now can recieve states');
+		document.dispatchEvent( onCanRecieveStates );
 	}
-});
+} );
