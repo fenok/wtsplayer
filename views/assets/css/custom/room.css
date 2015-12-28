@@ -1,0 +1,19 @@
+body {
+    overflow: hidden;
+}
+
+div {
+    position: absolute;
+    font-family: Arial;
+    color: #fff;
+    background: #5aa348;
+}
+
+#screenWrapper *{
+	position:absolute;
+}
+
+#video{
+	width: 100%;
+	height: auto;
+}

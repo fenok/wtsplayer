@@ -1,0 +1,39 @@
+{
+  "name": "NA",
+  "version": "1.0.0",
+  "description": "NA",
+  "keywords": [
+    "OpenShift",
+    "Node.js",
+    "application",
+    "openshift"
+  ],
+  "author": {
+    "name": "Fen-ok",
+    "email": "fenok2112@gmail.com",
+    "url": "NA"
+  },
+  "homepage": "http://nodejstest-fenok.rhcloud.com/",
+  "repository": {
+    "type": "git",
+    "url": "ssh://567651b72d52711f08000123@nodejstest-fenok.rhcloud.com/~/git/nodejstest.git/"
+  },
+  "engines": {
+    "node": ">= 0.6.0",
+    "npm": ">= 1.0.0"
+  },
+  "dependencies": {
+    "ejs": "^2.3.4",
+    "express": "^4.13.3",
+    "node-uuid": "^1.4.7",
+    "peer": "^0.2.8",
+    "timesync": "^0.2.0"
+  },
+  "devDependencies": {},
+  "bundleDependencies": [],
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "main": "index.js"
+}

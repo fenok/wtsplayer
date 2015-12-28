@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+<script>
+    // No API key required when not using cloud server
+    var peer = new Peer('dan', { host: '127.0.0.1', port: 80, path: '/peerjs', secure:false, debug:3});
+	peer.on('open', function(id)
+	{
+		alert(id);
+		var conn = peer.connect("fox", {label:"lab"});
+	});
+	
+</script>
+</head>
+<body>
+</body>
+</html>

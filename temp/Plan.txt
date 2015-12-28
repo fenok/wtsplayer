@@ -1,0 +1,39 @@
+Room:
+	random id (auto)
+	peers list
+	password
+	
+Process:
+	Creation (must set data source type and data source) (may set password)
+	Gets link (***/random_id)
+	Shares the link
+	New peer inputs password (if set) and nickname (optional)
+	New peer joins the room (getting id and time recync)
+	Chooses data source [type] from selected peer
+	Establishing media connection to peers
+	Update new peer's player state
+	
+Peer:
+	id (auto)
+	nickname (auto)
+	data source
+	data source type
+	
+Player states:
+	Delayed pause
+	Delayed play
+	
+		- switch timestamp
+		- timestamp when to hit pause/play
+		- player time when to hit pause/play
+		
+Process:
+	get peers list from server
+	ask every peer to add its id and for their player states (including responce timestamp)
+	update current state to the state with the latest timestamp (so we absolutely sure that every peer has new peer's id and new peer hasn't missed anything)
+	
+IDEA: include timestamps (switch timestamp) to state updates and ignore updates with timestamps before the last one (PARANOIA)
+
+What peer can emit to other peers:
+	State changed to delayed pause (timestamp when to hit pause, player time)
+	State changed to delayed play (timestamp when to hit play, player time)

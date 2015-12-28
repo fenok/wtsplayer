@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta charset="utf-8" />
+		<title>NA</title>
+		<!--<link rel="stylesheet" type="text/css" href="room.css" />-->
+	</head>
+	<body>
+		<div id="coverLayer">
+		<p>Loading layer:
+		<br />
+		<label>Password:<input id="passwordInput" type="password" /></label>
+		<input id="retryButton" type="button" value="Retry"/>
+		<input id="createRoomButton" type="button" value = "Create new room"/>
+		</div>
+		<div id="contentLayer">
+		<p>Content layer:
+		<br />
+		<video id = "video" style="width:400px;">
+			<source src = "http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" />
+		</video>
+		<br />
+		<input id="playerPlayButton" type = "button" value = "Play" />
+		<input id="playerPauseButton" type = "button" value = "Pause" />
+		<input id="playerSeekButton" type = "button" value = "Seek" />
+		<input id="playerSeekInput" type = "number" value = "0" />
+		<br />
+		<input id="messageInput" type = "text" />
+		<input id="sendMessageButton" type="button" value = "sendMessage"/>
+		</div>
+		<div id="chat">
+		</div>
+		<script src="/jquery.min.js"></script>
+		<script src="/peer.js"></script>
+		<script src="/timesync/timesync.js"></script>
+		<script src="/session.js"></script>
+		<script src="/syncTime.js"></script>
+		<script src="/switchToRoom.js"></script>
+		<script src="/createOrEnterRoom.js"></script>
+		<script src="/player.js"></script>
+		<!--
+		<script src="connect.js"></script>
+		<script src="actions.js"></script>
+		<script src="fullscreen.js"></script>-->
+	</body>
+</html>
