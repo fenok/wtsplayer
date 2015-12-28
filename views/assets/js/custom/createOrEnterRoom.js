@@ -23,7 +23,7 @@ var canSendData = false;
 //Remember that OpenShift uses 8000 port
 var peer = new Peer( '',	{
 								host: location.hostname,
-								port: location.port || ( location.protocol === 'https:' ? 443 : 80 ),
+								port: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
 								path: '/peerjs',
 								debug: 3
 							} );
