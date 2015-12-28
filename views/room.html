@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta charset="utf-8" />
 		<title>NA</title>
-		<!--<link rel="stylesheet" type="text/css" href="room.css" />-->
+		<link rel="stylesheet" type="text/css" href="/room.css" />
 	</head>
 	<body>
 		<div id="coverLayer">
@@ -17,9 +17,9 @@
 		<div id="contentLayer">
 		<p>Content layer:
 		<br />
-		<video id = "video" style="width:400px;">
-			<source src = "http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" />
-		</video>
+		<div id = "video" style="width:400px;">
+			<!--<source src = "http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" />-->
+		</div>
 		<br />
 		<input id="playerPlayButton" type = "button" value = "Play" />
 		<input id="playerPauseButton" type = "button" value = "Pause" />
@@ -32,14 +32,19 @@
 		<div id="chat">
 		</div>
 		<script src="/jquery.min.js"></script>
+		<script src="/webtorrent.min.js"></script>
 		<script src="/peer.js"></script>
 		<script src="/timesync/timesync.js"></script>
-		<script src="/session.js"></script>
-		<script src="/syncTime.js"></script>
-		<script src="/createOrEnterRoom.js"></script>
-		<script src="/player.js"></script>
+		
+		<script src="/torrent.js"></script>
 		<script src="/switchToRoom.js"></script>
 		<script src="/interfaceLogic.js"></script>
+		<script src="/session.js"></script>
+		<script src="/createOrEnterRoom.js"></script>
+		<script src="/syncTime.js"></script>
+		<script src="/player.js"></script>
+		
+		
 		<!--
 		<script src="connect.js"></script>
 		<script src="actions.js"></script>

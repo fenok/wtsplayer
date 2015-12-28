@@ -12,8 +12,8 @@ var timeIsSynced = false;
 
 //Fires when time has been synchronized and currentTimestamp() becomes usable
 //That means we can apply the latest saved state to player and apply new states immediately
-var onCanRecieveStates = new Event( 'onCanRecieveStates' );
-document.addEventListener( 'onCanRecieveStates', function( e )
+var onTimeIsSynced = new Event( 'onTimeIsSynced' );
+document.addEventListener( 'onTimeIsSynced', function( e )
 {
 	timeIsSynced = true;
 	currentTimestamp = ts.now;
@@ -30,6 +30,6 @@ ts.on( 'sync', function (state)
 {
 	if ( state === 'end' )
 	{
-		document.dispatchEvent( onCanRecieveStates );
+		document.dispatchEvent( onTimeIsSynced );
 	}
 } );

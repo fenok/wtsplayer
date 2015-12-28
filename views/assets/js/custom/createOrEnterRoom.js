@@ -137,6 +137,6 @@ function connectionHandler( conn )
 	conn.on( 'error', function (err)
 	{
 		delete dataConnections[ conn.peer ];
-		outputSystemMessage( "Failed to connect to " + conn.peer + " with error " + err.name + ": " + err.message );
+		outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + " with error " + err.name + ": " + err.message );
 	});
 }

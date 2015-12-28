@@ -1,19 +1,4 @@
-body {
-    overflow: hidden;
-}
-
-div {
-    position: absolute;
-    font-family: Arial;
-    color: #fff;
-    background: #5aa348;
-}
-
-#screenWrapper *{
-	position:absolute;
-}
-
-#video{
-	width: 100%;
+#video video{
+	width: 400px;
 	height: auto;
 }
