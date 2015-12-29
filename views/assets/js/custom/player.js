@@ -20,34 +20,47 @@ var player =
 	play : function()
 	{
 		//hit play
-		player.element.play();
+		player.video.play();
 	},
 	pause : function()
 	{
 		//hit pause
-		player.element.pause();
+		player.video.pause();
 	},
 	seek : function(playerTime)
 	{
-		player.element.currentTime = playerTime/1000;
+		player.video.currentTime = playerTime/1000;
 		//seek to playerTime
 	},
-	element : document.getElementById("video")
+	video : document.getElementById("video"),
+	playPauseButton : document.getElementById("playerPlayPauseButton")
 }
+
+player.playPauseButton.state = 'play';
+
+player.playPauseButton.switchToPlay = function()
+{
+	player.playPauseButton.state = 'play';
+	player.playPauseButton.value = "Play";
+};
+
+player.playPauseButton.switchToPause = function()
+{
+	player.playPauseButton.state = 'pause';
+	player.playPauseButton.value = "Pause";
+};
+
 //[video].currentTime is in seconds, normalizing to ms
-$("#playerPlayButton").on('click', function()
+player.playPauseButton.addEventListener('click', function()
 {
-	playerStateController.onPlayerPlay(player.element.currentTime * 1000);
-});
-
-$("#playerPauseButton").on('click', function()
-{
-	playerStateController.onPlayerPause(player.element.currentTime * 1000);
-});
-
-$("#playerSeekButton").on('click', function()
-{
-	playerStateController.onPlayerSeek($("#playerSeekInput").val() * 1000);
+	if (player.playPauseButton.state === 'play' )
+	{
+		playerStateController.onPlayerPlay(player.video.currentTime * 1000);
+	}
+	else if (player.playPauseButton.state === 'pause' )
+	{
+		playerStateController.onPlayerPause(player.video.currentTime * 1000);
+	}
 });
 
 var playerStateController = 
@@ -64,7 +77,11 @@ var playerStateController =
 			currentState.timestamp = currentTimestamp() + magicDelay;
 			currentState.playerTime = playerTime;
 			sendCurrentState();
-			setTimeout(function(){player.play();}, magicDelay);
+			setTimeout(function()
+			{
+				player.play();
+				player.playPauseButton.switchToPause();
+			}, magicDelay);
 		}
 	},
 	onPlayerPause : function(playerTime)
@@ -76,7 +93,11 @@ var playerStateController =
 			currentState.timestamp = currentTimestamp() + magicDelay;
 			currentState.playerTime = playerTime + magicDelay;
 			sendCurrentState();
-			setTimeout(function(){player.pause();}, magicDelay);
+			setTimeout(function()
+			{
+				player.pause();
+				player.playPauseButton.switchToPlay();
+			}, magicDelay);
 		}
 	},
 	onPlayerSeek : function(playerTime)
@@ -137,8 +158,6 @@ var playerStateController =
 		}
 	}
 }
-
-
 
 function sendCurrentState()
 {

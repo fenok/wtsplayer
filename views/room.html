@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta charset="utf-8" />
 		<title>NA</title>
-		<link rel="stylesheet" type="text/css" href="/room.css" />
+		<link rel="stylesheet" type="text/css" href="/player.css" />
 	</head>
 	<body>
 		<div id="coverLayer">
@@ -17,15 +17,14 @@
 		<div id="contentLayer">
 		<p>Content layer:
 		<br />
-		<div id = "video" style="width:400px;">
+		<video id = "video" style="width:400px;">
 			<!--<source src = "http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" />-->
+		</video>
+		<br />
+		<div id = "videoControls">
+			<input id = "playerPlayPauseButton" type = "button" value = "Play" />
+			<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0">
 		</div>
-		<br />
-		<input id="playerPlayButton" type = "button" value = "Play" />
-		<input id="playerPauseButton" type = "button" value = "Pause" />
-		<input id="playerSeekButton" type = "button" value = "Seek" />
-		<input id="playerSeekInput" type = "number" value = "0" />
-		<br />
 		<input id="messageInput" type = "text" />
 		<input id="sendMessageButton" type="button" value = "sendMessage"/>
 		</div>
