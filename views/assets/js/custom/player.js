@@ -1,12 +1,10 @@
-function state(name, switchTimestamp, timestamp, playerTime)
+var currentState =
 {
-	this.name = name;
-	this.switchTimestamp = switchTimestamp;
-	this.timestamp = timestamp;
-	this.playerTime = playerTime;
-}
-
-var currentState = new state('delayedPause', -1, -1, 0);
+	name : 'delayedPause', // or 'delayedPlay'
+	switchTimestamp : -1, //when the transition was made
+	timestamp : -1, // bounded to playerTime
+	playerTime : 0 // bounded to timestamp
+};
 //latestResponseTimestamp is used to determine whether the state must be changed.
 //It is used on initial state sync to make sure that new peer syncs to the most actual state.
 var latestResponseTimestamp = -1;
@@ -33,7 +31,8 @@ var player =
 		//seek to playerTime
 	},
 	video : document.getElementById("video"),
-	playPauseButton : document.getElementById("playerPlayPauseButton")
+	playPauseButton : document.getElementById("playerPlayPauseButton"),
+	seekRange : document.getElementById("playerSeekRange")
 }
 
 player.playPauseButton.state = 'play';
@@ -61,6 +60,18 @@ player.playPauseButton.addEventListener('click', function()
 	{
 		playerStateController.onPlayerPause(player.video.currentTime * 1000);
 	}
+});
+
+player.seekRange.addEventListener('change', function()
+{
+	//converting to ms
+	var playerTime = player.seekRange.value * (player.video.duration * 10);
+	playerStateController.onPlayerSeek(playerTime);
+});
+
+player.video.addEventListener('timeupdate', function()
+{
+	player.seekRange.value = (100 / player.video.duration) * player.video.currentTime;
 });
 
 var playerStateController = 
