@@ -134,12 +134,17 @@ var playerStateController =
 					if (offset > 0) // delay before play
 					{
 						player.seek(state.playerTime);
-						setTimeout(function(){player.play();}, offset);
+						setTimeout(function()
+						{
+							player.play();
+							player.playPauseButton.switchToPause();
+						}, offset);
 					}
 					else // magic delay was less than latency
 					{
 						player.seek(state.playerTime - offset);
 						player.play();
+						player.playPauseButton.switchToPause();
 					}
 				}
 				break;
@@ -154,12 +159,14 @@ var playerStateController =
 							{
 								player.pause();
 								player.seek(state.playerTime);
+								player.playPauseButton.switchToPlay();
 							}, offset);
 						}
 						else // magic delay was less than latency
 						{
 							player.seek(state.playerTime);
 							player.pause();
+							player.playPauseButton.switchToPlay();
 						}
 					}
 				break;
