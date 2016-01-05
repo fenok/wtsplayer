@@ -23,10 +23,10 @@ $(document).ready(function()
 {
 	$("#fullscreen").on('click', function()
 	{
-		enterFullscreen("screenWrapper");
+		enterFullscreen("player");
 	})
 });
-
+/*
 var docWidth, docHeight, docRatio, div = document.getElementsByTagName('div')[0];
 
 onresize = function()
@@ -91,4 +91,4 @@ function resizeFont(elem, width, height, size)
 }
 
 onresize();
-// вызываем функцию
+// вызываем функцию */

@@ -17,18 +17,23 @@
 		<div id="contentLayer">
 		<p>Content layer:
 		<br />
-		<video id = "video" style="width:400px;">
-			<!--<source src = "http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" />-->
-		</video>
-		<br />
-		<div id = "videoControls">
-			<input id = "playerPlayPauseButton" type = "button" value = "Play" />
-			<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0">
-		</div>
-		<input id="messageInput" type = "text" />
-		<input id="sendMessageButton" type="button" value = "sendMessage"/>
-		</div>
-		<div id="chat">
+			<div id = "player">
+				<video id = "video" style="width:400px;">
+					<!--<source src = "http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" />-->
+				</video>
+				<br />
+				<div id = "videoControls">
+					<input id = "fullscreen" type = "button" value = "Fullscreen" />
+					<input id = "playerPlayPauseButton" type = "button" value = "Play" />
+					<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" />
+					<input id = "playerCurrentTimeOutput" type = "input" />
+				</div>
+				<input id="messageInput" type = "text" />
+				<input id="sendMessageButton" type="button" value = "sendMessage"/>
+				
+				<div id="chat">
+				</div>
+			</div>
 		</div>
 		<script src="/jquery.min.js"></script>
 		<script src="/webtorrent.min.js"></script>
@@ -36,6 +41,7 @@
 		<script src="/timesync/timesync.js"></script>
 		
 		<script src="/torrent.js"></script>
+		<script src="/fullscreen.js"></script>
 		<script src="/switchToRoom.js"></script>
 		<script src="/interfaceLogic.js"></script>
 		<script src="/session.js"></script>
