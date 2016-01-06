@@ -119,7 +119,7 @@ function connectionHandler( conn )
 					outputMessage( data );
 					break;
 				case 'stateChangedNotification':
-					player.stateController.updateCurrentState( data.state, data.seeked );
+					player.stateController.updateCurrentState( data.state );
 					break;
 				default:
 					alert( 'Unrecognized data' );

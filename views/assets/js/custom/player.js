@@ -45,14 +45,16 @@ player.stateController.latestResponseTimestamp = -1;
 //TODO: may be calculated depending on actual latency in future
 player.stateController.magicDelay = 200; //200
 
-player.stateController.sendCurrentState = function ( seeked )
+player.stateController.delayedPlayPauseTimeout = null;
+
+player.stateController.canPlay = true;
+
+player.stateController.sendCurrentState = function ()
 {
-	seeked = seeked || false;
 	var data =
 	{
 		type : 'stateChangedNotification',
 		state : player.stateController.currentState,
-		seeked : seeked
 	};
 	for (var prop in dataConnections)
 	{
@@ -60,17 +62,15 @@ player.stateController.sendCurrentState = function ( seeked )
 	}
 }
 
-player.stateController.updateCurrentState = function( state, seeked )
+player.stateController.updateCurrentState = function( state )
 {
-	seeked = seeked || false; //Crutch to force video loading on paused seeking
-	//outputSystemMessage("seeked: "+ seeked + "name: "+state.name);
 	/* TODO: Can we use that (optimization)?
 	
 	if (state.switchTimestamp < player.stateController.currentState.switchTimestamp)
 		return;
 	
 	*/
-	//outputSystemMessage(state.name);
+
 	player.stateController.currentState = state;
 	var offset = state.timestamp - currentTimestamp();
 	
@@ -80,7 +80,8 @@ player.stateController.updateCurrentState = function( state, seeked )
 				if (offset > 0) // delay before play
 				{
 					player.playbackController.seek(state.playerTime);
-					setTimeout(function()
+					clearTimeout(player.stateController.delayedPlayPauseTimeout);
+					player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 					{
 						player.playbackController.play();
 						player.elements.playPauseButton.switchToPause();
@@ -96,12 +97,13 @@ player.stateController.updateCurrentState = function( state, seeked )
 			case 'delayedPause':
 					if (offset > 0) // delay before pause
 					{
-						setTimeout(function()
+						clearTimeout(player.stateController.delayedPlayPauseTimeout);
+						player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 						{
 							player.playbackController.seek(state.playerTime);
 							player.playbackController.pause();
 							player.elements.playPauseButton.switchToPlay();
-							if (seeked) //Crutch to force video loading
+							if (player.stateController.canPlay) //Crutch to force video loading
 							{
 								player.elements.video.play();
 								player.elements.video.pause();
@@ -115,7 +117,7 @@ player.stateController.updateCurrentState = function( state, seeked )
 						player.playbackController.seek(state.playerTime);
 						player.playbackController.pause();
 						player.elements.playPauseButton.switchToPlay();
-						if (seeked) //Crutch to force video loading
+						if (player.stateController.canPlay) //Crutch to force video loading
 						{
 							player.elements.video.play();
 							player.elements.video.pause();
@@ -169,8 +171,8 @@ player.stateController.onPlayerSeek = function( playerTime )
 		switchTimestamp : currentTimestamp(),
 		timestamp : currentTimestamp(),
 		playerTime : playerTime
-	}, true ); //Crutch to force video loading
-	player.stateController.sendCurrentState( true ); //Crutch to force video loading
+	});
+	player.stateController.sendCurrentState();
 }
 
 player.elements.playPauseButton.state = 'play';
@@ -224,6 +226,7 @@ player.elements.video.addEventListener('timeupdate', function()
 
 player.elements.video.addEventListener('waiting', function()
 {
+	player.stateController.canPlay = false;
 	if (player.stateController.currentState.name !== 'delayedPause')
 	{
 		player.stateController.updateCurrentState(
@@ -240,5 +243,6 @@ player.elements.video.addEventListener('waiting', function()
 
 player.elements.video.addEventListener('canplay', function()
 {
+	player.stateController.canPlay = true;
 	player.elements.playPauseButton.switchToPlay();
 });
