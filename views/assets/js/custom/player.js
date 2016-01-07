@@ -40,14 +40,32 @@ player.stateController.currentState =
 //It is used on initial state sync to make sure that new peer syncs to the most actual state.
 player.stateController.latestResponseTimestamp = -1;
 
-//delay to be applied before actual play/pause/seek to prevent possible microstutter
+//delay (ms) to be applied before actual play/pause/seek to prevent possible microstutter
 //it is about to change
 //TODO: may be calculated depending on actual latency in future
-player.stateController.magicDelay = 200; //200
+player.stateController.magicDelay = 0; //200ms
+
+//Maximum difference (ms) between currentTimes of players when they are considered to be synced 
+player.stateController.desyncInterval = 200; //100ms
 
 player.stateController.delayedPlayPauseTimeout = null;
 
-player.stateController.canPlay = true;
+//player.stateController.canPlay = false;
+
+player.stateController.desynced = function( state )
+{
+	var diff = Math.abs((currentTimestamp() + (state.name === 'delayedPlay' ? player.stateController.magicDelay : 0) - state.timestamp + state.playerTime) - player.elements.video.currentTime * 1000);
+	if (diff > player.stateController.desyncInterval)
+	{
+		outputSystemMessage("Desync: " + diff);
+		return true;
+	}
+	else
+	{
+		outputSystemMessage("Sync: " + diff);
+		return false;
+	}
+}
 
 player.stateController.sendCurrentState = function ()
 {
@@ -71,7 +89,7 @@ player.stateController.updateCurrentState = function( state )
 	
 	*/
 
-	player.stateController.currentState = state;
+	
 	var offset = state.timestamp - currentTimestamp();
 	
 	switch (state.name)
@@ -79,7 +97,11 @@ player.stateController.updateCurrentState = function( state )
 			case 'delayedPlay':
 				if (offset > 0) // delay before play
 				{
-					player.playbackController.seek(state.playerTime);
+					outputSystemMessage("DelayedPlay");
+					if( player.stateController.desynced(state) )
+					{
+						player.playbackController.seek(state.playerTime);
+					}
 					clearTimeout(player.stateController.delayedPlayPauseTimeout);
 					player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 					{
@@ -89,7 +111,11 @@ player.stateController.updateCurrentState = function( state )
 				}
 				else // magic delay was less than latency
 				{
-					player.playbackController.seek(state.playerTime - offset);
+					outputSystemMessage("InstantPlay");
+					if( player.stateController.desynced(state) )
+					{
+						player.playbackController.seek(state.playerTime - offset);
+					}
 					player.playbackController.play();
 					player.elements.playPauseButton.switchToPause();
 				}
@@ -97,37 +123,49 @@ player.stateController.updateCurrentState = function( state )
 			case 'delayedPause':
 					if (offset > 0) // delay before pause
 					{
+						outputSystemMessage("DelayedPause");
 						clearTimeout(player.stateController.delayedPlayPauseTimeout);
 						player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 						{
-							player.playbackController.seek(state.playerTime);
+							if( player.stateController.desynced(state) )
+							{
+								player.playbackController.seek(state.playerTime);
+							}
 							player.playbackController.pause();
 							player.elements.playPauseButton.switchToPlay();
-							if (player.stateController.canPlay) //Crutch to force video loading
+							/*if (player.elements.video.readyState !== 4) //Crutch to force video loading
 							{
+								outputSystemMessage("crutch!");
 								player.elements.video.play();
 								player.elements.video.pause();
-							}
+							}*/
 						}, offset);
 					}
 					else // magic delay was less than latency
 					{
+						outputSystemMessage("InstantPause");
 						//Alright, I can't remove that due to strange problems with switching to 'delayedPause' on 'waiting' event
 						//Maybe the case is that setTimeout has a minimum delay of 12ms
-						player.playbackController.seek(state.playerTime);
+						if( player.stateController.desynced(state) )
+						{
+							player.playbackController.seek(state.playerTime);
+						}
 						player.playbackController.pause();
 						player.elements.playPauseButton.switchToPlay();
-						if (player.stateController.canPlay) //Crutch to force video loading
+						/*if (player.elements.video.readyState !== 4) //Crutch to force video loading
 						{
+							outputSystemMessage("crutch!");
 							player.elements.video.play();
 							player.elements.video.pause();
-						}
+						}*/
 					}
 				break;
 			default:
 				alert('Unrecognized state name');
 				break;
 		}
+		
+	player.stateController.currentState = state;
 };
 
 player.stateController.onPlayerPlay = function( playerTime )
@@ -226,7 +264,10 @@ player.elements.video.addEventListener('timeupdate', function()
 
 player.elements.video.addEventListener('waiting', function()
 {
-	player.stateController.canPlay = false;
+	outputSystemMessage(player.elements.video.readyState);
+	if (player.elements.video.readyState === 4)
+		return;
+	//player.stateController.canPlay = false;
 	if (player.stateController.currentState.name !== 'delayedPause')
 	{
 		player.stateController.updateCurrentState(
@@ -238,11 +279,11 @@ player.elements.video.addEventListener('waiting', function()
 			} );
 		player.stateController.sendCurrentState();
 	}
-		player.elements.playPauseButton.switchToWaiting();
+	player.elements.playPauseButton.switchToWaiting();
 });
 
 player.elements.video.addEventListener('canplay', function()
 {
-	player.stateController.canPlay = true;
+	//player.stateController.canPlay = true;
 	player.elements.playPauseButton.switchToPlay();
 });
