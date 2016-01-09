@@ -20,6 +20,7 @@ function outputMessage( data )
 	var div = document.createElement( 'div' );
 	div.textContent = data.nick + ": " + data.message + " -- " + currentTimestamp();
 	document.getElementById( "chat" ).appendChild( div );
+	div.scrollIntoView();
 }
 
 function outputSystemMessage( message )
@@ -27,4 +28,5 @@ function outputSystemMessage( message )
 	var div = document.createElement( 'div' );
 	div.textContent = message;
 	document.getElementById( "chat" ).appendChild( div );
+	div.scrollIntoView();
 }

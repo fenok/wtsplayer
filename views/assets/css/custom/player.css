@@ -1,4 +1,9 @@
-input.playerSliders
+#chat
+{
+	height : 200px;
+	overflow : scroll;
+}
+/*input.playerSliders
 {
 	-webkit-appearance: none;
 	display: block;
@@ -33,4 +38,4 @@ input.playerSliders:focus
 input.playerSliders:focus::-webkit-slider-runnable-track
 {
 	background: #ccc;
-}
+}*/

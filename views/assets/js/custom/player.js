@@ -54,15 +54,27 @@ player.stateController.delayedPlayPauseTimeout = null;
 
 player.stateController.desynced = function( state )
 {
-	var diff = Math.abs((currentTimestamp() + (state.name === 'delayedPlay' ? player.stateController.magicDelay : 0) - state.timestamp + state.playerTime) - player.elements.video.currentTime * 1000);
+	//(state.name === 'delayedPlay' ? player.stateController.magicDelay : 0)
+
+	if (state.name === 'delayedPlay')
+		var diff = Math.abs((currentTimestamp() - state.timestamp + state.playerTime) - player.elements.video.currentTime * 1000);
+	else
+		var diff = Math.abs(state.playerTime - player.elements.video.currentTime * 1000);
+	/*
+	outputSystemMessage("PlayerTime: " + player.elements.video.currentTime * 1000);
+	outputSystemMessage("currentTimestamp(): " + now);
+	outputSystemMessage("state.timestamp: " + state.timestamp);
+	outputSystemMessage("state.playerTime: " + state.playerTime);
+	*/
+	
 	if (diff > player.stateController.desyncInterval)
 	{
-		outputSystemMessage("Desync: " + diff);
+		outputSystemMessage("Desync with diff: " + diff);
 		return true;
 	}
 	else
 	{
-		outputSystemMessage("Sync: " + diff);
+		outputSystemMessage("Sync with diff: " + diff);
 		return false;
 	}
 }
