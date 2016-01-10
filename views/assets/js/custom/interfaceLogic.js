@@ -7,7 +7,7 @@ $( "#retryButton" ).on( 'click', function()
 
 $( "#sendMessageButton" ).on( 'click', function()
 {
-	var data = { type : 'message', nick : session.nick || peer.id || 'You', message : $( "#messageInput" ).val() + " -- " + currentTimestamp() };
+	var data = { type : 'message', nick : session.nick || peer.id || 'You', message : $( "#messageInput" ).val() };
 	for ( var prop in dataConnections )
 	{
 		dataConnections[ prop ].send( data );
@@ -18,7 +18,7 @@ $( "#sendMessageButton" ).on( 'click', function()
 function outputMessage( data )
 {
 	var div = document.createElement( 'div' );
-	div.textContent = data.nick + ": " + data.message + " -- " + currentTimestamp();
+	div.textContent = data.nick + ": " + data.message;
 	document.getElementById( "chat" ).appendChild( div );
 	div.scrollIntoView();
 }

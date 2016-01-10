@@ -30,7 +30,7 @@ player.stateController = {};
 
 player.stateController.currentState =
 {
-	name : 'pause', // or 'delayedPlay'
+	name : 'pause', // or 'play'
 	mode : 'instant', //or 'delayed'
 	timestamp : -1, // bounded to playerTime AND is transition timestamp
 	playerTime : 0 // bounded to timestamp
@@ -40,7 +40,7 @@ player.stateController.currentState =
 //It is used on initial state sync to make sure that new peer syncs to the most actual state.
 player.stateController.latestResponseTimestamp = -1;
 
-//delay (ms) to be applied before actual play/pause/seek to prevent possible microdesync
+//delay (ms) to be applied before actual play/pause/(seek?) to prevent possible microdesync
 //it is about to change
 //TODO: may be calculated depending on actual latency in future
 player.stateController.magicDelay = 500; //200ms
@@ -50,62 +50,52 @@ player.stateController.desyncInterval = 100; //100ms
 
 player.stateController.delayedPlayPauseTimeout = null;
 
-//player.stateController.canPlay = false;
-
-player.stateController.desynced = function( state )
+player.stateController.syncTime = function( state )
 {
-	//(state.name === 'delayedPlay' ? player.stateController.magicDelay : 0)
-
 	var offset = state.mode === 'delayed' ? player.stateController.magicDelay : 0;
 	offset += state.timestamp - currentTimestamp();
-	var diff = -1;
+	var supposedTime = -1;
+	
 	//why not switch/case? testing speed o.o
 	if (state.name === 'play')
 	{
 		if (offset > 0)
 		{
-			diff = Math.abs(state.playerTime - player.elements.video.currentTime * 1000);
+			supposedTime = state.playerTime;
 		}
 		else
 		{
-			diff = Math.abs((state.playerTime - offset) - player.elements.video.currentTime * 1000);
+			supposedTime = state.playerTime - offset;
 		}
 	}
 	else // if (state.name === 'pause')
 	{
 		if (offset > 0) 
 		{
-			diff = Math.abs(state.playerTime + player.stateController.magicDelay - offset - player.elements.video.currentTime * 1000);
+			supposedTime = state.playerTime + player.stateController.magicDelay - offset;
 		}
 		else
 		{
 			if (state.mode === 'delayed')
 			{
-				diff = Math.abs(state.playerTime + player.stateController.magicDelay - player.elements.video.currentTime * 1000);
+				supposedTime = state.playerTime + player.stateController.magicDelay;
 			}
 			else
 			{
-				diff = Math.abs(state.playerTime - player.elements.video.currentTime * 1000);
+				supposedTime = state.playerTime;
 			}
 		}
 	}
-		
-	/*
-	outputSystemMessage("PlayerTime: " + player.elements.video.currentTime * 1000);
-	outputSystemMessage("currentTimestamp(): " + now);
-	outputSystemMessage("state.timestamp: " + state.timestamp);
-	outputSystemMessage("state.playerTime: " + state.playerTime);
-	*/
 	
+	var diff = Math.abs(supposedTime - player.elements.video.currentTime * 1000);
 	if (diff > player.stateController.desyncInterval)
 	{
-		outputSystemMessage("Desync with diff: " + diff);
-		return true;
+		outputSystemMessage("Desync: " + diff + " ms");
+		player.playbackController.seek(supposedTime);
 	}
 	else
 	{
-		outputSystemMessage("Sync with diff: " + diff);
-		return false;
+		outputSystemMessage("Sync: " + diff + " ms");
 	}
 }
 
@@ -124,97 +114,64 @@ player.stateController.sendCurrentState = function ()
 
 player.stateController.updateCurrentState = function( state )
 {
+	outputSystemMessage(state.mode+"_"+state.name);
+	
 	/* TODO: Can we use that (optimization)?
 	
-	if (state.switchTimestamp < player.stateController.currentState.switchTimestamp)
+	if (state.timestamp < player.stateController.currentState.timestamp)
 		return;
 	
 	*/
 
-	clearTimeout(player.stateController.delayedPlayPauseTimeout);
+	//crutch to prevent cascade instant pause updates on 'waiting'
+	if(state.waiting && player.stateController.currentState.waiting)
+	{
+		player.stateController.currentState.timestamp = state.timestamp;
+		return;
+	}
 	
+	//New state is being applied, so we need to clear the timeout to prevent unexpected changes
+	clearTimeout(player.stateController.delayedPlayPauseTimeout);
+
+	//Checking whether the actual time in player is correct, correcting if not
+	player.stateController.syncTime(state);
+	
+	//offset is used as delay before actual play/pause
 	var offset = state.mode === 'delayed' ? player.stateController.magicDelay : 0;
 	offset += state.timestamp - currentTimestamp();
 	
+	//why not switch/case? testing speed o.o
 	if (state.name === 'play')
 	{
-		if (offset > 0) // delay before play
+		if (offset > 0) // delay before play -- can occur ONLY if mode === 'delayed'
 		{
-			outputSystemMessage("DelayedPlay");
-			if( player.stateController.desynced(state) )
-			{
-				player.playbackController.seek(state.playerTime);
-			}
-			
 			player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 			{
 				player.playbackController.play();
 				player.elements.playPauseButton.switchToPause();
 			}, offset);
 		}
-		else // magic delay was less than latency
+		else // magic delay was less than latency OR mode === 'instant'
 		{
-			outputSystemMessage("InstantPlay");
-			if( player.stateController.desynced(state) )
-			{
-				player.playbackController.seek(state.playerTime - offset);
-			}
 			player.playbackController.play();
 			player.elements.playPauseButton.switchToPause();
 		}
 	}
-	else
+	else //state.name === 'pause'
 	{
-		if (offset > 0) // delay before pause
+		if (offset > 0) // delay before pause -- can occur ONLY if mode === 'delayed'
 		{
-			outputSystemMessage("DelayedPause");
-			
 			player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 			{
-				if( player.stateController.desynced(state) )
-				{
-					player.playbackController.seek(state.playerTime + player.stateController.magicDelay);
-				}
 				player.playbackController.pause();
 				player.elements.playPauseButton.switchToPlay();
-				/*if (player.elements.video.readyState !== 4) //Crutch to force video loading
-				{
-					outputSystemMessage("crutch!");
-					player.elements.video.play();
-					player.elements.video.pause();
-				}*/
 			}, offset);
 		}
-		else // magic delay was less than latency
+		else // magic delay was less than latency OR mode === 'instant'
 		{
-			if (state.mode === 'delayed')
-			{
-				outputSystemMessage("InstantPause");
-				//Alright, I can't remove that due to strange problems with switching to 'delayedPause' on 'waiting' event
-				//Maybe the case is that setTimeout has a minimum delay of 12ms
-				if( player.stateController.desynced(state) )
-				{
-					player.playbackController.seek(state.playerTime + player.stateController.magicDelay);
-				}
-				player.playbackController.pause();
-				player.elements.playPauseButton.switchToPlay();
-				/*if (player.elements.video.readyState !== 4) //Crutch to force video loading
-				{
-					outputSystemMessage("crutch!");
-					player.elements.video.play();
-					player.elements.video.pause();
-				}*/
-			}
-			else
-			{
-				outputSystemMessage("InstantPause -- Internal");
-				if( player.stateController.desynced(state) )
-				{
-					player.playbackController.seek(state.playerTime);
-				}
-				player.playbackController.pause();
-				player.elements.playPauseButton.switchToPlay();
-			}
+			player.playbackController.pause();
+			player.elements.playPauseButton.switchToPlay();
+			
 		}
 	}
 
@@ -314,16 +271,18 @@ player.elements.video.addEventListener('timeupdate', function()
 
 player.elements.video.addEventListener('waiting', function()
 {
-	outputSystemMessage(player.elements.video.readyState);
-	if (player.elements.video.readyState === 4)
+	//outputSystemMessage(player.elements.video.readyState);
+	/*if (player.elements.video.readyState === 4)
 		return;
-	//player.stateController.canPlay = false;
-	if (player.stateController.currentState.name !== 'pause')
+	*/
+	
+	if (player.stateController.currentState.name !== 'pause' || player.stateController.currentState.mode !== 'instant')
 	{
 		player.stateController.updateCurrentState(
 			{
 				name : "pause",
 				mode : "instant",
+				waiting : "waiting",
 				timestamp : currentTimestamp(),
 				playerTime : player.stateController.currentState.playerTime
 			} );
@@ -334,6 +293,5 @@ player.elements.video.addEventListener('waiting', function()
 
 player.elements.video.addEventListener('canplay', function()
 {
-	//player.stateController.canPlay = true;
 	player.elements.playPauseButton.switchToPlay();
 });
