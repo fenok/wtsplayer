@@ -213,7 +213,7 @@ player.stateController.onPlayerSeek = function( playerTime )
 	player.stateController.updateCurrentState(
 	{
 		name : player.stateController.currentState.name,
-		mode : "instant",
+		mode : player.stateController.currentState.name === 'play' ? 'delayed' : 'instant',
 		timestamp : currentTimestamp(),
 		playerTime : playerTime
 	});
