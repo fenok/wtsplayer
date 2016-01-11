@@ -220,8 +220,6 @@ player.stateController.onPlayerSeek = function( playerTime )
 	player.stateController.sendCurrentState();
 }
 
-player.elements.playPauseButton.state = 'play';
-
 player.elements.playPauseButton.switchToPlay = function()
 {
 	player.elements.playPauseButton.state = 'play';
@@ -242,6 +240,8 @@ player.elements.playPauseButton.switchToWaiting = function()
 	player.elements.playPauseButton.value = "Waiting";
 	player.elements.playPauseButton.disabled = true;
 };
+
+player.elements.playPauseButton.switchToWaiting();
 
 //[video].currentTime is in seconds, normalizing to ms
 player.elements.playPauseButton.addEventListener('click', function()
