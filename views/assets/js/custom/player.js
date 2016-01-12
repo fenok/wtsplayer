@@ -23,7 +23,6 @@ player.playbackController.seek = function( playerTime )
 {
 	player.elements.video.currentTime = playerTime / 1000;
 	player.elements.video.dispatchEvent(new Event('timeupdate'));
-
 };
 
 player.stateController = {};
@@ -92,10 +91,12 @@ player.stateController.syncTime = function( state )
 	{
 		outputSystemMessage("Desync: " + diff + " ms");
 		player.playbackController.seek(supposedTime);
+		return (0);
 	}
 	else
 	{
 		outputSystemMessage("Sync: " + diff + " ms");
+		return (supposedTime - player.elements.video.currentTime * 1000);
 	}
 }
 
@@ -132,12 +133,10 @@ player.stateController.updateCurrentState = function( state )
 	
 	//New state is being applied, so we need to clear the timeout to prevent unexpected changes
 	clearTimeout(player.stateController.delayedPlayPauseTimeout);
-
-	//Checking whether the actual time in player is correct, correcting if not
-	player.stateController.syncTime(state);
 	
 	//offset is used as delay before actual play/pause
 	var offset = state.mode === 'delayed' ? player.stateController.magicDelay : 0;
+	offset +=state.name === 'pause' ? player.stateController.syncTime(state) : 0 - player.stateController.syncTime(state);
 	offset += state.timestamp - currentTimestamp();
 	
 	//why not switch/case? testing speed o.o
@@ -171,7 +170,6 @@ player.stateController.updateCurrentState = function( state )
 		{
 			player.playbackController.pause();
 			player.elements.playPauseButton.switchToPlay();
-			
 		}
 	}
 
