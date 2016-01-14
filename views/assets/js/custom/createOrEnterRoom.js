@@ -121,6 +121,9 @@ function connectionHandler( conn )
 				case 'stateChangedNotification':
 					player.stateController.updateCurrentState( data.state );
 					break;
+				case 'waitingStatusChangeNotification':
+					player.stateController.updateWaitingStatus( conn.peer, data.status );
+					break;
 				default:
 					alert( 'Unrecognized data' );
 					break;
@@ -131,12 +134,22 @@ function connectionHandler( conn )
 	conn.on( 'close', function()
 	{
 		delete dataConnections[ conn.peer ];
+		if( player.stateController.waitingStates[ conn.peer ] )
+		{
+			delete player.stateController.waitingStates[ conn.peer ];
+			player.stateController.onWaitingStatusChanged();
+		}
 		outputSystemMessage( "Closed connection to " + conn.peer );
 	} );
 	
 	conn.on( 'error', function (err)
 	{
 		delete dataConnections[ conn.peer ];
+		if( player.stateController.waitingStates[ conn.peer ] )
+		{
+			delete player.stateController.waitingStates[ conn.peer ];
+			player.stateController.onWaitingStatusChanged();
+		}
 		outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + " with error " + err.name + ": " + err.message );
 	});
 }

@@ -29,9 +29,10 @@ player.stateController = {};
 
 player.stateController.currentState =
 {
-	name : 'pause', // or 'play' or 'waiting'
+	name : 'pause', // or 'play' or 'waitingPlay' or 'waitingPause'
 	timestamp : -1, // bounded to playerTime AND is transition timestamp
-	playerTime : 0 // bounded to timestamp
+	playerTime : 0, // bounded to timestamp
+	sender : null
 };
 
 //latestResponseTimestamp is used to determine whether the state must be changed.
@@ -47,6 +48,8 @@ player.stateController.magicDelay = 200; //200ms
 player.stateController.desyncInterval = 100; //100ms
 
 player.stateController.delayedPlayPauseTimeout = null;
+
+player.stateController.waitingStates = {};
 
 player.stateController.syncTime = function( state )
 {
@@ -93,6 +96,8 @@ player.stateController.syncTime = function( state )
 	else //state.name === 'waiting'
 	{
 		supposedTime = state.playerTime;
+		player.playbackController.seek(supposedTime);
+		return (0);
 	}
 	
 	var diff = Math.abs(supposedTime - player.elements.video.currentTime * 1000);
@@ -122,6 +127,38 @@ player.stateController.sendCurrentState = function ()
 	}
 }
 
+player.stateController.sendWaitingStatus = function( status )
+{
+	var data =
+	{
+		type : 'waitingStatusChangeNotification',
+		status : status,
+	};
+	for (var prop in dataConnections)
+	{
+		dataConnections[prop].send(data);
+	}
+}
+
+player.stateController.updateWaitingStatus = function(id, state)
+{
+	player.stateController.waitingStates[ id ] = state;
+	player.stateController.onWaitingStatusChanged()
+}
+
+player.stateController.onWaitingStatusChanged = function()
+{
+	for (var prop in player.stateController.waitingStates)
+	{
+		if (player.stateController.waitingStates[prop] === true)
+		{
+			outputSystemMessage("Tried to switch to play, denied (not all peers ready)");
+			return;
+		}
+	}
+	player.elements.playPauseButton.switchToPlay();
+}
+
 player.stateController.updateCurrentState = function( state )
 {
 	/* TODO: Can we use that (optimization)?
@@ -131,12 +168,12 @@ player.stateController.updateCurrentState = function( state )
 	
 	*/
 
-	//crutch to prevent cascade instant pause updates on 'waiting'
+	/*//crutch to prevent cascade instant pause updates on 'waiting'
 	if(state.name === 'waiting' && player.stateController.currentState.name === 'waiting')
 	{
 		player.stateController.currentState.timestamp = state.timestamp;
 		return;
-	}
+	}*/
 	
 	outputSystemMessage(state.name);
 	
@@ -145,7 +182,8 @@ player.stateController.updateCurrentState = function( state )
 	
 	//offset is used as delay before actual play/pause
 	var offset = player.stateController.magicDelay;
-	offset += state.name !== 'play' ? player.stateController.syncTime(state) : 0 - player.stateController.syncTime(state);
+	var timeCorrection = player.stateController.syncTime(state);
+	offset += state.name !== 'play' ? timeCorrection : 0 - timeCorrection;
 	offset += state.timestamp - currentTimestamp();
 	
 	//why not switch/case? testing speed o.o
@@ -167,32 +205,32 @@ player.stateController.updateCurrentState = function( state )
 	}
 	else if (state.name === 'pause')
 	{
-		if (player.stateController.currentState.name !== 'play')
+		if (offset > 0) // delay before pause
 		{
-			player.playbackController.play();
-			player.playbackController.pause();
-		}
-		else
-		{
-			if (offset > 0) // delay before pause
-			{
-				player.stateController.delayedPlayPauseTimeout = setTimeout(function()
-				{
-					player.playbackController.pause();
-					player.elements.playPauseButton.switchToPlay();
-				}, offset);
-			}
-			else // magic delay was less than latency
+			player.stateController.delayedPlayPauseTimeout = setTimeout(function()
 			{
 				player.playbackController.pause();
 				player.elements.playPauseButton.switchToPlay();
-			}
+			}, offset);
+		}
+		else // magic delay was less than latency
+		{
+			player.playbackController.pause();
+			player.elements.playPauseButton.switchToPlay();
 		}
 	}
 	else //state.name === 'waiting'
 	{
-		//can occur ONLY after seeking, assuming playerTimes are in sync
+		player.elements.playPauseButton.switchToWaiting();
+		
+		player.playbackController.play();
 		player.playbackController.pause();
+		
+		for (var prop in dataConnections)
+		{
+			player.stateController.waitingStates[ prop ] = true;
+		}
+		player.stateController.waitingStates[ peer.id ] = true;
 	}
 
 	player.stateController.currentState = state;
@@ -206,7 +244,8 @@ player.stateController.onPlayerPlay = function( playerTime )
 		{
 			name : "play",
 			timestamp : currentTimestamp(),
-			playerTime : playerTime
+			playerTime : playerTime,
+			sender : peer.id
 		} );
 		player.stateController.sendCurrentState();
 	}
@@ -220,7 +259,8 @@ player.stateController.onPlayerPause = function(playerTime)
 		{
 			name : "pause",
 			timestamp : currentTimestamp(),
-			playerTime : playerTime
+			playerTime : playerTime,
+			sender : peer.id
 		} );
 		player.stateController.sendCurrentState();
 	}
@@ -230,9 +270,11 @@ player.stateController.onPlayerSeek = function( playerTime )
 {
 	player.stateController.updateCurrentState(
 	{
-		name : player.stateController.currentState.name === 'play' ? 'play' : 'pause', //seeking switches 'waiting' to 'pause'
+		name : 'waiting',
 		timestamp : currentTimestamp(),
-		playerTime : playerTime
+		playerTime : playerTime,
+		sender : peer.id,
+		waitingFor : player.stateController.currentState.waitingFor ? player.stateController.currentState.waitingFor : player.stateController.currentState.name
 	});
 	player.stateController.sendCurrentState();
 }
@@ -292,15 +334,16 @@ player.elements.video.addEventListener('waiting', function()
 	/*if (player.elements.video.readyState === 4)
 		return;
 	*/
-	
-	if (player.stateController.currentState.waiting === undefined)
+	if (player.stateController.currentState.name !== 'waiting')
 	{
-		player.elements.playPauseButton.switchToWaiting();
+		//
 		player.stateController.updateCurrentState(
 			{
 				name : "waiting",
 				timestamp : currentTimestamp(),
-				playerTime : player.stateController.currentState.playerTime
+				playerTime : player.stateController.currentState.playerTime,
+				sender : peer.id,
+				waitingFor : player.stateController.currentState.name
 			} );
 		player.stateController.sendCurrentState();
 	}
@@ -308,5 +351,6 @@ player.elements.video.addEventListener('waiting', function()
 
 player.elements.video.addEventListener('canplay', function()
 {
-	player.elements.playPauseButton.switchToPlay();
+	player.stateController.sendWaitingStatus(false);
+	player.stateController.updateWaitingStatus(peer.id, false);
 });
