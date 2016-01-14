@@ -156,6 +156,7 @@ player.stateController.onWaitingStatusChanged = function()
 			return;
 		}
 	}
+	player.stateController.waitingStates = {};
 	player.elements.playPauseButton.switchToPlay();
 }
 
@@ -228,7 +229,8 @@ player.stateController.updateCurrentState = function( state )
 		
 		for (var prop in dataConnections)
 		{
-			player.stateController.waitingStates[ prop ] = true;
+			if (player.stateController.waitingStates[ prop ] !== false) // just in case we got some falses before (not sure if it even possible)
+				player.stateController.waitingStates[ prop ] = true;
 		}
 		player.stateController.waitingStates[ peer.id ] = true;
 	}
