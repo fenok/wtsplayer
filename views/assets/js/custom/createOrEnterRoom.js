@@ -133,6 +133,7 @@ function connectionHandler( conn )
 	
 	conn.on( 'close', function()
 	{
+		/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 		delete dataConnections[ conn.peer ];
 		if( player.stateController.waitingStates[ conn.peer ] )
 		{

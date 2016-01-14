@@ -51,6 +51,8 @@ player.stateController.delayedPlayPauseTimeout = null;
 
 player.stateController.waitingStates = {};
 
+player.stateController.lastAction = 'pause';
+
 player.stateController.syncTime = function( state )
 {
 	var offset = player.stateController.magicDelay + state.timestamp - currentTimestamp();
@@ -157,7 +159,27 @@ player.stateController.onWaitingStatusChanged = function()
 		}
 	}
 	player.stateController.waitingStates = {};
-	player.elements.playPauseButton.switchToPlay();
+	
+	var superPeerID = peer.id;
+	
+	for (var prop in dataConnections)
+	{
+		if (prop > superPeerID)
+		{
+			superPeerID = prop;
+		}
+	}
+	
+	if (superPeerID === peer.id)
+	{
+		player.stateController.updateCurrentState(
+		{
+			name : player.stateController.lastAction,
+			timestamp : currentTimestamp(),
+			playerTime : player.stateController.currentState.playerTime
+		} );
+		player.stateController.sendCurrentState();
+	}
 }
 
 player.stateController.updateCurrentState = function( state )
@@ -190,6 +212,7 @@ player.stateController.updateCurrentState = function( state )
 	//why not switch/case? testing speed o.o
 	if (state.name === 'play')
 	{
+		player.stateController.lastAction = 'play';
 		if (offset > 0) // delay before play
 		{
 			player.stateController.delayedPlayPauseTimeout = setTimeout(function()
@@ -206,6 +229,7 @@ player.stateController.updateCurrentState = function( state )
 	}
 	else if (state.name === 'pause')
 	{
+		player.stateController.lastAction = 'pause';
 		if (offset > 0) // delay before pause
 		{
 			player.stateController.delayedPlayPauseTimeout = setTimeout(function()
@@ -246,8 +270,7 @@ player.stateController.onPlayerPlay = function( playerTime )
 		{
 			name : "play",
 			timestamp : currentTimestamp(),
-			playerTime : playerTime,
-			sender : peer.id
+			playerTime : playerTime
 		} );
 		player.stateController.sendCurrentState();
 	}
@@ -261,8 +284,7 @@ player.stateController.onPlayerPause = function(playerTime)
 		{
 			name : "pause",
 			timestamp : currentTimestamp(),
-			playerTime : playerTime,
-			sender : peer.id
+			playerTime : playerTime
 		} );
 		player.stateController.sendCurrentState();
 	}
@@ -274,9 +296,7 @@ player.stateController.onPlayerSeek = function( playerTime )
 	{
 		name : 'waiting',
 		timestamp : currentTimestamp(),
-		playerTime : playerTime,
-		sender : peer.id,
-		waitingFor : player.stateController.currentState.waitingFor ? player.stateController.currentState.waitingFor : player.stateController.currentState.name
+		playerTime : playerTime
 	});
 	player.stateController.sendCurrentState();
 }
@@ -343,9 +363,7 @@ player.elements.video.addEventListener('waiting', function()
 			{
 				name : "waiting",
 				timestamp : currentTimestamp(),
-				playerTime : player.stateController.currentState.playerTime,
-				sender : peer.id,
-				waitingFor : player.stateController.currentState.name
+				playerTime : player.stateController.currentState.playerTime
 			} );
 		player.stateController.sendCurrentState();
 	}
