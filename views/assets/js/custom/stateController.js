@@ -18,11 +18,13 @@ wtsplayer.stateController = function()
 			sendToOthers 			: null,
 			selfIsSuperPeer 		: null,
 			getSelfID 				: null,
-			getOtherPeersID 		: null
+			getOtherPeersID 		: null,
+			getCanSendData			: null
 		},
 		timeController :
 		{
-			currentTimestamp 		: null
+			currentTimestamp 		: null,
+			getTimeIsSynced			: null
 		}
 	};
 	
@@ -35,7 +37,7 @@ wtsplayer.stateController = function()
 	
 	var _currentState =
 	{
-		name : 'pause', // or 'play' or 'waiting'
+		name : 'waiting', // or 'play' or 'pause'
 		timestamp : -1, // bounded to playerTime AND is transition timestamp
 		playerTime : 0 // bounded to timestamp
 	};
@@ -58,6 +60,8 @@ wtsplayer.stateController = function()
 
 	var _lastAction = 'pause';
 
+	var _canCommunicate = false;
+	
 	function syncTime( state )
 	{
 		var offset = _magicDelay + state.timestamp - __timeController.currentTimestamp();
@@ -123,6 +127,8 @@ wtsplayer.stateController = function()
 
 	function sendCurrentState()
 	{
+		console.log("SENDSTATES");
+		console.log(_currentState);
 		var data =
 		{
 			type 	: 'stateChangedNotification',
@@ -153,15 +159,19 @@ wtsplayer.stateController = function()
 		}
 		_waitingStates = {};
 		
-		if ( __peerController.selfIsSuperPeer() )
+		if ( _canCommunicate && _currentState.name === 'waiting' )
 		{
-			_self.updateCurrentState(
+			if ( __peerController.selfIsSuperPeer() )
 			{
-				name 		: _lastAction,
-				timestamp 	: __timeController.currentTimestamp(),
-				playerTime 	: _currentState.playerTime
-			} );
-			sendCurrentState();
+				console.log("PLAYING ON WAITING UPDATE WHATEVER");
+				_self.updateCurrentState(
+				{
+					name 		: _lastAction,
+					timestamp 	: __timeController.currentTimestamp(),
+					playerTime 	: _currentState.playerTime
+				} );
+				sendCurrentState();
+			}
 		}
 	}
 
@@ -173,83 +183,92 @@ wtsplayer.stateController = function()
 	
 	this.updateCurrentState = function( state )
 	{
-		/* TODO: Can we use that (optimization)?
+		console.log("RECIEVED STATE")
+		console.log(state);
+		/* TODO: Can we use that (optimization)? */
+		
+		//console.log(_currentState);
 		
 		if (state.timestamp < _currentState.timestamp)
+		{
+			console.log("TIMEFAIL");
 			return;
-		
-		*/
+		}
 		
 		__elementsController.outputSystemMessage(state.name);
 		
-		//New state is being applied, so we need to clear the timeout to prevent unexpected changes
-		clearTimeout( _delayedPlayPauseTimeout );
-		
-		//offset is used as delay before actual play/pause
-		var offset = _magicDelay;
-		var timeCorrection = syncTime( state );
-		offset += state.name !== 'play' ? timeCorrection : 0 - timeCorrection;
-		offset += state.timestamp - __timeController.currentTimestamp();
-		
-		//why not switch/case? testing speed o.o
-		if ( state.name === 'play' )
+		if ( _canCommunicate )
 		{
-			_lastAction = 'play';
-			if ( offset > 0 ) // delay before play
+			//New state is being applied, so we need to clear the timeout to prevent unexpected changes
+			clearTimeout( _delayedPlayPauseTimeout );
+			
+			//offset is used as delay before actual play/pause
+			var offset = _magicDelay;
+			var timeCorrection = syncTime( state );
+			offset += state.name !== 'play' ? timeCorrection : 0 - timeCorrection;
+			offset += state.timestamp - __timeController.currentTimestamp();
+			
+			//why not switch/case? testing speed o.o
+			if ( state.name === 'play' )
 			{
-				_delayedPlayPauseTimeout = setTimeout( function()
+				if ( offset > 0 ) // delay before play
+				{
+					_delayedPlayPauseTimeout = setTimeout( function()
+					{
+						__elementsController.play();
+					}, offset );
+				}
+				else // magic delay was less than latency
 				{
 					__elementsController.play();
-				}, offset );
+				}
 			}
-			else // magic delay was less than latency
+			else if ( state.name === 'pause' )
 			{
-				__elementsController.play();
-			}
-		}
-		else if ( state.name === 'pause' )
-		{
-			_lastAction = 'pause';
-			if ( offset > 0 ) // delay before pause
-			{
-				_delayedPlayPauseTimeout = setTimeout( function()
+				if ( offset > 0 ) // delay before pause
+				{
+					_delayedPlayPauseTimeout = setTimeout( function()
+					{
+						__elementsController.pause();
+					}, offset);
+				}
+				else // magic delay was less than latency
 				{
 					__elementsController.pause();
-				}, offset);
+				}
 			}
-			else // magic delay was less than latency
+			else //state.name === 'waiting'
 			{
-				__elementsController.pause();
+				__elementsController.wait();
+				
+				var otherPeers = __peerController.getOtherPeersID();
+				
+				for ( var index in otherPeers )
+				{
+					if ( _waitingStates[ otherPeers[ index ] ] !== false ) // just in case we got some falses before
+						_waitingStates[ otherPeers[ index ] ] = true;
+				}
+				_waitingStates[ __peerController.getSelfID() ] = true;
 			}
 		}
-		else //state.name === 'waiting'
-		{
-			__elementsController.wait();
-			
-			var otherPeers = __peerController.getOtherPeersID();
-			
-			for ( var index in otherPeers )
-			{
-				if ( _waitingStates[ otherPeers[ index ] ] !== false ) // just in case we got some falses before
-					_waitingStates[ otherPeers[ index ] ] = true;
-			}
-			_waitingStates[ __peerController.getSelfID() ] = true;
-		}
+		_lastAction = state.name === 'waiting' ? _lastAction : state.name;
 		_currentState = state;
+		
 	};
 
 	this.onPeerDeleted = function( id )
 	{
-		if ( _waitingStates[ id ] )
-		{
-			_self.updateWaitingStatus( id, false );
-		}
+		//if ( _waitingStates[ id ] )
+		//{
+		_self.updateWaitingStatus( id, false );
+		//}
 	}
 	
 	this.onPlayerPlay = function( playerTime )
 	{
 		if ( _currentState.name !== 'play' )
 		{
+			console.log("PLAYING AFTER PLAY");
 			_self.updateCurrentState(
 			{
 				name 		: "play",
@@ -301,7 +320,52 @@ wtsplayer.stateController = function()
 
 	this.onPlayerCanPlay = function()
 	{
+		console.log("ONCANPLAY");
 		sendWaitingStatus( false );
 		_self.updateWaitingStatus( __peerController.getSelfID(), false );
+	};
+	
+	this.getCurrentState = function()
+	{
+		return _currentState;
+	};
+	
+	this.getLastAction = function()
+	{
+		return _lastAction;
+	};
+	
+	this.checkCommunicability = function()
+	{
+		if (__peerController.getCanSendData() && __timeController.getTimeIsSynced())
+		{
+			//console.log(_currentState);
+			_canCommunicate = true;
+			var currentTime = __timeController.currentTimestamp();
+			var offset = null;
+			if ( _currentState.timestamp == -1 )
+			{
+				offset = 0;
+			}
+			else
+			{
+				offset = currentTime - _currentState.timestamp;
+			}
+			if (_lastAction === 'pause')
+			{
+				offset = _magicDelay;
+			}
+			if( _currentState === 'waiting' )
+			{
+				offset = 0;
+			}
+			_self.updateCurrentState(
+			{
+				name 		: 'waiting',
+				timestamp 	: currentTime,
+				playerTime 	: _currentState.playerTime + offset
+			});
+			sendCurrentState();
+		}
 	};
 }

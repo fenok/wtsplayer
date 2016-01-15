@@ -6,19 +6,22 @@ wtsplayer.peerController = function()
 	{
 		stateController :
 		{
-			updateCurrentState 	: null,
-			updateWaitingStatus : null,
-			onPeerDeleted 		: null
+			updateCurrentState 		: null,
+			updateWaitingStatus 	: null,
+			onPeerDeleted 			: null,
+			getCurrentState			: null,
+			getLastAction			: null,
+			checkCommunicability	: null,
 		},
 		elementsController :
 		{
-			outputSystemMessage : null,
-			outputMessage		: null
+			outputSystemMessage 	: null,
+			outputMessage			: null
 		},
 		sessionController :
 		{
-			getRoomID 			: null,
-			getPassword 		: null
+			getRoomID 				: null,
+			getPassword 			: null
 		}
 	}
 	
@@ -45,7 +48,7 @@ wtsplayer.peerController = function()
 	var _peer = new Peer( '',
 	{
 		host 	: location.hostname,
-		port 	: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
+		port 	: location.port || ( location.protocol === 'https:' ? 443 : 80 ),
 		path 	: '/peerjs',
 		debug 	: 3
 	} );
@@ -61,6 +64,18 @@ wtsplayer.peerController = function()
 	//Handle incoming connections with universal handler
 	_peer.on( 'connection', function( conn )
 	{
+		conn.on('open', function()
+		{
+			data =
+			{
+				type 		: 'stateChangedNotification',
+				state 		: __stateController.getCurrentState(),
+				lastAction 	: __stateController.getLastAction()
+			}
+			conn.send( data );
+			console.log("SENDINITIAL");
+			console.log(data.state);
+		} );
 		connectionHandler( conn );
 	} );
 
@@ -70,6 +85,7 @@ wtsplayer.peerController = function()
 	{
 		__elementsController.outputSystemMessage( "Connected to all peers" );
 		_canSendData = true;
+		__stateController.checkCommunicability();
 	};
 	
 	//Add connection to dataConnections, remove on 'close' or 'error'
@@ -207,5 +223,10 @@ wtsplayer.peerController = function()
 			}
 		}
 		return ( superPeerID === _peer.id );
+	};
+	
+	this.getCanSendData = function()
+	{
+		return _canSendData;
 	};
 };

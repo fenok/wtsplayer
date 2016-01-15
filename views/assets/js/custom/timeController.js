@@ -6,11 +6,16 @@ wtsplayer.timeController = function()
 	{
 		elementsController :
 		{
-			outputSystemMessage : null
+			outputSystemMessage 	: null
+		},
+		stateController :
+		{
+			checkCommunicability 	: null
 		}
 	};
 	
 	var __elementsController = this.externals.elementsController;
+	var __stateController = this.externals.stateController;
 	
 	var _self = this;
 	
@@ -39,18 +44,21 @@ wtsplayer.timeController = function()
 	function onTimeIsSynced()
 	{
 		_timeIsSynced = true;
-		_self.currentTimestamp = _ts.now;
+		//_self.currentTimestamp = _ts.now;
+		__stateController.checkCommunicability();
 		__elementsController.outputSystemMessage( "Time synced" );
 	};
 	//--
 	
 	//Function to be used to get synced timestamp
 	//Can't be used when !timeIsSynced
-	this.currentTimestamp = function()
-	{
-		return -1;
-	};
+	this.currentTimestamp = _ts.now;
 	//--
+	
+	this.getTimeIsSynced = function()
+	{
+		return _timeIsSynced;
+	}
 	
 	_ts.sync();
 }
