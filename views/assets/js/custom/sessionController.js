@@ -2,16 +2,7 @@ var wtsplayer = wtsplayer || {};
 
 wtsplayer.sessionController = function()
 {
-
-	this.externals =
-	{
-		elementsController :
-		{
-			outputSystemMessage : null
-		}
-	};
-	
-	var __elementsController = this.externals.elementsController;
+	this.externals = {};
 
 	var _self = this;
 	
@@ -38,32 +29,32 @@ wtsplayer.sessionController = function()
 	{
 		_session.password = password;
 		window.name = JSON.stringify( _session );
-	}
+	};
 
 	this.setRoomID = function( roomID )
 	{
 		_session.roomID = roomID;
 		window.name = JSON.stringify( _session );
-	}
+	};
 
 	this.setNick = function( nick )
 	{
 		_session.nick = nick;
 		window.name = JSON.stringify( _session );
-	}
+	};
 	
 	this.getNick = function()
 	{
 		return _session.nick;
-	}
+	};
 
 	this.getRoomID = function()
 	{
 		return _session.roomID;
-	}
+	};
 	
 	this.getPassword = function()
 	{
 		return _session.password;
-	}
-}
+	};
+};

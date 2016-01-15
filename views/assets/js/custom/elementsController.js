@@ -6,40 +6,44 @@ wtsplayer.elementsController = function()
 	{
 		stateController :
 		{
-			onPlayerPlay : null,
-			onPlayerPause : null,
-			onPlayerSeek : null,
+			onPlayerPlay 	: null,
+			onPlayerPause 	: null,
+			onPlayerSeek 	: null,
 			onPlayerWaiting : null,
 			onPlayerCanPlay : null
 		},
 		sessionController :
 		{
-			setRoomID : null,
-			setPassword : null
+			setRoomID 		: null,
+			setPassword 	: null,
+			getNick			: null
 		},
 		peerController :
 		{
-			sendToOthers : null
+			sendToOthers 	: null,
+			joinRoom 		: null,
+			getSelfID		: null
 		}
 	};
 	
-	var __stateController = this.externals.stateController;
+	var __stateController 	= this.externals.stateController;
 	var __sessionController = this.externals.sessionController;
-	var __peerController = this.externals.peerController;
+	var __peerController 	= this.externals.peerController;
 	
 	var _self = this;
 	
-	var _video = document.getElementById("video");
-	var _playPauseButton = document.getElementById("playerPlayPauseButton");
-	var _seekRange = document.getElementById("playerSeekRange");
-	var _currentTimeOutput = document.getElementById("playerCurrentTimeOutput");
-	var _retryButton = document.getElementById("retryButton");
-	var _passwordInput = document.getElementById("passwordInput");
-	var _sendMessageButton = document.getElementById("sendMessageButton");
-	var _messageInput = document.getElementById("messageInput");
-	var _createRoomButton = document.getElementById("createRoomButton");
-	var _fullscreenButton = document.getElementById("fullscreen");
+	var _video 				= document.getElementById( "video" );
+	var _playPauseButton 	= document.getElementById( "playerPlayPauseButton" );
+	var _seekRange 			= document.getElementById( "playerSeekRange" );
+	var _currentTimeOutput 	= document.getElementById( "playerCurrentTimeOutput" );
+	var _retryButton 		= document.getElementById( "retryButton" );
+	var _passwordInput 		= document.getElementById( "passwordInput" );
+	var _sendMessageButton 	= document.getElementById( "sendMessageButton" );
+	var _messageInput 		= document.getElementById( "messageInput" );
+	var _createRoomButton 	= document.getElementById( "createRoomButton" );
+	var _fullscreenButton 	= document.getElementById( "fullscreen" );
 	
+	//switching user interface
 	switchToPlay = function()
 	{
 		_playPauseButton.state = 'play';
@@ -60,66 +64,69 @@ wtsplayer.elementsController = function()
 		_playPauseButton.value = "Waiting";
 		_playPauseButton.disabled = true;
 	};
-
-	switchToWaiting();
 	
 	//Change session password and try joining or creation again
-	_retryButton.addEventListener('click', function()
+	_retryButton.addEventListener( 'click', function()
 	{
-		sessionHandler.setPassword( _passwordInput.value );
-		joinRoom();
-	});
+		__sessionController.setPassword( _passwordInput.value );
+		__peerController.joinRoom();
+	} );
 
 	//[video].currentTime is in seconds, normalizing to ms
-	_playPauseButton.addEventListener('click', function()
+	_playPauseButton.addEventListener( 'click', function()
 	{
-		if (_playPauseButton.state === 'play' )
+		if ( _playPauseButton.state === 'play' )
 		{
-			__stateController.onPlayerPlay(_video.currentTime * 1000);
+			__stateController.onPlayerPlay( _video.currentTime * 1000 );
 		}
-		else if (_playPauseButton.state === 'pause' )
+		else if ( _playPauseButton.state === 'pause' )
 		{
-			__stateController.onPlayerPause(_video.currentTime * 1000);
+			__stateController.onPlayerPause( _video.currentTime * 1000 );
 		}
 	});
 
-	_seekRange.addEventListener('change', function()
+	_seekRange.addEventListener( 'change', function()
 	{
 		//converting to ms
-		var playerTime = _seekRange.value * (_video.duration * 10);
-		__stateController.onPlayerSeek(playerTime);
-	});
+		var playerTime = _seekRange.value * ( _video.duration * 10 );
+		__stateController.onPlayerSeek( playerTime );
+	} );
 	
-	_video.addEventListener('timeupdate', function()
+	_video.addEventListener( 'timeupdate', function()
 	{
-		_seekRange.value = (100 / _video.duration) * _video.currentTime;
+		_seekRange.value = ( 100 / _video.duration ) * _video.currentTime;
 		_currentTimeOutput.value = _video.currentTime;
-	});
+	} );
 	
-	_video.addEventListener('waiting', function()
+	_video.addEventListener( 'waiting', function()
 	{
 		__stateController.onPlayerWaiting();
-	});
+	} );
 	
-	_video.addEventListener('canplay', function()
+	_video.addEventListener( 'canplay', function()
 	{
 		__stateController.onPlayerCanPlay();
-	});
+	} );
 	
-	_sendMessageButton.addEventListener('click', function()
+	_sendMessageButton.addEventListener( 'click', function()
 	{
-		var data = { type : 'message', nick : session.nick || peer.id || 'You', message : _messageInput.value };
-		__peerController.sendToOthers(data);
+		var data =
+		{
+			type 	: 'message',
+			nick 	: __sessionController.getNick() || __peerController.getSelfID() || 'Someone',
+			message : _messageInput.value
+		};
+		__peerController.sendToOthers( data );
 		_self.outputMessage( data );
 	});
 
-	_createRoomButton.addEventListener('click', function()
+	_createRoomButton.addEventListener( 'click', function()
 	{
 		$.ajax(
 		{
-			url: '/getRoomID',
-			dataType : 'json',
-			success: function( data )
+			url			: '/getRoomID',
+			dataType 	: 'json',
+			success 	: function( data )
 			{   
 				__sessionController.setRoomID( data );
 				__sessionController.setPassword( _passwordInput.value );
@@ -128,9 +135,9 @@ wtsplayer.elementsController = function()
 		} );
 	} );
 
-	_fullscreenButton.addEventListener('click', function()
+	_fullscreenButton.addEventListener( 'click', function()
 	{
-		enterFullscreen("player");
+		enterFullscreen( "player" );
 	});
 	
 	//-----------------FULLSCREEN----------------
@@ -138,18 +145,18 @@ wtsplayer.elementsController = function()
 	document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen;
 
 	// Note: FF nightly needs about:config full-screen-api.enabled set to true.
-	function enterFullscreen(id)
+	function enterFullscreen( id )
 	{
-	  var el = document.getElementById(id);
-	  if (el.webkitRequestFullScreen)
-	  {
-		el.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-	  }
-	  else
-	  {
-		el.mozRequestFullScreen();
-	  }
-	}
+		var el = document.getElementById( id );
+		if ( el.webkitRequestFullScreen )
+		{
+			el.webkitRequestFullScreen( Element.ALLOW_KEYBOARD_INPUT );
+		}
+		else
+		{
+			el.mozRequestFullScreen();
+		}
+	};
 	
 	/*function exitFullscreen()
 	{
@@ -162,7 +169,7 @@ wtsplayer.elementsController = function()
 		_video.play();
 		_video.pause();
 		switchToWaiting();
-	}
+	};
 	
 	this.play = function()
 	{
@@ -185,7 +192,7 @@ wtsplayer.elementsController = function()
 	this.getPlayerCurrentTime = function()
 	{
 		return _video.currentTime * 1000;
-	}
+	};
 	
 	this.outputMessage = function ( data )
 	{
@@ -193,7 +200,7 @@ wtsplayer.elementsController = function()
 		div.textContent = data.nick + ": " + data.message;
 		document.getElementById( "chat" ).appendChild( div );
 		div.scrollIntoView();
-	}
+	};
 
 	this.outputSystemMessage = function ( message )
 	{
@@ -201,5 +208,8 @@ wtsplayer.elementsController = function()
 		div.textContent = message;
 		document.getElementById( "chat" ).appendChild( div );
 		div.scrollIntoView();
-	}
-}
+	};
+	
+	//Initializing _playPauseButton object
+	switchToWaiting();
+};

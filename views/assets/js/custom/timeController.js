@@ -14,17 +14,23 @@ wtsplayer.timeController = function()
 	
 	var _self = this;
 	
-	//Function to be used to get synced timestamp
-	//Can't be used when !timeIsSynced
-	this.currentTimestamp = function()
-	{
-		return -1;
-	};
-	//--
-
 	//Flag to know whether the time was synced
 	var _timeIsSynced = false;
 	//--
+	
+	var _ts = timesync.create(
+	{
+		server 		: '/timesync',
+		interval 	: null
+	} );
+	
+	_ts.on( 'sync', function ( state )
+	{
+		if ( state === 'end' )
+		{
+			onTimeIsSynced();
+		}
+	} );
 
 	//Fires when time has been synchronized and currentTimestamp() becomes usable
 	//That means we can apply the latest saved state to player and apply new states immediately
@@ -34,20 +40,17 @@ wtsplayer.timeController = function()
 	{
 		_timeIsSynced = true;
 		_self.currentTimestamp = _ts.now;
-		__elementsController.outputSystemMessage("Time synced");
+		__elementsController.outputSystemMessage( "Time synced" );
 	};
 	//--
-
-	var _ts = timesync.create(	{
-									server: '/timesync',
-									interval: null
-								} );
-	_ts.sync();
-	_ts.on( 'sync', function (state)
+	
+	//Function to be used to get synced timestamp
+	//Can't be used when !timeIsSynced
+	this.currentTimestamp = function()
 	{
-		if ( state === 'end' )
-		{
-			onTimeIsSynced();
-		}
-	} );
+		return -1;
+	};
+	//--
+	
+	_ts.sync();
 }

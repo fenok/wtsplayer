@@ -6,18 +6,19 @@ wtsplayer.peerController = function()
 	{
 		stateController :
 		{
-			updateCurrentState : null,
+			updateCurrentState 	: null,
 			updateWaitingStatus : null,
-			onPeerDeleted : null
+			onPeerDeleted 		: null
 		},
 		elementsController :
 		{
-			outputSystemMessage : null
+			outputSystemMessage : null,
+			outputMessage		: null
 		},
 		sessionController :
 		{
-			getRoomID : null,
-			getPassword : null
+			getRoomID 			: null,
+			getPassword 		: null
 		}
 	}
 	
@@ -34,38 +35,26 @@ wtsplayer.peerController = function()
 	//Timeout after which it is considered that some peers are unreachable on join (connection could not open).
 	var _joinTimeout = 3000; //ms
 	//--
-	 
-	//Fired when connected to all reachable peers after join
-	//var onCanSendData = new Event( 'onCanSendData' );
-	//TODO: GUI logic onCanSendData
-	//document.addEventListener( 'onCanSendData', function( e )
-	function onCanSendData()
-	{
-		__elementsController.outputSystemMessage( "Connected to all peers" );
-		_canSendData = true;
-	}
-	/*{
-		canSendData = true;
-		outputSystemMessage( "Connected to all peers" );
-	} );*/
+	
 	//Can't send data to peers before establishing connection to all possible peers
 	var _canSendData = false;
 	//--
-
+	
 	//Creating peer
 	//Remember that OpenShift uses 8000 port
-	var _peer = new Peer( '',	{
-									host: location.hostname,
-									port: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
-									path: '/peerjs',
-									debug: 3
-								} );
+	var _peer = new Peer( '',
+	{
+		host 	: location.hostname,
+		port 	: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
+		path 	: '/peerjs',
+		debug 	: 3
+	} );
 
 	//Connected to server -- start joining room or creating one
 	//Joining uses data from session
 	_peer.on( 'open', function( id )
 	{
-		joinRoom();
+		_self.joinRoom();
 		__elementsController.outputSystemMessage( "Your id is: " + id );
 	});
 
@@ -75,19 +64,71 @@ wtsplayer.peerController = function()
 		connectionHandler( conn );
 	} );
 
-	function joinRoom()
+	//connected to all reachable peers after join
+	//TODO: GUI logic onCanSendData
+	function onCanSendData()
+	{
+		__elementsController.outputSystemMessage( "Connected to all peers" );
+		_canSendData = true;
+	};
+	
+	//Add connection to dataConnections, remove on 'close' or 'error'
+	function connectionHandler( conn )
+	{
+		_dataConnections[ conn.peer ] = conn;
+		conn.on( 'open', function()
+		{
+			__elementsController.outputSystemMessage( "Connected to " + conn.peer );
+			conn.on( 'data', function( data )
+			{
+				switch ( data.type )
+				{
+					case 'message':
+						__elementsController.outputMessage( data );
+						break;
+					case 'stateChangedNotification':
+						__stateController.updateCurrentState( data.state );
+						break;
+					case 'waitingStatusChangeNotification':
+						__stateController.updateWaitingStatus( conn.peer, data.status );
+						break;
+					default:
+						alert( 'Unrecognized data' );
+						break;
+				}
+			} );
+		} );
+		
+		conn.on( 'close', function()
+		{
+			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
+			delete _dataConnections[ conn.peer ];
+			__stateController.onPeerDeleted( conn.peer );
+			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
+		} );
+		
+		conn.on( 'error', function ( err )
+		{
+			delete _dataConnections[ conn.peer ];
+			__stateController.onPeerDeleted( conn.peer );
+			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
+		} );
+	}
+	
+	//Joining room
+	this.joinRoom = function()
 	{
 		$.ajax(
 		{
-			url: '/joinRoom?roomID=' + encodeURIComponent( __sessionController.getRoomID() ) + '&password=' + encodeURIComponent( __sessionController.getPassword() ) + '&peerID=' + encodeURIComponent( _peer.id ),
-			dataType : 'json',
-			success: function( data )
+			url 		: '/joinRoom?roomID=' + encodeURIComponent( __sessionController.getRoomID() ) + '&password=' + encodeURIComponent( __sessionController.getPassword() ) + '&peerID=' + encodeURIComponent( _peer.id ),
+			dataType 	: 'json',
+			success 	: function( data )
 			{
 				switch ( data.type )
 				{
 					case 'created':
 						__elementsController.outputSystemMessage( "Room created" );
-						//Firts peer in the room, can send data to peers
+						//First peer in the room, can send data to peers
 						onCanSendData();
 						break;
 					case 'joined':
@@ -105,7 +146,7 @@ wtsplayer.peerController = function()
 								if ( recievedPeersCount === 0 )
 									onCanSendData();
 							} );
-						})
+						} );
 						setInterval( function()
 						{
 							if ( !_canSendData )
@@ -135,79 +176,36 @@ wtsplayer.peerController = function()
 				}
 			}
 		} );
-	}
-
-	//Add connection to dataConnections, remove on 'close' or 'error'
-	function connectionHandler( conn )
-	{
-		_dataConnections[ conn.peer ] = conn;
-		conn.on( 'open', function()
-		{
-			__elementsController.outputSystemMessage( "Connected to " + conn.peer );
-			conn.on( 'data', function(data)
-			{
-				switch ( data.type )
-				{
-					case 'message':
-						outputMessage( data );
-						break;
-					case 'stateChangedNotification':
-						__stateController.updateCurrentState( data.state );
-						break;
-					case 'waitingStatusChangeNotification':
-						__stateController.updateWaitingStatus( conn.peer, data.status );
-						break;
-					default:
-						alert( 'Unrecognized data' );
-						break;
-				}
-			} );
-		} );
-		
-		conn.on( 'close', function()
-		{
-			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
-			delete _dataConnections[ conn.peer ];
-			__stateController.onPeerDeleted( conn.peer );
-			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
-		} );
-		
-		conn.on( 'error', function (err)
-		{
-			delete _dataConnections[ conn.peer ];
-			__stateController.onPeerDeleted( conn.peer );
-			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + " with error " + err.name + ": " + err.message );
-		});
-	}
+	};
 	
-	this.sendToOthers = function (data)
+	this.sendToOthers = function ( data )
 	{
 		for ( var prop in _dataConnections )
 		{
 			_dataConnections[ prop ].send( data );
 		}
-	}
+	};
 	
 	this.getSelfID = function()
 	{
 		return _peer.id;
 	};
 	
+	this.getOtherPeersID = function()
+	{
+		return Object.getOwnPropertyNames( _dataConnections );
+	};
+	
 	this.selfIsSuperPeer = function()
 	{
 		var superPeerID = _peer.id;
-		for (var prop in _dataConnections)
+		for ( var prop in _dataConnections )
 		{
-			if (prop > superPeerID)
+			if ( prop > superPeerID )
 			{
 				superPeerID = prop;
 			}
 		}
-		return (superPeerID === _peer.id);
-	}
-	
-	this.getOtherPeersID = function()
-	{
-		return Object.getOwnPropertyNames(_dataConnections);
-	}
-}
+		return ( superPeerID === _peer.id );
+	};
+};
