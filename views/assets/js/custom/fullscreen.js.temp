@@ -1,31 +1,3 @@
-document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen;
-
-// Note: FF nightly needs about:config full-screen-api.enabled set to true.
-function enterFullscreen(id)
-{
-  var el = document.getElementById(id);
-  if (el.webkitRequestFullScreen)
-  {
-    el.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-  }
-  else
-  {
-    el.mozRequestFullScreen();
-  }
-}
-
-function exitFullscreen()
-{
-  document.cancelFullScreen();
-}
-
-$(document).ready(function()
-{
-	$("#fullscreen").on('click', function()
-	{
-		enterFullscreen("player");
-	})
-});
 /*
 var docWidth, docHeight, docRatio, div = document.getElementsByTagName('div')[0];
 
