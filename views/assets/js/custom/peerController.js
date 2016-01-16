@@ -10,9 +10,8 @@ wtsplayer.peerController = function()
 			onStateRecieved 		: null,
 			onWaitingStatusRecieved : null,
 			onPeerDeleted 			: null,
-			getCurrentState			: null,
 			getLastAction			: null,
-			onCommConditionChanged	: null
+			onNoInitialState	: null
 		},
 		elementsController :
 		{
@@ -23,54 +22,52 @@ wtsplayer.peerController = function()
 		{
 			getRoomID 				: null,
 			getPassword 			: null
+		},
+		timeController :
+		{
+			getTimeIsSynced			: null
 		}
 	}
 	
 	var __stateController = this.externals.stateController;
 	var __elementsController = this.externals.elementsController;
 	var __sessionController = this.externals.sessionController;
+	var __timeController = this.externals.timeController;
 	
 	var _self = this;
 	//We recommend keeping track of connections yourself rather than relying on this [peer.connections] hash.
 	//Okay!
 	var _dataConnections = {};
 	//--
-
-	var _gotInitialState = {};
-	
-	function addToWaitingList(id)
-	{
-		_gotInitialState[id] = false;
-	}
-	
-	function removeFromWaitingList(id)
-	{
-		if ( _gotInitialState[id] !== undefined )
-		{
-			delete _gotInitialState[id];
-			if (Object.getOwnPropertyNames(_gotInitialState).length === 0)
-			{
-				onGotAllStates();
-			}
-		}
-	}
-	
-	function onGotAllStates()
-	{
-		__elementsController.outputSystemMessage("Got all states");
-		_gotAllStates = true;
-		__stateController.onCommConditionChanged();
-	}
-	
-	var _gotAllStates = false;
 	
 	//Timeout after which it is considered that some peers are unreachable on join (connection could not open).
 	var _joinTimeout = 3000; //ms
 	//--
 	
+	var _initialStateAccepted = false;
+	
+	function onConnConditionsChanged()
+	{
+		if( _connectedToAllPeers && __timeController.getTimeIsSynced() )
+		{
+			__elementsController.outputSystemMessage("Connected to all and synced time -- assume controls are available");
+			if ( Object.getOwnPropertyNames(_dataConnections).length === 0 )
+			{
+				
+			}
+		}
+	}
+	
+	this.onConnConditionsChanged = onConnConditionsChanged;
 	//
 	var _connectedToAllPeers = false;
 	//--
+	
+	function onConnectedToAllPeers()
+	{
+		_connectedToAllPeers = true;
+		onConnConditionsChanged();
+	}
 	
 	//Creating peer
 	//Remember that OpenShift uses 8000 port
@@ -122,8 +119,6 @@ wtsplayer.peerController = function()
 					case 'message':
 						__elementsController.onMessageRecieved( data.messageData );
 						break;
-					case 'initialStateChangedNotification':
-						removeFromWaitingList( conn.peer );
 					case 'stateChangedNotification':
 						__stateController.onStateRecieved( data.stateData );
 						break;
@@ -141,7 +136,6 @@ wtsplayer.peerController = function()
 		{
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
-			removeFromWaitingList( conn.peer );
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
@@ -149,7 +143,6 @@ wtsplayer.peerController = function()
 		conn.on( 'error', function ( err )
 		{
 			delete _dataConnections[ conn.peer ];
-			removeFromWaitingList( conn.peer );
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
 		} );
@@ -169,8 +162,7 @@ wtsplayer.peerController = function()
 					case 'created':
 						__elementsController.outputSystemMessage( "Room created" );
 						//First peer in the room, can send data to peers
-						_connectedToAllPeers = true;
-						onGotAllStates();
+						onConnectedToAllPeers();
 						break;
 					case 'joined':
 						__elementsController.outputSystemMessage( "Joined room" );
@@ -183,10 +175,9 @@ wtsplayer.peerController = function()
 							//And add specific handler to determine whether all recieved peers have been connected to
 							conn.on( 'open', function ()
 							{
-								addToWaitingList( conn.peer );
 								--recievedPeersCount;
 								if ( recievedPeersCount === 0 )
-									_connectedToAllPeers = true;
+									onConnectedToAllPeers();
 							} );
 						} );
 						setInterval( function()
@@ -201,7 +192,7 @@ wtsplayer.peerController = function()
 										2) Problem peer is not presented in the room:
 											Ignore that (means peer disconnected right after we joined)
 								*/
-								_connectedToAllPeers = true;
+								onConnectedToAllPeers();
 								__elementsController.outputSystemMessage( "Warning: some peers are anreachable OR disconnected right after you joined." );
 							}
 						}, _joinTimeout );

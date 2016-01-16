@@ -8,14 +8,14 @@ wtsplayer.timeController = function()
 		{
 			outputSystemMessage 	: null
 		},
-		stateController :
+		peerController :
 		{
-			onCommConditionChanged 	: null
+			onConnConditionsChanged : null
 		}
 	};
 	
 	var __elementsController = this.externals.elementsController;
-	var __stateController = this.externals.stateController;
+	var __peerController = this.externals.peerController;
 	
 	var _self = this;
 	
@@ -45,7 +45,7 @@ wtsplayer.timeController = function()
 	{
 		_timeIsSynced = true;
 		//_self.currentTimestamp = _ts.now;
-		__stateController.onCommConditionChanged();
+		__peerController.onConnConditionsChanged();
 		__elementsController.outputSystemMessage( "Time synced" );
 	};
 	//--

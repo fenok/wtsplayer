@@ -24,8 +24,7 @@ wtsplayer.stateController = function()
 		},
 		timeController :
 		{
-			currentTimestamp 		: null,
-			getTimeIsSynced			: null
+			currentTimestamp 		: null
 		}
 	};
 	
@@ -38,9 +37,11 @@ wtsplayer.stateController = function()
 	
 	var _currentState =
 	{
-		name : 'waiting', // or 'play' or 'pause'
-		timestamp : -1, // bounded to playerTime AND is transition timestamp
-		playerTime : 0 // bounded to timestamp
+		name 				: 'waiting', // or 'play' or 'pause'
+		timestamp 			: -1, // bounded to playerTime AND is transition timestamp
+		playerTime 			: 0, // bounded to timestamp
+		lastAction 			: 'pause',
+		previousStateName 	: 'waiting'
 	};
 
 	//latestResponseTimestamp is used to determine whether the state must be changed.
@@ -58,10 +59,6 @@ wtsplayer.stateController = function()
 	var _delayedPlayPauseTimeout = null;
 
 	var _waitingStates = {};
-	
-	var _previousStateName = 'waiting';
-	
-	var _lastAction = 'pause';
 
 	var _canCommunicate = false;
 	
@@ -73,7 +70,7 @@ wtsplayer.stateController = function()
 		//why not switch/case? testing speed o.o
 		if ( state.name === 'play' )
 		{
-			if ( _currentState.name !== 'play' )
+			if ( state.previousStateName !== 'play' )
 			{
 				if ( offset > 0 )
 				{
@@ -91,7 +88,7 @@ wtsplayer.stateController = function()
 		}
 		else if ( state.name === 'pause' )
 		{
-			if ( _currentState.name === 'play' )
+			if ( state.previousStateName === 'play' )
 			{
 				if (offset > 0) 
 				{
@@ -138,9 +135,7 @@ wtsplayer.stateController = function()
 	{
 		var stateData = _canCommunicate === true ?
 		{
-			state 				: _currentState,
-			lastAction 			: _lastAction,
-			previousStateName 	: _previousStateName
+			state 				: _currentState
 		} : null;
 		return stateData;
 	}
@@ -178,9 +173,11 @@ wtsplayer.stateController = function()
 				
 				updateCurrentState(
 				{
-					name 		: _lastAction,
-					timestamp 	: __timeController.currentTimestamp(),
-					playerTime 	: _currentState.playerTime
+					name 				: _currentState.lastAction,
+					timestamp 			: __timeController.currentTimestamp(),
+					playerTime 			: _currentState.playerTime,
+					lastAction 			: _currentState.lastAction,
+					previousStateName 	: _currentState.name
 				} );
 				sendCurrentState();
 			}
@@ -216,70 +213,66 @@ wtsplayer.stateController = function()
 		
 		__elementsController.outputSystemMessage(state.name);
 		
-		if ( _canCommunicate )
+		//New state is being applied, so we need to clear the timeout to prevent unexpected changes
+		clearTimeout( _delayedPlayPauseTimeout );
+		
+		//offset is used as delay before actual play/pause
+		var offset = _magicDelay;
+		var timeCorrection = syncTime( state );
+		if (timeCorrection !== false)
 		{
-			//New state is being applied, so we need to clear the timeout to prevent unexpected changes
-			clearTimeout( _delayedPlayPauseTimeout );
-			
-			//offset is used as delay before actual play/pause
-			var offset = _magicDelay;
-			var timeCorrection = syncTime( state );
-			if (timeCorrection !== false)
+			offset += state.name !== 'play' ? timeCorrection : 0 - timeCorrection;
+		}
+		offset += state.timestamp - __timeController.currentTimestamp();
+		
+		//why not switch/case? testing speed o.o
+		if ( state.name === 'play' )
+		{
+			if ( offset > 0 ) // delay before play
 			{
-				offset += state.name !== 'play' ? timeCorrection : 0 - timeCorrection;
-			}
-			offset += state.timestamp - __timeController.currentTimestamp();
-			
-			//why not switch/case? testing speed o.o
-			if ( state.name === 'play' )
-			{
-				if ( offset > 0 ) // delay before play
-				{
-					_delayedPlayPauseTimeout = setTimeout( function()
-					{
-						__elementsController.play();
-					}, offset );
-				}
-				else // magic delay was less than latency
+				_delayedPlayPauseTimeout = setTimeout( function()
 				{
 					__elementsController.play();
-				}
+				}, offset );
 			}
-			else if ( state.name === 'pause' )
+			else // magic delay was less than latency
 			{
-				if ( offset > 0 ) // delay before pause
-				{
-					_delayedPlayPauseTimeout = setTimeout( function()
-					{
-						__elementsController.pause();
-					}, offset);
-				}
-				else // magic delay was less than latency
+				__elementsController.play();
+			}
+		}
+		else if ( state.name === 'pause' )
+		{
+			if ( offset > 0 ) // delay before pause
+			{
+				_delayedPlayPauseTimeout = setTimeout( function()
 				{
 					__elementsController.pause();
-				}
+				}, offset);
 			}
-			else //state.name === 'waiting'
+			else // magic delay was less than latency
 			{
-				__elementsController.wait();
-				
-				var otherPeers = __peerController.getOtherPeersID();
-				
-				for ( var index in otherPeers )
-				{
-					if ( _waitingStates[ otherPeers[ index ] ] !== false ) // just in case we got some falses before
-						_waitingStates[ otherPeers[ index ] ] = true;
-				}
-				_waitingStates[ __peerController.getSelfID() ] = true;
-				
-				/*if (timeCorrection !== false)
-				{
-					_self.onPlayerCanPlay();
-				}*/
+				__elementsController.pause();
 			}
-			_previousStateName = _currentState.name;
-			_lastAction = state.name === 'waiting' ? _lastAction : state.name;
 		}
+		else //state.name === 'waiting'
+		{
+			__elementsController.wait();
+			
+			var otherPeers = __peerController.getOtherPeersID();
+			
+			for ( var index in otherPeers )
+			{
+				if ( _waitingStates[ otherPeers[ index ] ] !== false ) // just in case we got some falses before
+					_waitingStates[ otherPeers[ index ] ] = true;
+			}
+			_waitingStates[ __peerController.getSelfID() ] = true;
+			
+			/*if (timeCorrection !== false)
+			{
+				_self.onPlayerCanPlay();
+			}*/
+		}
+		
 		_currentState = state;
 		console.log( "_currentState updated" );
 		
@@ -291,18 +284,6 @@ wtsplayer.stateController = function()
 		{
 			return;
 		}
-		
-		if ( stateData.state.timestamp <= _currentState.timestamp )
-		{
-			return;
-		}
-		
-		if ( !_canCommunicate )
-		{
-			_lastAction = stateData.lastAction;
-			_previousStateName = stateData.previousStateName;
-		}
-		
 		console.log( "Updating from recieved:" );
 		//console.log( stateData.state );
 		
@@ -327,9 +308,11 @@ wtsplayer.stateController = function()
 			
 			updateCurrentState(
 			{
-				name 		: "play",
-				timestamp 	: __timeController.currentTimestamp(),
-				playerTime 	: playerTime
+				name 				: "play",
+				timestamp 			: __timeController.currentTimestamp(),
+				playerTime 			: playerTime,
+				lastAction 			: 'play',
+				previousStateName 	: _currentState.name 
 			} );
 			sendCurrentState();
 		}
@@ -344,9 +327,11 @@ wtsplayer.stateController = function()
 			
 			updateCurrentState(
 			{
-				name 		: "pause",
-				timestamp 	: __timeController.currentTimestamp(),
-				playerTime 	: playerTime
+				name 				: "pause",
+				timestamp 			: __timeController.currentTimestamp(),
+				playerTime 			: playerTime,
+				lastAction 			: 'pause',
+				previousStateName 	: _currentState.name
 			} );
 			sendCurrentState();
 		}
@@ -359,9 +344,11 @@ wtsplayer.stateController = function()
 		
 		updateCurrentState(
 		{
-			name 		: 'waiting',
-			timestamp 	: __timeController.currentTimestamp(),
-			playerTime 	: playerTime
+			name 				: 'waiting',
+			timestamp 			: __timeController.currentTimestamp(),
+			playerTime 			: playerTime,
+			lastAction 			: _currentState.lastAction,
+			previousStateName 	: _currentState.name
 		});
 		sendCurrentState();
 	};
@@ -374,9 +361,11 @@ wtsplayer.stateController = function()
 			
 			updateCurrentState(
 				{
-					name 		: "waiting",
-					timestamp 	: __timeController.currentTimestamp(),
-					playerTime 	: _currentState.playerTime
+					name 				: "waiting",
+					timestamp 			: __timeController.currentTimestamp(),
+					playerTime 			: _currentState.playerTime,
+					lastAction 			: _currentState.lastAction,
+					previousStateName 	: _currentState.name
 				} );
 			sendCurrentState();
 		}
@@ -390,53 +379,17 @@ wtsplayer.stateController = function()
 		updateWaitingStatus( __peerController.getSelfID(), false );
 	};
 	
-	this.getCurrentState = function()
+	this.onNoInitialState = function()
 	{
-		return _currentState;
-	};
-	
-	this.getLastAction = function()
-	{
-		return _lastAction;
-	};
-	
-	this.onCommConditionChanged = function()
-	{
-		if (__peerController.getGotAllStates() && __timeController.getTimeIsSynced())
-		{
-			_canCommunicate = true;
-			var offset = null;
-
-			if( _currentState === 'waiting' )
+		console.log( "No initial state" );
+		updateCurrentState(
 			{
-				offset = 0;
-			}
-			else if (_lastAction === 'pause')
-			{
-				offset = _previousStateName === 'waiting' ? 0 : _magicDelay;
-			}
-			else if ( _currentState.timestamp == -1 )
-			{
-				offset = 0;
-			}
-			else
-			{
-				offset = __timeController.currentTimestamp() - _currentState.timestamp - _magicDelay;
-			}
-			
-			console.log( "Updating from INITIAL:" );
-			
-			updateCurrentState(
-			{
-				name 		: 'waiting',
-				timestamp 	: __timeController.currentTimestamp(),
-				playerTime 	: _currentState.playerTime + offset
-			});
-			sendCurrentState();
-		}
-		else
-		{
-			_canCommunicate = false;
-		}
+				name 				: "waiting",
+				timestamp 			: __timeController.currentTimestamp(),
+				playerTime 			: _currentState.playerTime,
+				lastAction 			: _currentState.lastAction,
+				previousStateName 	: _currentState.name
+			} );
+		sendCurrentState();
 	};
 }
