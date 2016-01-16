@@ -6,17 +6,18 @@ wtsplayer.peerController = function()
 	{
 		stateController :
 		{
-			updateCurrentState 		: null,
-			updateWaitingStatus 	: null,
+			getStateData			: null,
+			onStateRecieved 		: null,
+			onWaitingStatusRecieved : null,
 			onPeerDeleted 			: null,
 			getCurrentState			: null,
 			getLastAction			: null,
-			checkCommunicability	: null,
+			onCommConditionChanged	: null
 		},
 		elementsController :
 		{
 			outputSystemMessage 	: null,
-			outputMessage			: null
+			onMessageRecieved		: null
 		},
 		sessionController :
 		{
@@ -35,12 +36,43 @@ wtsplayer.peerController = function()
 	var _dataConnections = {};
 	//--
 
+	var _gotInitialState = {};
+	
+	function addToWaitingList(id)
+	{
+		_gotInitialState[id] = false;
+	}
+	
+	function removeFromWaitingList(id)
+	{
+		if ( _gotInitialState[id] !== undefined )
+		{
+			delete _gotInitialState[id];
+			if (Object.getOwnPropertyNames(_gotInitialState).length === 0)
+			{
+				onGotAllStates();
+			}
+		}
+		console.log(Object.getOwnPropertyNames(_gotInitialState).length);
+		console.log(_gotInitialState);
+		console.log(id);
+	}
+	
+	function onGotAllStates()
+	{
+		__elementsController.outputSystemMessage("Got all states");
+		_gotAllStates = true;
+		__stateController.onCommConditionChanged();
+	}
+	
+	var _gotAllStates = false;
+	
 	//Timeout after which it is considered that some peers are unreachable on join (connection could not open).
 	var _joinTimeout = 3000; //ms
 	//--
 	
-	//Can't send data to peers before establishing connection to all possible peers
-	var _canSendData = false;
+	//
+	var _connectedToAllPeers = false;
 	//--
 	
 	//Creating peer
@@ -68,25 +100,17 @@ wtsplayer.peerController = function()
 		{
 			data =
 			{
-				type 		: 'stateChangedNotification',
-				state 		: __stateController.getCurrentState(),
-				lastAction 	: __stateController.getLastAction()
+				type 			: 'initialStateChangedNotification',
+				stateData		: __stateController.getStateData()
 			}
 			conn.send( data );
 			console.log("SENDINITIAL");
-			console.log(data.state);
 		} );
 		connectionHandler( conn );
 	} );
 
 	//connected to all reachable peers after join
 	//TODO: GUI logic onCanSendData
-	function onCanSendData()
-	{
-		__elementsController.outputSystemMessage( "Connected to all peers" );
-		_canSendData = true;
-		__stateController.checkCommunicability();
-	};
 	
 	//Add connection to dataConnections, remove on 'close' or 'error'
 	function connectionHandler( conn )
@@ -100,13 +124,16 @@ wtsplayer.peerController = function()
 				switch ( data.type )
 				{
 					case 'message':
-						__elementsController.outputMessage( data );
+						__elementsController.onMessageRecieved( data.messageData );
 						break;
+					case 'initialStateChangedNotification':
+						removeFromWaitingList( conn.peer );
+						console.log("GOT INITSTATE");
 					case 'stateChangedNotification':
-						__stateController.updateCurrentState( data.state );
+						__stateController.onStateRecieved( data.stateData );
 						break;
 					case 'waitingStatusChangeNotification':
-						__stateController.updateWaitingStatus( conn.peer, data.status );
+						__stateController.onWaitingStatusRecieved( data.waitingStatusData );
 						break;
 					default:
 						alert( 'Unrecognized data' );
@@ -119,6 +146,7 @@ wtsplayer.peerController = function()
 		{
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
+			removeFromWaitingList( conn.peer );
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
@@ -126,6 +154,7 @@ wtsplayer.peerController = function()
 		conn.on( 'error', function ( err )
 		{
 			delete _dataConnections[ conn.peer ];
+			removeFromWaitingList( conn.peer );
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
 		} );
@@ -145,7 +174,8 @@ wtsplayer.peerController = function()
 					case 'created':
 						__elementsController.outputSystemMessage( "Room created" );
 						//First peer in the room, can send data to peers
-						onCanSendData();
+						_connectedToAllPeers = true;
+						onGotAllStates();
 						break;
 					case 'joined':
 						__elementsController.outputSystemMessage( "Joined room" );
@@ -158,14 +188,15 @@ wtsplayer.peerController = function()
 							//And add specific handler to determine whether all recieved peers have been connected to
 							conn.on( 'open', function ()
 							{
+								addToWaitingList( conn.peer );
 								--recievedPeersCount;
 								if ( recievedPeersCount === 0 )
-									onCanSendData();
+									_connectedToAllPeers = true;
 							} );
 						} );
 						setInterval( function()
 						{
-							if ( !_canSendData )
+							if ( !_connectedToAllPeers )
 							{
 								//Can send data after timeout anyway, notify about connection problems
 								/*
@@ -175,7 +206,7 @@ wtsplayer.peerController = function()
 										2) Problem peer is not presented in the room:
 											Ignore that (means peer disconnected right after we joined)
 								*/
-								onCanSendData();
+								_connectedToAllPeers = true;
 								__elementsController.outputSystemMessage( "Warning: some peers are anreachable OR disconnected right after you joined." );
 							}
 						}, _joinTimeout );
@@ -194,13 +225,44 @@ wtsplayer.peerController = function()
 		} );
 	};
 	
-	this.sendToOthers = function ( data )
+	this.sendState = function ( stateData )
 	{
+		data =
+		{
+			type : 'stateChangedNotification',
+			stateData : stateData
+		};
 		for ( var prop in _dataConnections )
 		{
 			_dataConnections[ prop ].send( data );
 		}
 	};
+	
+	this.sendWaitingStatus = function ( waitingStatusData )
+	{
+		data =
+		{
+			type : 'waitingStatusChangeNotification',
+			waitingStatusData : waitingStatusData
+		};
+		for ( var prop in _dataConnections )
+		{
+			_dataConnections[ prop ].send( data );
+		}
+	};
+	
+	this.sendMessage = function ( messageData )
+	{
+		data =
+		{
+			type : 'message',
+			messageData : messageData
+		};
+		for ( var prop in _dataConnections )
+		{
+			_dataConnections[ prop ].send( data );
+		}
+	}
 	
 	this.getSelfID = function()
 	{
@@ -225,8 +287,8 @@ wtsplayer.peerController = function()
 		return ( superPeerID === _peer.id );
 	};
 	
-	this.getCanSendData = function()
+	this.getGotAllStates = function()
 	{
-		return _canSendData;
+		return _gotAllStates;
 	};
 };

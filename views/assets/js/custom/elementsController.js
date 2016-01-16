@@ -20,7 +20,7 @@ wtsplayer.elementsController = function()
 		},
 		peerController :
 		{
-			sendToOthers 	: null,
+			sendMessage 	: null,
 			joinRoom 		: null,
 			getSelfID		: null
 		}
@@ -110,14 +110,13 @@ wtsplayer.elementsController = function()
 	
 	_sendMessageButton.addEventListener( 'click', function()
 	{
-		var data =
+		var messageData =
 		{
-			type 	: 'message',
 			nick 	: __sessionController.getNick() || __peerController.getSelfID() || 'Someone',
 			message : _messageInput.value
 		};
-		__peerController.sendToOthers( data );
-		_self.outputMessage( data );
+		__peerController.sendMessage( messageData );
+		outputMessage( data );
 	});
 
 	_createRoomButton.addEventListener( 'click', function()
@@ -194,14 +193,16 @@ wtsplayer.elementsController = function()
 		return _video.currentTime * 1000;
 	};
 	
-	this.outputMessage = function ( data )
+	outputMessage = function ( messageData )
 	{
 		var div = document.createElement( 'div' );
-		div.textContent = data.nick + ": " + data.message;
+		div.textContent = messageData.nick + ": " + messageData.message;
 		document.getElementById( "chat" ).appendChild( div );
 		div.scrollIntoView();
 	};
-
+	
+	this.onMessageRecieved = outputMessage;
+	
 	this.outputSystemMessage = function ( message )
 	{
 		var div = document.createElement( 'div' );

@@ -10,7 +10,7 @@ wtsplayer.timeController = function()
 		},
 		stateController :
 		{
-			checkCommunicability 	: null
+			onCommConditionChanged 	: null
 		}
 	};
 	
@@ -45,7 +45,7 @@ wtsplayer.timeController = function()
 	{
 		_timeIsSynced = true;
 		//_self.currentTimestamp = _ts.now;
-		__stateController.checkCommunicability();
+		__stateController.onCommConditionChanged();
 		__elementsController.outputSystemMessage( "Time synced" );
 	};
 	//--
