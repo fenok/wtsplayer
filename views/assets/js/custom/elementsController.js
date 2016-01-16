@@ -105,6 +105,7 @@ wtsplayer.elementsController = function()
 	
 	_video.addEventListener( 'canplay', function()
 	{
+		console.log("canplay accepted");
 		__stateController.onPlayerCanPlay();
 	} );
 	
@@ -168,6 +169,14 @@ wtsplayer.elementsController = function()
 		_video.play();
 		_video.pause();
 		switchToWaiting();
+		if ( _video.readyState === 4 )
+		{
+			setTimeout(function()
+			{
+				console.log( "Custom canplay dispatched" );
+				_video.dispatchEvent(new Event('canplay'));
+			}, 1);
+		}
 	};
 	
 	this.play = function()

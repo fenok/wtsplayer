@@ -173,6 +173,9 @@ wtsplayer.stateController = function()
 		{
 			if ( __peerController.selfIsSuperPeer() )
 			{
+				console.log( "Updating from onWaitingStatusChanged:" );
+				console.log( "Name: " + _currentState.name );
+				
 				updateCurrentState(
 				{
 					name 		: _lastAction,
@@ -192,6 +195,7 @@ wtsplayer.stateController = function()
 	
 	this.onWaitingStatusRecieved = function( waitingStatusData )
 	{
+		console.log( "updating status from onWaitingStatusRecieved" );
 		updateWaitingStatus(waitingStatusData.id, waitingStatusData.status);
 	};
 	
@@ -202,8 +206,13 @@ wtsplayer.stateController = function()
 		
 		if (state.timestamp <= _currentState.timestamp)
 		{
+			console.log( "Denied:");
+			console.log( state );
 			return;
 		}
+		
+		console.log( "Accepted:");
+		console.log( state );
 		
 		__elementsController.outputSystemMessage(state.name);
 		
@@ -263,15 +272,16 @@ wtsplayer.stateController = function()
 				}
 				_waitingStates[ __peerController.getSelfID() ] = true;
 				
-				if (timeCorrection !== false)
+				/*if (timeCorrection !== false)
 				{
 					_self.onPlayerCanPlay();
-				}
+				}*/
 			}
 			_previousStateName = _currentState.name;
 			_lastAction = state.name === 'waiting' ? _lastAction : state.name;
 		}
 		_currentState = state;
+		console.log( "_currentState updated" );
 		
 	};
 
@@ -293,6 +303,8 @@ wtsplayer.stateController = function()
 			_previousStateName = stateData.previousStateName;
 		}
 		
+		console.log( "Updating from recieved:" );
+		//console.log( stateData.state );
 		
 		updateCurrentState( stateData.state );
 	};
@@ -301,6 +313,7 @@ wtsplayer.stateController = function()
 	{
 		//if ( _waitingStates[ id ] )
 		//{
+		console.log( "updating status from onPeerDeleted" );
 		updateWaitingStatus( id, false );
 		//}
 	}
@@ -309,6 +322,9 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'play' )
 		{
+			console.log( "Updating from onPlayerPlay:" );
+			//console.log( stateData.state );
+			
 			updateCurrentState(
 			{
 				name 		: "play",
@@ -323,6 +339,9 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'pause' )
 		{
+			console.log( "Updating from onPlayerPause:" );
+			//console.log( stateData.state );
+			
 			updateCurrentState(
 			{
 				name 		: "pause",
@@ -335,6 +354,9 @@ wtsplayer.stateController = function()
 
 	this.onPlayerSeek = function( playerTime )
 	{
+		console.log( "Updating from onPlayerSeek:" );
+		//console.log( stateData.state );
+		
 		updateCurrentState(
 		{
 			name 		: 'waiting',
@@ -348,6 +370,8 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'waiting' )
 		{
+			console.log( "Updating from onPlayerWaiting:" );
+			
 			updateCurrentState(
 				{
 					name 		: "waiting",
@@ -360,6 +384,8 @@ wtsplayer.stateController = function()
 
 	this.onPlayerCanPlay = function()
 	{
+		console.log( "updating status from onPlayerCanPlay" );
+		
 		sendWaitingStatus( false );
 		updateWaitingStatus( __peerController.getSelfID(), false );
 	};
@@ -397,6 +423,9 @@ wtsplayer.stateController = function()
 			{
 				offset = __timeController.currentTimestamp() - _currentState.timestamp - _magicDelay;
 			}
+			
+			console.log( "Updating from INITIAL:" );
+			
 			updateCurrentState(
 			{
 				name 		: 'waiting',
