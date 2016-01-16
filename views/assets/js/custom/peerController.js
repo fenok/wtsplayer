@@ -53,9 +53,6 @@ wtsplayer.peerController = function()
 				onGotAllStates();
 			}
 		}
-		console.log(Object.getOwnPropertyNames(_gotInitialState).length);
-		console.log(_gotInitialState);
-		console.log(id);
 	}
 	
 	function onGotAllStates()
@@ -104,7 +101,6 @@ wtsplayer.peerController = function()
 				stateData		: __stateController.getStateData()
 			}
 			conn.send( data );
-			console.log("SENDINITIAL");
 		} );
 		connectionHandler( conn );
 	} );
@@ -128,7 +124,6 @@ wtsplayer.peerController = function()
 						break;
 					case 'initialStateChangedNotification':
 						removeFromWaitingList( conn.peer );
-						console.log("GOT INITSTATE");
 					case 'stateChangedNotification':
 						__stateController.onStateRecieved( data.stateData );
 						break;

@@ -50,18 +50,18 @@ wtsplayer.stateController = function()
 	//delay (ms) to be applied before actual play/pause to prevent possible microdesync
 	//it is about to change
 	//TODO: may be calculated depending on actual latency in future
-	var _magicDelay = 200; //200ms
+	var _magicDelay = 500; //200ms
 
 	//Maximum difference (ms) between currentTimes of players when they are considered to be synced 
-	var _desyncInterval = 100; //100ms
+	var _desyncInterval = 200; //100ms
 
 	var _delayedPlayPauseTimeout = null;
 
 	var _waitingStates = {};
 	
-	var _previousStateName = null;
+	var _previousStateName = 'waiting';
 	
-	var _lastAction = null;
+	var _lastAction = 'pause';
 
 	var _canCommunicate = false;
 	
@@ -130,19 +130,18 @@ wtsplayer.stateController = function()
 
 	function sendCurrentState()
 	{
-		console.log("SENDSTATES");
-		console.log(_currentState);
 		var stateData = getStateData();
 		__peerController.sendState( stateData );
 	}
 
 	function getStateData()
 	{
-		var stateData =
+		var stateData = _canCommunicate === true ?
 		{
-			state 		: _currentState,
-			lastAction 	: _lastAction
-		}
+			state 				: _currentState,
+			lastAction 			: _lastAction,
+			previousStateName 	: _previousStateName
+		} : null;
 		return stateData;
 	}
 	
@@ -174,7 +173,6 @@ wtsplayer.stateController = function()
 		{
 			if ( __peerController.selfIsSuperPeer() )
 			{
-				console.log("PLAYING ON WAITING UPDATE WHATEVER");
 				updateCurrentState(
 				{
 					name 		: _lastAction,
@@ -199,15 +197,11 @@ wtsplayer.stateController = function()
 	
 	updateCurrentState = function( state )
 	{
-		console.log("RECIEVED STATE")
-		console.log(state);
 		/* TODO: Can we use that (optimization)? */
 		
-		//console.log(_currentState);
 		
 		if (state.timestamp <= _currentState.timestamp)
 		{
-			console.log("TIMEFAIL");
 			return;
 		}
 		
@@ -274,15 +268,32 @@ wtsplayer.stateController = function()
 					_self.onPlayerCanPlay();
 				}
 			}
+			_previousStateName = _currentState.name;
+			_lastAction = state.name === 'waiting' ? _lastAction : state.name;
 		}
-		_lastAction = state.name === 'waiting' ? _lastAction : state.name;
 		_currentState = state;
 		
 	};
 
 	this.onStateRecieved = function( stateData )
 	{
-		_lastAction = _lastAction === null ? stateData.lastAction : _lastAction;
+		if ( stateData === null )
+		{
+			return;
+		}
+		
+		if ( stateData.state.timestamp <= _currentState.timestamp )
+		{
+			return;
+		}
+		
+		if ( !_canCommunicate )
+		{
+			_lastAction = stateData.lastAction;
+			_previousStateName = stateData.previousStateName;
+		}
+		
+		
 		updateCurrentState( stateData.state );
 	};
 	
@@ -298,7 +309,6 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'play' )
 		{
-			console.log("PLAYING AFTER PLAY");
 			updateCurrentState(
 			{
 				name 		: "play",
@@ -350,7 +360,6 @@ wtsplayer.stateController = function()
 
 	this.onPlayerCanPlay = function()
 	{
-		console.log("ONCANPLAY");
 		sendWaitingStatus( false );
 		updateWaitingStatus( __peerController.getSelfID(), false );
 	};
@@ -369,18 +378,16 @@ wtsplayer.stateController = function()
 	{
 		if (__peerController.getGotAllStates() && __timeController.getTimeIsSynced())
 		{
-			console.log("CAN COMMUNICATE");
-			//console.log(_currentState);
 			_canCommunicate = true;
 			var offset = null;
-			_lastAction = _lastAction === null ? 'pause' : _lastAction;
-			if (_lastAction === 'pause')
-			{
-				offset = _magicDelay / 2; //TOTAL CRUTCH! We can't say exactly whether there was a delay bofore pause or not
-			}
-			else if( _currentState === 'waiting' )
+
+			if( _currentState === 'waiting' )
 			{
 				offset = 0;
+			}
+			else if (_lastAction === 'pause')
+			{
+				offset = _previousStateName === 'waiting' ? 0 : _magicDelay;
 			}
 			else if ( _currentState.timestamp == -1 )
 			{
@@ -400,7 +407,6 @@ wtsplayer.stateController = function()
 		}
 		else
 		{
-			console.log("CANNOT COMMUNICATE");
 			_canCommunicate = false;
 		}
 	};
