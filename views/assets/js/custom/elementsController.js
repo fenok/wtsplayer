@@ -109,6 +109,13 @@ wtsplayer.elementsController = function()
 		__stateController.onPlayerCanPlay();
 	} );
 	
+	_video.addEventListener( 'play', function() //DEBUG
+	{ 
+		console.log("Actual play timestamp:" + new Date().getTime()); //DEBUG
+		console.log("And the playerTime is:" + _video.currentTime); //DEBUG
+		
+	} );
+	
 	_sendMessageButton.addEventListener( 'click', function()
 	{
 		var messageData =
@@ -182,6 +189,7 @@ wtsplayer.elementsController = function()
 	this.play = function()
 	{
 		_video.play();
+		//console.log("Hit play:" + new Date().getTime()); //DEBUG
 		switchToPause();
 	};
 
