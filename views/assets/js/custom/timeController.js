@@ -10,7 +10,7 @@ wtsplayer.timeController = function()
 		},
 		peerController :
 		{
-			onConnConditionsChanged : null
+			onJoinConditionChanged : null
 		}
 	};
 	
@@ -45,7 +45,7 @@ wtsplayer.timeController = function()
 	{
 		_timeIsSynced = true;
 		//_self.currentTimestamp = _ts.now;
-		__peerController.onConnConditionsChanged();
+		__peerController.onJoinConditionChanged();
 		__elementsController.outputSystemMessage( "Time synced" );
 	};
 	//--

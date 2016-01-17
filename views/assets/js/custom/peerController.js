@@ -10,8 +10,7 @@ wtsplayer.peerController = function()
 			onStateRecieved 		: null,
 			onWaitingStatusRecieved : null,
 			onPeerDeleted 			: null,
-			getLastAction			: null,
-			onNoInitialState	: null
+			onJoinedRoom			: null
 		},
 		elementsController :
 		{
@@ -44,30 +43,60 @@ wtsplayer.peerController = function()
 	var _joinTimeout = 3000; //ms
 	//--
 	
-	var _initialStateAccepted = false;
+	var _gotAllStates = false;
 	
-	function onConnConditionsChanged()
+	var _connectedToAllPeers = false;
+	
+	var _waitingList = {};
+ 	
+	function waitingList_add(id)
 	{
-		if( _connectedToAllPeers && __timeController.getTimeIsSynced() )
+		_waitingList[id] = true;
+	}
+	
+	function waitingList_remove(id)
+	{
+		if ( _waitingList[id] !== undefined )
 		{
-			__elementsController.outputSystemMessage("Connected to all and synced time -- assume controls are available");
-			if ( Object.getOwnPropertyNames(_dataConnections).length === 0 )
-			{
-				
-			}
+			delete _waitingList[id];
+			waitingList_checkEmpty();
 		}
 	}
 	
-	this.onConnConditionsChanged = onConnConditionsChanged;
-	//
-	var _connectedToAllPeers = false;
-	//--
+	function waitingList_checkEmpty()
+	{
+		if (Object.getOwnPropertyNames(_waitingList).length === 0)
+			{
+				onGotAllStates();
+ 			}
+	}
+	
+	function onGotAllStates()
+	{
+		//__elementsController.outputSystemMessage("Got all states");
+		_gotAllStates = true;
+		onJoinConditionChanged();
+	}
 	
 	function onConnectedToAllPeers()
 	{
 		_connectedToAllPeers = true;
-		onConnConditionsChanged();
+		onJoinConditionChanged();
 	}
+	
+	function onJoinConditionChanged()
+	{
+		if( _connectedToAllPeers && _gotAllStates && __timeController.getTimeIsSynced() )
+		{
+			__elementsController.outputSystemMessage("Connected, recieved, synced time");
+			__stateController.onJoinedRoom();
+		}
+	}
+	
+	this.onJoinConditionChanged = onJoinConditionChanged;
+	//
+	
+	//--
 	
 	//Creating peer
 	//Remember that OpenShift uses 8000 port
@@ -83,7 +112,7 @@ wtsplayer.peerController = function()
 	//Joining uses data from session
 	_peer.on( 'open', function( id )
 	{
-		_self.joinRoom();
+		joinRoom();
 		__elementsController.outputSystemMessage( "Your id is: " + id );
 	});
 
@@ -119,6 +148,8 @@ wtsplayer.peerController = function()
 					case 'message':
 						__elementsController.onMessageRecieved( data.messageData );
 						break;
+					case 'initialStateChangedNotification':
+						waitingList_remove( conn.peer );
 					case 'stateChangedNotification':
 						__stateController.onStateRecieved( data.stateData );
 						break;
@@ -136,6 +167,7 @@ wtsplayer.peerController = function()
 		{
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
+			waitingList_remove( conn.peer );
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
@@ -143,13 +175,14 @@ wtsplayer.peerController = function()
 		conn.on( 'error', function ( err )
 		{
 			delete _dataConnections[ conn.peer ];
+			waitingList_remove( conn.peer );
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
 		} );
 	}
 	
 	//Joining room
-	this.joinRoom = function()
+	joinRoom = function()
 	{
 		$.ajax(
 		{
@@ -163,6 +196,7 @@ wtsplayer.peerController = function()
 						__elementsController.outputSystemMessage( "Room created" );
 						//First peer in the room, can send data to peers
 						onConnectedToAllPeers();
+						onGotAllStates();
 						break;
 					case 'joined':
 						__elementsController.outputSystemMessage( "Joined room" );
@@ -175,6 +209,7 @@ wtsplayer.peerController = function()
 							//And add specific handler to determine whether all recieved peers have been connected to
 							conn.on( 'open', function ()
 							{
+								waitingList_add( conn.peer );
 								--recievedPeersCount;
 								if ( recievedPeersCount === 0 )
 									onConnectedToAllPeers();
@@ -193,6 +228,7 @@ wtsplayer.peerController = function()
 											Ignore that (means peer disconnected right after we joined)
 								*/
 								onConnectedToAllPeers();
+								waitingList_checkEmpty();
 								__elementsController.outputSystemMessage( "Warning: some peers are anreachable OR disconnected right after you joined." );
 							}
 						}, _joinTimeout );
@@ -210,6 +246,8 @@ wtsplayer.peerController = function()
 			}
 		} );
 	};
+	
+	this.joinRoom = joinRoom;
 	
 	this.sendState = function ( stateData )
 	{
@@ -271,10 +309,5 @@ wtsplayer.peerController = function()
 			}
 		}
 		return ( superPeerID === _peer.id );
-	};
-	
-	this.getGotAllStates = function()
-	{
-		return _gotAllStates;
 	};
 };

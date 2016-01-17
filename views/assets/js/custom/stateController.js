@@ -19,8 +19,7 @@ wtsplayer.stateController = function()
 			sendWaitingStatus		: null,
 			selfIsSuperPeer 		: null,
 			getSelfID 				: null,
-			getOtherPeersID 		: null,
-			getGotAllStates			: null
+			getOtherPeersID 		: null
 		},
 		timeController :
 		{
@@ -60,7 +59,7 @@ wtsplayer.stateController = function()
 
 	var _waitingStates = {};
 
-	var _canCommunicate = false;
+	var _joinedRoom = false;
 	
 	function syncTime( state )
 	{
@@ -133,7 +132,7 @@ wtsplayer.stateController = function()
 
 	function getStateData()
 	{
-		var stateData = _canCommunicate === true ?
+		var stateData = _joinedRoom === true ?
 		{
 			state 				: _currentState
 		} : null;
@@ -164,7 +163,7 @@ wtsplayer.stateController = function()
 		}
 		_waitingStates = {};
 		
-		if ( _canCommunicate && _currentState.name === 'waiting' )
+		if ( _joinedRoom && _currentState.name === 'waiting' )
 		{
 			if ( __peerController.selfIsSuperPeer() )
 			{
@@ -287,7 +286,14 @@ wtsplayer.stateController = function()
 		console.log( "Updating from recieved:" );
 		//console.log( stateData.state );
 		
-		updateCurrentState( stateData.state );
+		if (_joinedRoom)
+		{
+			updateCurrentState( stateData.state );
+		}
+		else
+		{
+			_currentState = stateData.state;
+		}
 	};
 	
 	this.onPeerDeleted = function( id )
@@ -379,17 +385,35 @@ wtsplayer.stateController = function()
 		updateWaitingStatus( __peerController.getSelfID(), false );
 	};
 	
-	this.onNoInitialState = function()
+	this.onJoinedRoom = function()
 	{
-		console.log( "No initial state" );
+		_joinedRoom = true;
+		var offset = null;
+		if( _currentState === 'waiting' )
+		{
+			offset = 0;
+		}
+		else if (_currentState.lastAction === 'pause')
+		{
+			offset = _currentState.previousStateName === 'waiting' ? 0 : _magicDelay;
+		}
+		else if ( _currentState.timestamp == -1 )
+		{
+			offset = 0;
+		}
+		else
+		{
+			offset = __timeController.currentTimestamp() - _currentState.timestamp - _magicDelay;
+		}
+		
 		updateCurrentState(
-			{
-				name 				: "waiting",
-				timestamp 			: __timeController.currentTimestamp(),
-				playerTime 			: _currentState.playerTime,
-				lastAction 			: _currentState.lastAction,
-				previousStateName 	: _currentState.name
-			} );
+		{
+			name 				: 'waiting',
+			timestamp 			: __timeController.currentTimestamp(),
+			playerTime 			: _currentState.playerTime + offset,
+			lastAction 			: _currentState.lastAction,
+			previousStateName 	: _currentState.previousStateName
+		});
 		sendCurrentState();
-	};
+ 	};
 }
