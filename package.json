@@ -16,10 +16,10 @@
     "email": "fenok2112@gmail.com",
     "url": "https://github.com/fenok"
   },
-  "homepage": "http://nodejstest-fenok.rhcloud.com/",
+  "homepage": "http://wtsplayer-fenok.rhcloud.com/",
   "repository": {
     "type": "git",
-    "url": "ssh://567651b72d52711f08000123@nodejstest-fenok.rhcloud.com/~/git/nodejstest.git/"
+    "url": "git@gitlab.com:fenok/wtsplayer.git"
   },
   "engines": {
     "node": ">= 0.6.0",
