@@ -1,8 +1,11 @@
 {
-  "name": "NA",
+  "name": "WTSPlayer",
   "version": "1.0.0",
-  "description": "NA",
+  "description": "Web. Torrent. Synced. Player.",
   "keywords": [
+    "webtorrent",
+    "synchronization",
+    "player",
     "OpenShift",
     "Node.js",
     "application",
@@ -11,7 +14,7 @@
   "author": {
     "name": "Fen-ok",
     "email": "fenok2112@gmail.com",
-    "url": "NA"
+    "url": "https://github.com/fenok"
   },
   "homepage": "http://nodejstest-fenok.rhcloud.com/",
   "repository": {
