@@ -7,15 +7,34 @@
 		<link rel="stylesheet" type="text/css" href="/player.css" />
 	</head>
 	<body>
-		<div id="coverLayer">
-		<p>Loading layer:
-		<br />
-		<label>Password:<input id="passwordInput" type="password" /></label>
-		<input id="retryButton" type="button" value="Retry"/>
-		<input id="createRoomButton" type="button" value = "Create new room"/>
+		<div id = "wrongPasswordLayer" class = "layers">
+			<p>Joining room.../Wrong password</p>
+			<label>Password:<input id="passwordInput" type="password" /></label>
+			<input id="retryButton" type="button" value="Retry"/>
+			<input id="createRoomButton" type="button" value = "Create new room"/>
 		</div>
-		<div id="contentLayer">
-		<p>Content layer:
+		<div id="overlayLayer" class = "layers">
+		<p>Creating/Joining the room...</p>
+			<label>Synced time:<input id = "timeOutput" type = "text" readonly = "readonly" /></label>
+			<input id = "resyncButton" type = "button" value = "Resync" />
+			<br />
+			<label>Connection status:<input id = "connectionStatusOutput" type = "text" readonly = "readonly" /></label>
+			<input id = "reconnectButton" type = "button" value = "Reconnect" />
+			<br />
+			<label>Data source:<select id = "dataSourceInput">
+				<option selected = "selected" disabled = "disabled" >Select data source</option>
+				<option>Webtorrent magnet link</option>
+				<option>Local file</option>
+			</select></label>
+			<br />
+			<input id = "webtorrentMagnetLinkInput" type = "text" />
+			<input id = "loadDataSourceButton" type = "button" value = "Load" />
+			<input id = "loadingDataSourceStatusOutput" type = "text" readonly = "readonly" />
+			<br />
+			<label>Nick:<input id = "nickInput" type = "text" /></label>
+			<input id = "enterRoomButton" type = "button" value = "Enter room" />
+		</div>
+		<div id="playerLayer" class = "layers">
 		<br />
 			<div id = "player">
 				<video id = "video" style="width:400px;">

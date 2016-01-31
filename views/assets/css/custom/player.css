@@ -3,6 +3,22 @@
 	height : 200px;
 	overflow : scroll;
 }
+
+body
+{
+	position: relative;
+}
+
+.layers
+{
+	position: absolute;
+	display: none;
+}
+
+#overlayLayer
+{
+	display: block;
+}
 /*input.playerSliders
 {
 	-webkit-appearance: none;
