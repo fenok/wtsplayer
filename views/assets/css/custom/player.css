@@ -1,8 +1,94 @@
-#chat
-{
-	height : 200px;
-	overflow : scroll;
+#chat{
+  height : 200px;
+  overflow: hidden;
 }
+#video{
+  width:400px; 
+  background:black;
+}
+#player:-webkit-full-screen #video{
+  width: 100%;
+  height: 100%;
+}
+#player:-webkit-full-screen{
+  width: 100%;
+  height: 100%;
+}
+#player:-moz-full-screen #video{
+  width: 100%;
+  height: 100%;
+}
+/* Элементы управления */
+#player:-moz-full-screen #videoControls{
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
+#player:-moz-full-screen #videoControls:hover div{
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
+#player:-moz-full-screen #videoControls div{
+  /*transition: bottom 1s ease-out 0s;*/
+  position: relative;
+  bottom: -30px;
+}
+#player:-moz-full-screen #playerSeekRange{
+  width: 80%;
+}
+/* Стилизация слайдеров */
+#playerSeekRange::-moz-range-track {
+    border-radius: 8px;
+    height: 7px;
+    border: 1px solid #bdc3c7;
+    background-color: #fff;
+}
+#playerSeekRange::-moz-range-thumb {
+    background: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+/* Ввод сообщений */
+#player:-moz-full-screen #send{
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+}
+#player:-moz-full-screen #send:hover #sendMessageButton{
+   top: 0;
+}
+#player:-moz-full-screen #send #sendMessageButton{
+   position:relative;
+   top: -30px;
+}
+#player:-moz-full-screen #send:hover #messageInput{
+  border: 2px outset white;
+}
+#player:-moz-full-screen #send #messageInput{
+  width: 80%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  text-align: center;
+  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+}
+/* Элементы чата */
+#player:-moz-full-screen #chat{
+  position: absolute;
+  top: 50px;
+  width: 100%;
+  color: #fff;
+  font-size: 20px;
+  text-align: center;
+  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+}
+
 /*input.playerSliders
 {
 	-webkit-appearance: none;
@@ -39,3 +125,75 @@ input.playerSliders:focus::-webkit-slider-runnable-track
 {
 	background: #ccc;
 }*/
+#player:-webkit-full-screen #videoControls{
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
+#player:-webkit-full-screen #videoControls:hover div{
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
+#player:-webkit-full-screen #videoControls div{
+  /*transition: bottom 1s ease-out 0s;*/
+  position: relative;
+  bottom: -30px;
+}
+#player:-webkit-full-screen #playerSeekRange{
+  width: 80%;
+}
+/* Стилизация слайдеров */
+#playerSeekRange {
+    -webkit-appearance: none;
+    border-radius: 8px;
+    height: 7px;
+    border: 1px solid #bdc3c7;
+    background-color: #fff;
+} 
+#playerSeekRange::-webkit-slider-thumb {
+-webkit-appearance: none;
+background-color: #ecf0f1;
+border: 1px solid #bdc3c7;
+width: 20px;
+height: 20px;
+border-radius: 10px;
+cursor: pointer;
+}
+
+/* Ввод сообщений */
+#player:-webkit-full-screen #send{
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+}
+#player:-webkit-full-screen #send:hover #sendMessageButton{
+   top: 0;
+}
+#player:-webkit-full-screen #send #sendMessageButton{
+   position:relative;
+   top: -30px;
+}
+#player:-webkit-full-screen #send:hover #messageInput{
+  border: 2px outset white;
+}
+#player:-webkit-full-screen #send #messageInput{
+  width: 80%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  text-align: center;
+  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+}
+/* Элементы чата */
+#player:-webkit-full-screen #chat{
+  position: absolute;
+  top: 50px;
+  width: 100%;
+  color: #fff;
+  font-size: 20px;
+  text-align: center;
+  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+}

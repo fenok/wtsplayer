@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta charset="utf-8" />
 		<title>WTSPlayer</title>
-		<link rel="stylesheet" type="text/css" href="/player.css" />
+		<link rel="stylesheet" type="text/css" href="/player.css">
 	</head>
 	<body>
 		<div id="coverLayer">
@@ -18,19 +18,22 @@
 		<p>Content layer:
 		<br />
 			<div id = "player">
-				<video id = "video" style="width:400px;">
+				<video id = "video">
 					<!--<source src = "/MadMaxMadness.mp4" /> -->
 				</video>
 				<br />
 				<div id = "videoControls">
-					<input id = "fullscreen" type = "button" value = "Fullscreen" />
-					<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled" />
-					<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" />
-					<input id = "playerCurrentTimeOutput" type = "input" />
+					<div>
+						<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
+						<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
+						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
+						<input id = "fullscreen" type = "button" value = "Fullscreen">
+					</div>
 				</div>
-				<input id="messageInput" type = "text" />
-				<input id="sendMessageButton" type="button" value = "sendMessage"/>
-				
+				<div id="send">
+					<input id="messageInput" type = "text" />
+					<input id="sendMessageButton" type="button" value = "sendMessage">
+				</div>
 				<div id="chat">
 				</div>
 			</div>
