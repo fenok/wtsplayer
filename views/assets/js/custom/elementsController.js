@@ -154,14 +154,25 @@ wtsplayer.elementsController = function()
 	// Note: FF nightly needs about:config full-screen-api.enabled set to true.
 	function enterFullscreen( id )
 	{
-		var el = document.getElementById( id );
-		if ( el.webkitRequestFullScreen )
+	
+		if(document.mozFullScreen || document.webkitIsFullScreen)
 		{
-			el.webkitRequestFullScreen( Element.ALLOW_KEYBOARD_INPUT );
+			if(document.cancelFullScreen) 
+				document.cancelFullScreen();
+			else if(document.webkitCancelFullScreen ) 
+				document.webkitCancelFullScreen();
+			else if(document.mozCancelFullScreen) 
+				document.mozCancelFullScreen();
 		}
 		else
 		{
-			el.mozRequestFullScreen();
+			var el = document.getElementById( id );
+			if(el.requestFullScreen)
+				el.requestFullScreen();
+			else if(el.webkitRequestFullScreen )
+				el.webkitRequestFullScreen();
+			else if(el.mozRequestFullScreen)
+				el.mozRequestFullScreen();
 		}
 	};
 	
