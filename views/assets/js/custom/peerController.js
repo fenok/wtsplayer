@@ -112,6 +112,7 @@ wtsplayer.peerController = function()
 	//Joining uses data from session
 	_peer.on( 'open', function( id )
 	{
+
 		joinRoom();
 		__elementsController.outputSystemMessage( "Your id is: " + id );
 	});

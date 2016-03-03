@@ -261,7 +261,7 @@ wtsplayer.stateController = function()
 			
 			for ( var index in otherPeers )
 			{
-				if ( _waitingStates[ otherPeers[ index ] ] !== false ) // just in case we got some falses before
+				if ( _waitingStates[ otherPeers[ index ] ] !== false ) // just in case we got some falses before -- element is either false or undefined TODO: === undefined
 					_waitingStates[ otherPeers[ index ] ] = true;
 			}
 			_waitingStates[ __peerController.getSelfID() ] = true;

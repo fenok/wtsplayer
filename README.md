@@ -10,6 +10,11 @@ npm install ejs --save
 
 remember that OpenShift works on 8000 port!
 
+- files, store them in session
+- voice chat, always active, condition of join. pass nicknames with streams
+- constant nickname
+- get 'passwordIsEmpty' before join
+
 How-to: Erase all history from a git repository on OpenShift and start over with your current files as the Initial Commit
 Started by cdaley on January 26, 2013 at 02:27 AM
 Do this at your own risk. Make sure that you have a good backup first

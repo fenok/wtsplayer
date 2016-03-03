@@ -22,7 +22,7 @@ wtsplayer.elementsController = function()
 		{
 			sendMessage 	: null,
 			joinRoom 		: null,
-			getSelfID		: null
+			getSelfID		: null // TODO: remove, make 'nick' var in session controller equal to ID by default
 		}
 	};
 	
@@ -42,6 +42,10 @@ wtsplayer.elementsController = function()
 	var _messageInput 		= document.getElementById( "messageInput" );
 	var _createRoomButton 	= document.getElementById( "createRoomButton" );
 	var _fullscreenButton 	= document.getElementById( "fullscreen" );
+
+	var _client = new WebTorrent();
+	var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
+	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
 	
 	//switching user interface
 	switchToPlay = function()
@@ -238,7 +242,16 @@ wtsplayer.elementsController = function()
 		document.getElementById( "chat" ).appendChild( div );
 		div.scrollIntoView();
 	};
-	
+
+	_client.add( _torrentId, function ( torrent )
+	{
+		// Torrents can contain many files. Let's use the first.
+		var file = torrent.files[ 0 ];
+
+		// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+		file.renderTo( '#video', function( err, elem ) {} );
+	});
+
 	//Initializing _playPauseButton object
 	switchToWaiting();
 };
