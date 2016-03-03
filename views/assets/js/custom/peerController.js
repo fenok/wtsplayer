@@ -15,7 +15,8 @@ wtsplayer.peerController = function()
 		elementsController :
 		{
 			outputSystemMessage 	: null,
-			onMessageRecieved		: null
+			onMessageRecieved		: null,
+			onGotPswdNotEmpty 		: null
 		},
 		sessionController :
 		{
@@ -48,7 +49,42 @@ wtsplayer.peerController = function()
 	var _connectedToAllPeers = false;
 	
 	var _waitingList = {};
- 	
+
+	var _audioStream;
+	var _calls = {};
+	var _waitingCallsList = {};
+	var _calledToAllPeers = false;
+
+	//TODO: combine *_add, *_remove, *_checkEmpty functions
+	function _waitingCallsList_add(id)
+	{
+		_waitingCallsList[id] = true;
+	}
+
+	function _waitingCallsList_remove(id)
+	{
+		if ( _waitingCallsList[id] !== undefined )
+		{
+			delete _waitingCallsList[id];
+			_waitingCallsList_checkEmpty();
+		}
+	}
+
+	function _waitingCallsList_checkEmpty()
+	{
+		if (Object.getOwnPropertyNames(_waitingCallsList).length === 0)
+		{
+			onCalledToAllPeers();
+		}
+	}
+
+	function onCalledToAllPeers()
+	{
+		//__elementsController.outputSystemMessage("Got all states");
+		_calledToAllPeers = true;
+		onJoinConditionChanged();
+	}
+
 	function waitingList_add(id)
 	{
 		_waitingList[id] = true;
@@ -86,13 +122,32 @@ wtsplayer.peerController = function()
 	
 	function onJoinConditionChanged()
 	{
-		if( _connectedToAllPeers && _gotAllStates && __timeController.getTimeIsSynced() )
+		if( _connectedToAllPeers && _gotAllStates && _calledToAllPeers && __timeController.getTimeIsSynced() )
 		{
-			__elementsController.outputSystemMessage("Connected, recieved, synced time");
+			__elementsController.outputSystemMessage("Connected, recieved, called to all, synced time");
 			__stateController.onJoinedRoom();
 		}
 	}
-	
+
+	// Get access to the microphone
+	function getLocalAudioStream()
+	{
+		navigator.getUserMedia (
+			{video: false, audio: true},
+
+			function success(audioStream)
+			{
+				console.log('Microphone is open.');
+				_audioStream = audioStream;
+			},
+
+			function error(err)
+			{
+				console.log('Couldn\'t connect to microphone. Reload the page to try again.');
+			}
+		);
+	}
+
 	this.onJoinConditionChanged = onJoinConditionChanged;
 	//
 	
@@ -112,8 +167,16 @@ wtsplayer.peerController = function()
 	//Joining uses data from session
 	_peer.on( 'open', function( id )
 	{
-
-		joinRoom();
+		$.ajax(
+			{
+				url 		: '/getPswdNotEmpty?roomID=' + encodeURIComponent( __sessionController.getRoomID() ),
+				dataType 	: 'json',
+				success 	: function( pswdNotEmpty )
+				{
+					__elementsController.onGotPswdNotEmpty( pswdNotEmpty );
+				}
+			});
+		//joinRoom();
 		__elementsController.outputSystemMessage( "Your id is: " + id );
 	});
 
@@ -131,6 +194,27 @@ wtsplayer.peerController = function()
 		} );
 		connectionHandler( conn );
 	} );
+
+	_peer.on('call', function(call)
+	{
+		alert("answered call");
+		call.answer( _audioStream );
+
+		call.on('error', function(err)
+		{
+			alert("error on answering");
+			console.log(err);
+		});
+
+		call.on('stream', function(stream)
+		{
+			alert("got incoming stream");
+			_waitingCallsList_remove(call.peer);
+			//addIncomingStream(peer, stream);
+		});
+
+		_calls[ call.peer ] = call;
+	});
 
 	//connected to all reachable peers after join
 	//TODO: GUI logic onCanSendData
@@ -169,6 +253,7 @@ wtsplayer.peerController = function()
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
 			waitingList_remove( conn.peer );
+			//_waitingCallsList_remove(conn.peer);
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
@@ -177,6 +262,7 @@ wtsplayer.peerController = function()
 		{
 			delete _dataConnections[ conn.peer ];
 			waitingList_remove( conn.peer );
+			//_waitingCallsList_remove(conn.peer);
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
 		} );
@@ -198,6 +284,7 @@ wtsplayer.peerController = function()
 						//First peer in the room, can send data to peers
 						onConnectedToAllPeers();
 						onGotAllStates();
+						onCalledToAllPeers();
 						break;
 					case 'joined':
 						__elementsController.outputSystemMessage( "Joined room" );
@@ -210,7 +297,22 @@ wtsplayer.peerController = function()
 							//And add specific handler to determine whether all recieved peers have been connected to
 							conn.on( 'open', function ()
 							{
+								_calls[ conn.peer ] = _peer.call( conn.peer, _audioStream );
+								_calls[ conn.peer ].on('error', function(err)
+								{
+									alert("error on call");
+									console.log(err);
+									_waitingCallsList_remove(conn.peer);
+								});
+
+								_calls[ conn.peer ].on('stream', function(stream)
+								{
+									alert("got incoming stream");
+									_waitingCallsList_remove(conn.peer);
+									//addIncomingStream(peer, stream);
+								});
 								waitingList_add( conn.peer );
+								_waitingCallsList_add(conn.peer);
 								--recievedPeersCount;
 								if ( recievedPeersCount === 0 )
 									onConnectedToAllPeers();
@@ -311,4 +413,6 @@ wtsplayer.peerController = function()
 		}
 		return ( superPeerID === _peer.id );
 	};
+
+	getLocalAudioStream();
 };

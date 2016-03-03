@@ -27,6 +27,12 @@ server.on('peerDisconnect', function(id)
 	}
 });
 
+server.on('getPswdNotEmpty', function(req, res)
+{
+	console.log('getPswdNotEmpty');
+	res.json( passwords[ req.query.roomID ] === undefined ? false : passwords[ req.query.roomID ] !== '' );
+});
+
 server.on('getRoomID', function(req, res)
 {
 	console.log('getRoomID');

@@ -243,6 +243,13 @@ wtsplayer.elementsController = function()
 		div.scrollIntoView();
 	};
 
+	this.onGotPswdNotEmpty = function( pswdNotEmpty )
+	{
+		//alert(pswdNotEmpty);
+		__peerController.joinRoom();
+	};
+
+
 	_client.add( _torrentId, function ( torrent )
 	{
 		// Torrents can contain many files. Let's use the first.
