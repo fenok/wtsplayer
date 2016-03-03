@@ -6,6 +6,9 @@
   width:400px; 
   background:black;
 }
+#player{
+  width: 50%;
+}
 #player:-webkit-full-screen #video{
   width: 100%;
   height: 100%;
@@ -30,7 +33,7 @@
   width: 100%;
 }
 #player:-moz-full-screen #videoControls div{
-  /*transition: bottom 1s ease-out 0s;*/
+  transition: bottom 0.5s ease-out 0s;
   position: relative;
   bottom: -30px;
 }
@@ -51,6 +54,63 @@
     height: 20px;
     border-radius: 10px;
     cursor: pointer;
+}
+/* Кнопка громкости */
+.vrange{
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  transform: rotate(270deg);
+  transform-origin: 0 0;
+}
+#volume::-moz-range-track {
+  height: 4px;
+  border: 1px solid #000;
+  background-color: #fff;
+  cursor: pointer;
+}
+#volume::-moz-range-thumb {
+  background-color: #fff;
+  border: 1px solid #000;
+  width: 4px;
+  height: 15px;
+  border-radius: 0px;
+  cursor: pointer;
+}
+#volume {
+  -webkit-appearance: none;
+  height: 4px;
+  border: 1px solid #000;
+  background-color: #fff;
+  cursor: pointer;
+}
+#volume::-webkit-slider-thumb {
+   -webkit-appearance: none;
+  background-color: #fff;
+  border: 1px solid #000;
+  width: 6px;
+  height: 17px;
+  border-radius: 0px;
+  cursor: pointer;
+}
+#volume{
+  width: 100px;
+  top: 115px;
+  left: 10px;
+  display: inherit;
+}
+#volume_area
+{
+  /*transition: disply 1s linear 1.5s;*/
+  position: absolute;
+  display: none;
+  height: 130px;
+  width: 30px;
+  top: -130px;
+  left: 0;
+}
+#vol:hover #volume_area{
+  display:block!important;
 }
 /* Ввод сообщений */
 #player:-moz-full-screen #send{
