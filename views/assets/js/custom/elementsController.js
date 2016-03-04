@@ -44,6 +44,7 @@ wtsplayer.elementsController = function()
 	var _nick		 		= document.getElementById( "nick" );
 	var _joinButton 		= document.getElementById( "joinButton" );
 	var _fullscreenButton 	= document.getElementById( "fullscreen" );
+	var _backOvervayBut 	= document.getElementById( "backOverlayBut" );
 	var _typeSrc 			= document.getElementsByName( "typeSrc" );
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
@@ -115,7 +116,15 @@ wtsplayer.elementsController = function()
 		
 	} );
 	
-	_sendMessageButton.addEventListener( 'click', function()
+	_sendMessageButton.addEventListener( 'click', sendMsg);
+	
+	_messageInput.onkeydown = function(e)
+	{
+		if(e.keyCode == "13")
+			sendMsg();
+	}
+	
+	function sendMsg()
 	{
 		var messageData =
 		{
@@ -123,9 +132,10 @@ wtsplayer.elementsController = function()
 			message : _messageInput.value
 		};
 		__peerController.sendMessage( messageData );
-		outputMessage( data );
-	});
-
+		_self.onMessageRecieved( messageData );
+		_messageInput.value = '';
+	}
+	
 	_fullscreenButton.addEventListener( 'click', function()
 	{
 		// Note: FF nightly needs about:config full-screen-api.enabled set to true.
@@ -149,6 +159,14 @@ wtsplayer.elementsController = function()
 			else if(el.mozRequestFullScreen)
 				el.mozRequestFullScreen();
 		}
+	});
+	
+	_backOvervayBut.addEventListener( 'click', function()
+	{
+		document.getElementById("enterPswd").className="close";
+		document.getElementById("typeRoom" ).className="close";
+		_joinButton.onclick = function(){ selectInput()};
+		document.getElementById("overlay").className="";
 	});
 
 	this.wait = function()
@@ -190,41 +208,69 @@ wtsplayer.elementsController = function()
 		return _video.currentTime * 1000;
 	};
 	
-	outputMessage = function ( messageData )
+	this.onMessageRecieved = function ( messageData )
 	{
-		var div = document.createElement( 'div' );
-		div.textContent = messageData.nick + ": " + messageData.message;
-		document.getElementById( "chat" ).appendChild( div );
-		div.scrollIntoView();
+		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
 	};
-	
-	this.onMessageRecieved = outputMessage;
 	
 	this.outputSystemMessage = function ( message )
 	{
 		var div = document.createElement( 'div' );
+		var chat = document.getElementById( "chat" )
 		div.textContent = message;
-		document.getElementById( "chat" ).appendChild( div );
-		div.scrollIntoView();
+		chat.insertBefore(div, chat.firstChild);
+		setTimeout(function(){animate(function(timePassed) {div.style.opacity = 1 - timePassed/3000;}, 3000);},7000);
 	};
+	
+	// Рисует функция draw
+	// Продолжительность анимации duration
+	function animate(draw, duration) 
+	{
+	  var start = performance.now();
+
+	  requestAnimationFrame(function animate(time) 
+	  {
+		// определить, сколько прошло времени с начала анимации
+		var timePassed = time - start;
+
+		// возможно небольшое превышение времени, в этом случае зафиксировать конец
+		if (timePassed > duration) timePassed = duration;
+
+		// нарисовать состояние анимации в момент timePassed
+		draw(timePassed);
+
+		// если время анимации не закончилось - запланировать ещё кадр
+		if (timePassed < duration) {
+		  requestAnimationFrame(animate);
+		}
+
+	  });
+	}
+
+	
+	
 	
 	this.onGotPswdNotEmpty = function( pswdNotEmpty )
 	{
 		//alert(pswdNotEmpty);
 		if (pswdNotEmpty === 'undefined') //создание комнаты
 		{
+			//TODO: переподключение при перезагрузке страницы
 			document.getElementById("typeRoom").className="";
-			_joinButton.addEventListener( 'click', createRoom);
+			_joinButton.onclick = createRoom;
 		}
 		else if (pswdNotEmpty === false) //пустой пароль
 		{
-			__peerController.joinRoom('join');
-			_joinButton.addEventListener( 'click', selectInput);
+			_joinButton.onclick = function()
+			{
+				__peerController.joinRoom('join');
+				selectInput();
+			};
 		} 
 		else
 		{
 			document.getElementById("enterPswd").className="";
-			_joinButton.addEventListener( 'click', joinRoom);
+			_joinButton.onclick = joinRoom;
 		}
 		document.getElementById("overlayContent").className="";
 		
