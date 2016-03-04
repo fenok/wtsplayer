@@ -14,10 +14,14 @@
   height: 100%;
 }
 
-#player #video, #player{
-  margin-left: 5%;
-  width: 90%;
-  height: 90%;
+#player #video{
+  width: 100%;
+  height: 100%;
+}
+#player{
+  margin-left: 10%;
+  width: 80%;
+  height: 80%;
 }
 
 #player:-webkit-full-screen{
@@ -45,7 +49,7 @@
   bottom: -30px;
 }
 #player #playerSeekRange{
-  width: 78%;
+  width: 70%;
 }
 /* Стилизация слайдеров */
 #playerSeekRange::-moz-range-track {
