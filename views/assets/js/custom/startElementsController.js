@@ -27,7 +27,6 @@ wtsplayer.startElementsController = function()
 			success 	: function( data )
 			{   
 				__sessionController.setRoomID( data );
-				__sessionController.setPassword( _passwordInput.value );
 				window.location.href = '/room/' + data;
 			}
 		} );

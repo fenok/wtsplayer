@@ -1,0 +1,76 @@
+.close{
+  display: none!important;
+}
+#overlay{
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: gray;
+  opacity: 0.9;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+#overlayContent{
+  width: 30%;
+  text-align: center;
+  border-radius: 10px;
+  border: 3px solid orange;
+  background: white;
+  opacity: 1;
+}
+
+#magnet{
+	width: 50%;
+	background: skyblue;
+	border: 0;
+	margin-bottom: 10px;
+	border-radius: 5px;
+}
+#globalURL{
+	width: 65.5%;
+	background: skyblue;
+	border: 0;
+	margin-bottom: 8px;
+	border-radius: 5px;
+}
+#localURL {
+	margin-bottom: 7px;
+	width: 256px;
+}
+
+input[name="typeSrc"] + label + input{
+	opacity: 0.35;
+}
+input[name="typeSrc"]:checked + label + input{
+	opacity: 1!important;
+}
+#joinButton {
+	position: relative;
+	top: 25px;
+	width: 300px;
+	height: 50px;
+	border: none;
+	background: orange;
+	border-radius: 5px;
+	font-size: 20px;
+	cursor: pointer;
+}
+#but_6:checked + label + input{
+	opacity: 1!important;
+}
+#passwordSet {
+	margin: 0 0 1.25% 45.5%;
+	width: 132px;
+	border: none;
+	border-radius: 5px;
+	background: skyblue;
+	opacity: 0;
+}
+#wrongPassword {
+	margin: 0 0 1.25% 45.5%;
+	color: red;
+}

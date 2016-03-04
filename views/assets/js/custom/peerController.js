@@ -21,7 +21,8 @@ wtsplayer.peerController = function()
 		sessionController :
 		{
 			getRoomID 				: null,
-			getPassword 			: null
+			getPassword 			: null,
+			setNick					: null
 		},
 		timeController :
 		{
@@ -167,6 +168,7 @@ wtsplayer.peerController = function()
 	//Joining uses data from session
 	_peer.on( 'open', function( id )
 	{
+		__sessionController.setNick( id );
 		$.ajax(
 			{
 				url 		: '/getPswdNotEmpty?roomID=' + encodeURIComponent( __sessionController.getRoomID() ),
@@ -271,6 +273,8 @@ wtsplayer.peerController = function()
 	//Joining room
 	joinRoom = function()
 	{
+		//принимает 'create' или 'join'
+		//возвращает true если совпало иначе false (на даййный момент всегда возвращет true. последняя строчка)
 		$.ajax(
 		{
 			url 		: '/joinRoom?roomID=' + encodeURIComponent( __sessionController.getRoomID() ) + '&password=' + encodeURIComponent( __sessionController.getPassword() ) + '&peerID=' + encodeURIComponent( _peer.id ),
@@ -348,6 +352,7 @@ wtsplayer.peerController = function()
 				}
 			}
 		} );
+		return true;
 	};
 	
 	this.joinRoom = joinRoom;

@@ -16,13 +16,13 @@ wtsplayer.elementsController = function()
 		{
 			setRoomID 		: null,
 			setPassword 	: null,
-			getNick			: null
+			getNick			: null,
+			setNick			: null
 		},
 		peerController :
 		{
 			sendMessage 	: null,
-			joinRoom 		: null,
-			getSelfID		: null // TODO: remove, make 'nick' var in session controller equal to ID by default
+			joinRoom 		: null
 		}
 	};
 	
@@ -38,13 +38,15 @@ wtsplayer.elementsController = function()
 	var _currentTimeOutput 	= document.getElementById( "playerCurrentTimeOutput" );
 	var _retryButton 		= document.getElementById( "retryButton" );
 	var _passwordInput 		= document.getElementById( "passwordInput" );
+	var _passwordSet 		= document.getElementById( "passwordSet" );
 	var _sendMessageButton 	= document.getElementById( "sendMessageButton" );
 	var _messageInput 		= document.getElementById( "messageInput" );
-	var _createRoomButton 	= document.getElementById( "createRoomButton" );
+	var _nick		 		= document.getElementById( "nick" );
+	var _joinButton 		= document.getElementById( "joinButton" );
 	var _fullscreenButton 	= document.getElementById( "fullscreen" );
+	var _typeSrc 			= document.getElementsByName( "typeSrc" );
 
-	var _client = new WebTorrent();
-	var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
+	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
 	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
 	
 	//switching user interface
@@ -68,13 +70,6 @@ wtsplayer.elementsController = function()
 		_playPauseButton.value = "Waiting";
 		_playPauseButton.disabled = true;
 	};
-	
-	//Change session password and try joining or creation again
-	_retryButton.addEventListener( 'click', function()
-	{
-		__sessionController.setPassword( _passwordInput.value );
-		__peerController.joinRoom();
-	} );
 
 	//[video].currentTime is in seconds, normalizing to ms
 	_playPauseButton.addEventListener( 'click', function()
@@ -124,41 +119,17 @@ wtsplayer.elementsController = function()
 	{
 		var messageData =
 		{
-			nick 	: __sessionController.getNick() || __peerController.getSelfID() || 'Someone',
+			nick 	: __sessionController.getNick() || 'Someone',
 			message : _messageInput.value
 		};
 		__peerController.sendMessage( messageData );
 		outputMessage( data );
 	});
 
-	_createRoomButton.addEventListener( 'click', function()
-	{
-		$.ajax(
-		{
-			url			: '/getRoomID',
-			dataType 	: 'json',
-			success 	: function( data )
-			{   
-				__sessionController.setRoomID( data );
-				__sessionController.setPassword( _passwordInput.value );
-				window.location.href = '/room/' + data;
-			}
-		} );
-	} );
-
 	_fullscreenButton.addEventListener( 'click', function()
 	{
-		enterFullscreen( "player" );
-	});
-	
-	//-----------------FULLSCREEN----------------
-	
-	document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen;
-
-	// Note: FF nightly needs about:config full-screen-api.enabled set to true.
-	function enterFullscreen( id )
-	{
-	
+		// Note: FF nightly needs about:config full-screen-api.enabled set to true.
+		
 		if(document.mozFullScreen || document.webkitIsFullScreen)
 		{
 			if(document.cancelFullScreen) 
@@ -170,7 +141,7 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			var el = document.getElementById( id );
+			var el = document.getElementById( "player" );
 			if(el.requestFullScreen)
 				el.requestFullScreen();
 			else if(el.webkitRequestFullScreen )
@@ -178,13 +149,7 @@ wtsplayer.elementsController = function()
 			else if(el.mozRequestFullScreen)
 				el.mozRequestFullScreen();
 		}
-	};
-	
-	/*function exitFullscreen()
-	{
-	  document.cancelFullScreen();
-	}*/
-	//-------------------------------------------
+	});
 
 	this.wait = function()
 	{
@@ -242,23 +207,84 @@ wtsplayer.elementsController = function()
 		document.getElementById( "chat" ).appendChild( div );
 		div.scrollIntoView();
 	};
-
+	
 	this.onGotPswdNotEmpty = function( pswdNotEmpty )
 	{
 		//alert(pswdNotEmpty);
-		__peerController.joinRoom();
+		if (pswdNotEmpty === 'undefined') //создание комнаты
+		{
+			document.getElementById("typeRoom").className="";
+			_joinButton.addEventListener( 'click', createRoom);
+		}
+		else if (pswdNotEmpty === false) //пустой пароль
+		{
+			__peerController.joinRoom('join');
+			_joinButton.addEventListener( 'click', selectInput);
+		} 
+		else
+		{
+			document.getElementById("enterPswd").className="";
+			_joinButton.addEventListener( 'click', joinRoom);
+		}
+		document.getElementById("overlayContent").className="";
+		
 	};
-
-
-	_client.add( _torrentId, function ( torrent )
+	
+	function createRoom() 
 	{
-		// Torrents can contain many files. Let's use the first.
-		var file = torrent.files[ 0 ];
+		__sessionController.setPassword( _passwordSet.value);
+		if(__peerController.joinRoom('create'))
+			selectInput();
+	};
+	function joinRoom() 
+	{
+		__sessionController.setPassword( _passwordInput.value);
+		if(__peerController.joinRoom('join'))
+			selectInput();
+		else
+			document.getElementById("wrongPassword").className="";
+	};
+	function selectInput()
+	{
+		if ( _nick.value !== '' ) __sessionController.setNick( _nick.value );
+		for (var i = 0; i < _typeSrc.length; i++)
+			if (_typeSrc[i].type === 'radio' && _typeSrc[i].checked)
+			{
+				var type = _typeSrc[i].value; 
+				break;
+			}
+		
+		if ( type == "magnet" ) 
+			loadMagnet()
+		else if ( type == "local" ) 
+			loadLocal();
+		
+		document.getElementById("overlay").className="close";
+	}
+	
+	function loadMagnet()
+	{
+		torrentId = document.getElementById("magnet").value;
+		var _client = new WebTorrent();
+		_client.add( torrentId, function ( torrent )
+		{
+			// Torrents can contain many files. Let's use the first.
+			var file = torrent.files[ 0 ];
 
-		// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-		file.renderTo( '#video', function( err, elem ) {} );
-	});
+			// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+			file.renderTo( '#video', function( err, elem ) {} );
+		});
+	}
+	
+	function loadLocal()
+	{
+		var file = document.getElementById("localURL").files[0];
+		var url = URL.createObjectURL(file);
+		document.getElementById("video").src = url;
+	}
 
+	
+	
 	//Initializing _playPauseButton object
 	switchToWaiting();
 };

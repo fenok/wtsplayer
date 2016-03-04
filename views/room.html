@@ -5,43 +5,66 @@
 		<meta charset="utf-8" />
 		<title>WTSPlayer</title>
 		<link rel="stylesheet" type="text/css" href="/player.css">
+		<link rel="stylesheet" type="text/css" href="/overlay.css">
 	</head>
 	<body>
-		<div id="coverLayer">
-		<p>Loading layer:
-		<br />
-		<label>Password:<input id="passwordInput" type="password" /></label>
-		<input id="retryButton" type="button" value="Retry"/>
-		<input id="createRoomButton" type="button" value = "Create new room"/>
+		<div id="overlay">
+			<div id="overlayContent" class="close"> 
+				<h2>Источник видео:</h2>
+				<input type ="radio" id="but_1" name = "typeSrc" value = "magnet" checked>
+				<label for="but_1">Введите magnet-ссылку:</label>
+				<input type="text" id="magnet" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
+				<br>
+				<input type ="radio" id="but_2" name = "typeSrc">
+				<label for="but_2">Введите адрес:</label>
+				<input type="text" id="globalURL">
+				<br>
+				<input type ="radio" id="but_3" name = "typeSrc" value="local">
+				<label for="but_3">Выберите файл:</label>
+				<input type="file" id="localURL">
+				<br>
+				<div id="typeRoom" class="close">
+					<h2>Выберите тип команты:</h2>
+					<input type = "radio" id="but_5" name = "b" checked>
+					<label id="adress_5" for="but_5">Открытая комната</label>
+					<input type = "radio" id="but_6" name = "b">
+					<label for="but_6">Частная комната</label>
+					<input id="passwordSet" type="password" placeholder=" Введите пароль">
+					<br>
+				</div>
+				<div id="enterPswd" class="close">
+					Введите пароль для входа в комнату:
+					<input id="passwordInput" type="password" placeholder=" Введите пароль">
+					<span id="wrongPassword" class="close">Неверный пароль!</span>
+				</div>
+				<label for="nick">Введите ник для чата:</label>
+				<input id="nick">
+				
+				<input id="joinButton" type="button" value="Join room">			
+			</div>
 		</div>
-		<div id="contentLayer">
-		<p>Content layer:
-		<br />
-			<div id = "player">
-				<video id = "video">
-					<!--<source src = "/MadMaxMadness.mp4" /> -->
-				</video>
-				<br />
-				<div id = "videoControls">
-					<div>
-						<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
-						<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
-						<div  id = "vol" style="display:inline; position:relative;">
-							<div id = "volume_area">
-								<input id = "volume" class = "vrange" type = "range" value = "100" >
-							</div>
-							<img  id = "volume_button" src="../assets/svg/custom/volume.svg" height="25px">
+		<div id = "player">
+			<video id = "video"></video>
+			<br>
+			<div id = "videoControls">
+				<div>
+					<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
+					<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
+					<div  id = "vol" style="display:inline; position:relative;">
+						<div id = "volume_area">
+							<input id = "volume" class = "vrange" type = "range" value = "100" >
 						</div>
-						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
-						<input id = "fullscreen" type = "button" value = "Fullscreen">
+						<img  id = "volume_button" src="../assets/svg/custom/volume.svg" height="25px">
 					</div>
+					<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
+					<input id = "fullscreen" type = "button" value = "Fullscreen">
 				</div>
-				<div id="send">
-					<input id="messageInput" type = "text" />
-					<input id="sendMessageButton" type="button" value = "sendMessage">
-				</div>
-				<div id="chat">
-				</div>
+			</div>
+			<div id="send">
+				<input id="messageInput" type = "text" />
+				<input id="sendMessageButton" type="button" value = "sendMessage">
+			</div>
+			<div id="chat">
 			</div>
 		</div>
 		<script src="/jquery.min.js"></script>
@@ -49,19 +72,11 @@
 		<script src="/peer.js"></script>
 		<script src="/timesync/timesync.js"></script>
 		
-		<script src="/torrent.js"></script>
-		
 		<script src="/elementsController.js"></script>
 		<script src="/sessionController.js"></script>
 		<script src="/peerController.js"></script>
 		<script src="/timeController.js"></script>
 		<script src="/stateController.js"></script>
 		<script src="/roomScripts.js"></script>
-		
-		
-		<!--
-		<script src="connect.js"></script>
-		<script src="actions.js"></script>
-		<script src="fullscreen.js"></script>-->
 	</body>
 </html>

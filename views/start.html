@@ -65,79 +65,27 @@
 				text-align: center;
 			}
 			
-			
-			#adress{
-				width: 50%;
-				background: skyblue;
-				border: 0;
-				margin-bottom: 10px;
-				border-radius: 5px;
-			}
-			#adress1{
-				width: 65.5%;
-				background: skyblue;
-				border: 0;
-				margin-bottom: 8px;
-				border-radius: 5px;
-			}
-			#adress2 {
-				margin-bottom: 7px;
-				width: 256px;
-			}
-			#adress3 {
-				margin-bottom: 10px;
-			}
-			input[name="a"] + label + input{
-				opacity: 0.35;
-			}
-			input[name="a"]:checked + label + input{
-				opacity: 1!important;
-			}
 			#createRoomButton {
-				position: absolute;
-				top: 320px;
 				width: 300px;
 				height: 50px;
 				border: none;
 				background: orange;
 				border-radius: 5px;
 				font-size: 20px;
-				margin-left: 48px;
-			}
-			#type_room {
-				height: 30px;
-				margin-left: 45px;
-				margin-bottom: 0;
-			}
-			#passwordInput {
-				margin: 1.25% 0 0 45.5%;
-				width: 132px;
-				border: none;
-				border-radius: 5px;
-				background: skyblue;
-				opacity: 0;
-			}
-			#but_6:checked ~ #passwordInput{
-				opacity: 1;
+				cursor: pointer;
 			}
 			#about{
 				height: 60%;
 				margin: 0 20%;
 			}
-			#about_text, #room, #about:target #main, #create_room:target #main{
+			#about_text, #about:target #main{
 				display: none;
 			}
-			#about:target #about_text, #create_room:target #room{
+			#about:target #about_text{
 				display: block;
 			}			
-			#room{
-				position: relative;
-				margin: 0 auto;
-				width: 400px;
-				height: 345px;
-				border-radius: 10px;
-				border: 3px solid orange;
-				background: white;
+			#main{
+			  text-align:center;
 			}
 			#footer {
 				position: fixed;
@@ -177,44 +125,18 @@
 			</div>
 			
 		</div>	
-		<div id="about"><div id="create_room">
+		<div id="about">
 			<h2>Добро пожаловать на сайт!</h2>
 			<div id="main">
 				Здесь вы сможете посмотреть фильм с вашими друзьями, даже если между вами тысячи километров.<br>
 				Для этого необходимо нажать на кнопку "создать комнату". Появится окошко, в котором необходимо указать видео для просмотра и при необходимости задать пароль для комнаты. После этого достаточно будет отдать ссылку вашим друзьям и насладиться возможностями, предоставляемыми синхронизированным плеером.
+				<br><br>
+				<input id="createRoomButton" type="button" value="Create room" />			
 			</div>
 			<div id="about_text">
 				Данный сайт является дипломным проектом двух психов и не претендует на высокую научную ценность.
 			</div>
-			<div id="room">
-				<h2>Создать новую комнату:</h2>
-				<input type ="radio" id="but_1" name = "a" checked>
-				<label for="but_1">Введите magnet-ссылку:</label>
-				<input type="text" id="adress">
-				<br>
-				<input type ="radio" id="but_2" name = "a">
-				<label for="but_2">Введите адрес:</label>
-				<input type="text" id="adress1">
-				<br>
-				<input type ="radio" id="but_3" name = "a">
-				<label for="but_3">Выберите файл:</label>
-				<input type="file" id="adress2">
-				<br>
-				<input type = "radio" id="but_4" name = "a">
-				<label for="but_4">Пустая комната.</label>
-				<br>
-				<h2>Выберите тип команты:</h2>
-				<div id="type_room">
-					<input type = "radio" id="but_5" name = "b" checked>
-					<label id="adress_5" for="but_5">Открытая комната</label>
-					<input type = "radio" id="but_6" name = "b">
-					<label for="but_6">Частная комната</label>
-					<input id="passwordInput" type="password" placeholder=" Введите пароль">
-				</div>
-				<br>
-				<input id="createRoomButton" type="button" value="Create room" />			
-			</div>
-		</div></div>
+		</div>
 		<div id="footer"> Powered by &copy Fen-ok & Geosins 2016  </div>
 	</body>
 	<script src="/jquery.min.js"></script>
