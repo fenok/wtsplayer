@@ -50,8 +50,8 @@ function connect()
 	console.log("connecting");
 	_peer = new Peer( '',
 	{
-		host 	: 'localhost',
-		port 	: 8000,
+		host 	: location.hostname,
+		port 	: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
 		path 	: '/peerjs',
 		debug 	: 3
 	} );
