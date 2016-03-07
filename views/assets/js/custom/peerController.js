@@ -28,7 +28,7 @@ wtsplayer.peerController = function()
 		{
 			getTimeIsSynced			: null
 		}
-	}
+	};
 	
 	var __stateController = this.externals.stateController;
 	var __elementsController = this.externals.elementsController;
@@ -36,6 +36,9 @@ wtsplayer.peerController = function()
 	var __timeController = this.externals.timeController;
 	
 	var _self = this;
+
+	var _peer;
+
 	//We recommend keeping track of connections yourself rather than relying on this [peer.connections] hash.
 	//Okay!
 	var _dataConnections = {};
@@ -51,10 +54,119 @@ wtsplayer.peerController = function()
 	
 	var _waitingList = {};
 
-	var _audioStream;
+	var _audioStream = null;
 	var _calls = {};
 	var _waitingCallsList = {};
 	var _calledToAllPeers = false;
+
+	function start()
+	{
+		getAudioStream(function()
+		{
+			connectToServer(function()
+			{
+				$.ajax(
+					{
+						url 		: '/getPswdNotEmpty?roomID=' + encodeURIComponent( __sessionController.getRoomID() ),
+						dataType 	: 'json',
+						success 	: function( pswdNotEmpty )
+						{
+							__elementsController.onGotPswdNotEmpty( pswdNotEmpty );
+						}
+					});
+			});
+		});
+	}
+
+	// Get access to the microphone
+	function getAudioStream( callback )
+	{
+		navigator.getUserMedia (
+			{video: false, audio: true},
+
+			function success(audioStream)
+			{
+				console.log('Successfully got the audioStream');
+				_audioStream = audioStream;
+				callback();
+			},
+
+			function error(err)
+			{
+				console.log('Couldn\'t get the audioStream');
+				callback();
+			}
+		);
+	}
+
+	function connectToServer(callback)
+	{
+		//Creating peer
+		//Remember that OpenShift uses 8000 port
+		_peer = new Peer( '',
+			{
+				host 	: location.hostname,
+				port 	: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
+				path 	: '/peerjs',
+				debug 	: 3
+			} );
+
+		//Connected to server -- start joining room or creating one
+		//Joining uses data from session
+		_peer.on( 'open', function( id )
+		{
+			__sessionController.setNick( id );
+			__elementsController.outputSystemMessage( "Your id is: " + id );
+			callback();
+		});
+
+		_peer.on( 'connection', function( conn )
+		{
+			//Send current state ASAP!!
+			conn.on('open', function()
+			{
+				data =
+				{
+					type 			: 'initialStateChangedNotification',
+					stateData		: __stateController.getStateData()
+				};
+				conn.send( data );
+			} );
+
+			//Handle incoming connections with universal handler
+			connectionHandler( conn );
+		} );
+
+		_peer.on('call', function(call)
+		{
+			if ( _audioStream !== null )
+			{
+				call.answer( _audioStream );
+
+				call.on('error', function(err)
+				{
+					console.error("Error on answering call:");
+					console.error(err);
+				});
+
+				call.on('stream', function(stream)
+				{
+					console.log("Got incoming stream");
+					_waitingCallsList_remove(call.peer);
+					//addIncomingStream(peer, stream);
+				});
+
+				_calls[ call.peer ] = call;
+			}
+			else
+			{
+				//Answering with no stream to tell the other side to close connection
+				//TODO: AMIRIGHT?
+				call.answer();
+				call.close();
+			}
+		});
+	}
 
 	//TODO: combine *_add, *_remove, *_checkEmpty functions
 	function _waitingCallsList_add(id)
@@ -130,93 +242,12 @@ wtsplayer.peerController = function()
 		}
 	}
 
-	// Get access to the microphone
-	function getLocalAudioStream()
-	{
-		navigator.getUserMedia (
-			{video: false, audio: true},
-
-			function success(audioStream)
-			{
-				console.log('Microphone is open.');
-				_audioStream = audioStream;
-			},
-
-			function error(err)
-			{
-				console.log('Couldn\'t connect to microphone. Reload the page to try again.');
-			}
-		);
-	}
-
 	this.onJoinConditionChanged = onJoinConditionChanged;
 	//
 	
 	//--
 	
-	//Creating peer
-	//Remember that OpenShift uses 8000 port
-	var _peer = new Peer( '',
-	{
-		host 	: location.hostname,
-		port 	: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
-		path 	: '/peerjs',
-		debug 	: 3
-	} );
 
-	//Connected to server -- start joining room or creating one
-	//Joining uses data from session
-	_peer.on( 'open', function( id )
-	{
-		__sessionController.setNick( id );
-		$.ajax(
-			{
-				url 		: '/getPswdNotEmpty?roomID=' + encodeURIComponent( __sessionController.getRoomID() ),
-				dataType 	: 'json',
-				success 	: function( pswdNotEmpty )
-				{
-					__elementsController.onGotPswdNotEmpty( pswdNotEmpty );
-				}
-			});
-		//joinRoom();
-		__elementsController.outputSystemMessage( "Your id is: " + id );
-	});
-
-	//Handle incoming connections with universal handler
-	_peer.on( 'connection', function( conn )
-	{
-		conn.on('open', function()
-		{
-			data =
-			{
-				type 			: 'initialStateChangedNotification',
-				stateData		: __stateController.getStateData()
-			}
-			conn.send( data );
-		} );
-		connectionHandler( conn );
-	} );
-
-	_peer.on('call', function(call)
-	{
-		alert("answered call");
-		call.answer( _audioStream );
-
-		call.on('error', function(err)
-		{
-			alert("error on answering");
-			console.log(err);
-		});
-
-		call.on('stream', function(stream)
-		{
-			alert("got incoming stream");
-			_waitingCallsList_remove(call.peer);
-			//addIncomingStream(peer, stream);
-		});
-
-		_calls[ call.peer ] = call;
-	});
 
 	//connected to all reachable peers after join
 	//TODO: GUI logic onCanSendData
@@ -304,14 +335,14 @@ wtsplayer.peerController = function()
 								_calls[ conn.peer ] = _peer.call( conn.peer, _audioStream );
 								_calls[ conn.peer ].on('error', function(err)
 								{
-									alert("error on call");
-									console.log(err);
+									console.error("error on call");
+									console.error(err);
 									_waitingCallsList_remove(conn.peer);
 								});
 
 								_calls[ conn.peer ].on('stream', function(stream)
 								{
-									alert("got incoming stream");
+									console.error("got incoming stream");
 									_waitingCallsList_remove(conn.peer);
 									//addIncomingStream(peer, stream);
 								});
@@ -419,5 +450,5 @@ wtsplayer.peerController = function()
 		return ( superPeerID === _peer.id );
 	};
 
-	getLocalAudioStream();
+	start();
 };
