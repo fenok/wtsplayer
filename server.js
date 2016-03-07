@@ -24,7 +24,12 @@ function initServer()
 	{
 		res.render('room.html');
 	});
-	
+
+	app.get('/testing', function (req, res)
+	{
+		res.render('testing.html');
+	});
+
 	app.get('/', function(req, res, next)
 	{
 		console.log("/");

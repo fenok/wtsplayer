@@ -271,10 +271,10 @@ wtsplayer.peerController = function()
 	}
 	
 	//Joining room
-	joinRoom = function()
+	//expectedAction = 'create' || 'join'
+	//TODO: discuss
+	joinRoom = function(expectedAction)
 	{
-		//принимает 'create' или 'join'
-		//возвращает true если совпало иначе false (на даййный момент всегда возвращет true. последняя строчка)
 		$.ajax(
 		{
 			url 		: '/joinRoom?roomID=' + encodeURIComponent( __sessionController.getRoomID() ) + '&password=' + encodeURIComponent( __sessionController.getPassword() ) + '&peerID=' + encodeURIComponent( _peer.id ),
