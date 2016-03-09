@@ -103,3 +103,18 @@ function getLocalAudioStream()
 }
 
 getLocalAudioStream();
+
+function test()
+{
+	//alert(this.vrbl);
+	--this.vrbl;
+}
+
+function testCaller()
+{
+	this.vrbl = 5;
+	test.call(this);
+	alert(this.vrbl);
+}
+
+testCaller();

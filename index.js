@@ -39,6 +39,22 @@ server.on('getRoomID', function(req, res)
 	res.json(getRandomRoomID());
 });
 
+server.on('getPeers', function(req, res)
+{
+	var roomID = req.query.roomID;
+	var password = req.query.password;
+	if (roomID in rooms && passwords[roomID] === password)
+	{
+		console.log('getPeers');
+		res.json(rooms[roomID]);
+	}
+	else
+	{
+		console.log('getPeers: denied');
+		res.json(null);
+	}
+});
+
 server.on('joinRoom', function(req, res)
 {
 	var peerID = req.query.peerID;

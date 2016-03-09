@@ -19,17 +19,13 @@ wtsplayer.stateController = function()
 			sendWaitingStatus		: null,
 			selfIsSuperPeer 		: null,
 			getSelfID 				: null,
-			getOtherPeersID 		: null
-		},
-		timeController :
-		{
+			getOtherPeersID 		: null,
 			currentTimestamp 		: null
 		}
 	};
 	
 	var __elementsController 	= this.externals.elementsController;
 	var __peerController 		= this.externals.peerController;
-	var __timeController 		= this.externals.timeController;
 	
 	
 	var _self = this;
@@ -63,7 +59,7 @@ wtsplayer.stateController = function()
 	
 	function syncTime( state )
 	{
-		var offset = _magicDelay + state.timestamp - __timeController.currentTimestamp();
+		var offset = _magicDelay + state.timestamp - __peerController.currentTimestamp();
 		var supposedTime = -1;
 		
 		//why not switch/case? testing speed o.o
@@ -173,7 +169,7 @@ wtsplayer.stateController = function()
 				updateCurrentState(
 				{
 					name 				: _currentState.lastAction,
-					timestamp 			: __timeController.currentTimestamp(),
+					timestamp 			: __peerController.currentTimestamp(),
 					playerTime 			: _currentState.playerTime,
 					lastAction 			: _currentState.lastAction,
 					previousStateName 	: _currentState.name
@@ -222,7 +218,7 @@ wtsplayer.stateController = function()
 		{
 			offset += state.name !== 'play' ? timeCorrection : 0 - timeCorrection;
 		}
-		offset += state.timestamp - __timeController.currentTimestamp();
+		offset += state.timestamp - __peerController.currentTimestamp();
 		
 		//why not switch/case? testing speed o.o
 		if ( state.name === 'play' )
@@ -315,7 +311,7 @@ wtsplayer.stateController = function()
 			updateCurrentState(
 			{
 				name 				: "play",
-				timestamp 			: __timeController.currentTimestamp(),
+				timestamp 			: __peerController.currentTimestamp(),
 				playerTime 			: playerTime,
 				lastAction 			: 'play',
 				previousStateName 	: _currentState.name 
@@ -334,7 +330,7 @@ wtsplayer.stateController = function()
 			updateCurrentState(
 			{
 				name 				: "pause",
-				timestamp 			: __timeController.currentTimestamp(),
+				timestamp 			: __peerController.currentTimestamp(),
 				playerTime 			: playerTime,
 				lastAction 			: 'pause',
 				previousStateName 	: _currentState.name
@@ -351,7 +347,7 @@ wtsplayer.stateController = function()
 		updateCurrentState(
 		{
 			name 				: 'waiting',
-			timestamp 			: __timeController.currentTimestamp(),
+			timestamp 			: __peerController.currentTimestamp(),
 			playerTime 			: playerTime,
 			lastAction 			: _currentState.lastAction,
 			previousStateName 	: _currentState.name
@@ -368,7 +364,7 @@ wtsplayer.stateController = function()
 			updateCurrentState(
 				{
 					name 				: "waiting",
-					timestamp 			: __timeController.currentTimestamp(),
+					timestamp 			: __peerController.currentTimestamp(),
 					playerTime 			: _currentState.playerTime,
 					lastAction 			: _currentState.lastAction,
 					previousStateName 	: _currentState.name
@@ -380,9 +376,12 @@ wtsplayer.stateController = function()
 	this.onPlayerCanPlay = function()
 	{
 		console.log( "updating status from onPlayerCanPlay" );
-		
-		sendWaitingStatus( false );
-		updateWaitingStatus( __peerController.getSelfID(), false );
+
+		if (_joinedRoom)
+		{
+			sendWaitingStatus( false );
+			updateWaitingStatus( __peerController.getSelfID(), false );
+		}
 	};
 	
 	this.onJoinedRoom = function()
@@ -403,13 +402,13 @@ wtsplayer.stateController = function()
 		}
 		else
 		{
-			offset = __timeController.currentTimestamp() - _currentState.timestamp - _magicDelay;
+			offset = __peerController.currentTimestamp() - _currentState.timestamp - _magicDelay;
 		}
 		
 		updateCurrentState(
 		{
 			name 				: 'waiting',
-			timestamp 			: __timeController.currentTimestamp(),
+			timestamp 			: __peerController.currentTimestamp(),
 			playerTime 			: _currentState.playerTime + offset,
 			lastAction 			: _currentState.lastAction,
 			previousStateName 	: _currentState.previousStateName

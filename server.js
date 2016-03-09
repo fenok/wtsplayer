@@ -40,6 +40,7 @@ function initServer()
 	app.get('/getRoomID', function (req, res){ self.emit('getRoomID', req, res); });
 	app.get('/joinRoom', function (req, res){ self.emit('joinRoom', req, res); });
 	app.get('/getPswdNotEmpty', function (req, res){ self.emit('getPswdNotEmpty', req, res); });
+	app.get('/getPeers', function (req, res){ self.emit('getPeers', req, res); });
 
 	var ExpressPeerServer = require('peer').ExpressPeerServer;
 	var server = require('http').createServer(app);

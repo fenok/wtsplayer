@@ -8,7 +8,6 @@ navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia
 			peerController 		: new wtsplayer.peerController(),
 			sessionController 	: new wtsplayer.sessionController(),
 			stateController 	: new wtsplayer.stateController(),
-			timeController 		: new wtsplayer.timeController(),
 			elementsController 	: new wtsplayer.elementsController()
 		};
 
