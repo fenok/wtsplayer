@@ -216,7 +216,7 @@ wtsplayer.elementsController = function()
 	this.outputSystemMessage = function ( message )
 	{
 		var div = document.createElement( 'div' );
-		var chat = document.getElementById( "chat" )
+		var chat = document.getElementById( "chat" );
 		div.textContent = message;
 		chat.insertBefore(div, chat.firstChild);
 		setTimeout(function(){animate(function(timePassed) {div.style.opacity = 1 - timePassed/3000;}, 3000);},7000);
@@ -263,7 +263,10 @@ wtsplayer.elementsController = function()
 		{
 			_joinButton.onclick = function()
 			{
-				__peerController.joinRoom('join');
+				__peerController.joinRoom(function(result)
+				{
+					//
+				});
 				selectInput();
 			};
 		} 
@@ -279,16 +282,32 @@ wtsplayer.elementsController = function()
 	function createRoom() 
 	{
 		__sessionController.setPassword( _passwordSet.value);
-		if(__peerController.joinRoom('create'))
-			selectInput();
-	};
+		//if(__peerController.joinRoom('create'))
+		//	selectInput();
+		__peerController.joinRoom(function(result)
+		{
+			if (result === 'created')
+			{
+				selectInput();
+			}
+		});
+	}
+
 	function joinRoom() 
 	{
 		__sessionController.setPassword( _passwordInput.value);
-		if(__peerController.joinRoom('join'))
-			selectInput();
-		else
-			document.getElementById("wrongPassword").className="";
+		__peerController.joinRoom(function(result)
+		{
+			if (result === 'joined')
+			{
+				selectInput();
+			}
+			else
+			{
+				document.getElementById( "wrongPassword" ).className = "";
+			}
+		});
+
 	};
 	function selectInput()
 	{
@@ -301,7 +320,7 @@ wtsplayer.elementsController = function()
 			}
 		
 		if ( type == "magnet" ) 
-			loadMagnet()
+			loadMagnet();
 		else if ( type == "local" ) 
 			loadLocal();
 		

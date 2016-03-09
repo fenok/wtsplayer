@@ -304,7 +304,7 @@ wtsplayer.peerController = function()
 	//Joining room
 	//expectedAction = 'create' || 'join'
 	//TODO: discuss
-	joinRoom = function(expectedAction)
+	this.joinRoom = function( callback )
 	{
 		$.ajax(
 		{
@@ -315,6 +315,7 @@ wtsplayer.peerController = function()
 				switch ( data.type )
 				{
 					case 'created':
+						!callback || callback(data.type);
 						__elementsController.outputSystemMessage( "Room created" );
 						//First peer in the room, can send data to peers
 						onConnectedToAllPeers();
@@ -322,6 +323,7 @@ wtsplayer.peerController = function()
 						onCalledToAllPeers();
 						break;
 					case 'joined':
+						!callback || callback(data.type);
 						__elementsController.outputSystemMessage( "Joined room" );
 						recievedPeersCount = data.peers.length;
 						data.peers.forEach( function( value, index, array )
@@ -372,21 +374,21 @@ wtsplayer.peerController = function()
 						}, _joinTimeout );
 						break;
 					case 'joinedBefore':
+						!callback || callback(data.type);
 						__elementsController.outputSystemMessage( "Already joined" );
 						break;
 					case 'wrongPassword':
+						!callback || callback(data.type);
 						__elementsController.outputSystemMessage( "Wrong password" );
 						break;
 					default:
+						!callback || callback(data.type);
 						alert( 'Unrecognized response' );
 						break;
 				}
 			}
 		} );
-		return true;
 	};
-	
-	this.joinRoom = joinRoom;
 	
 	this.sendState = function ( stateData )
 	{
