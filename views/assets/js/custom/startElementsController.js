@@ -6,8 +6,8 @@ wtsplayer.startElementsController = function()
 	{
 		sessionController :
 		{
-			setRoomID 	: null,
-			setPassword : null
+			set 	: null,
+			vars : null
 		}
 	};
 	
@@ -26,7 +26,7 @@ wtsplayer.startElementsController = function()
 			dataType 	: 'json',
 			success 	: function( data )
 			{   
-				__sessionController.setRoomID( data );
+				__sessionController.set(__sessionController.vars.ROOM_ID, data );
 				window.location.href = '/room/' + data;
 			}
 		} );

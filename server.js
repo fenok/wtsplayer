@@ -1,63 +1,81 @@
-var events = require('events');
-var util = require('util');
+var events = require( 'events' );
+var util   = require( 'util' );
 
 function initServer()
 {
 	var self = this;
-	events.EventEmitter.call(this);
-	var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8000;
+	events.EventEmitter.call( this );
+	var server_port       = process.env.OPENSHIFT_NODEJS_PORT || 8000;
 	var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 
-	var express = require('express');
-	var app = express();
+	var express = require( 'express' );
+	var app     = express();
 
-	app.use(express.static('./views'));
-	app.use(express.static('./views/assets/js/original'));
-	app.use(express.static('./views/assets/js/custom'));
-	app.use(express.static('./views/assets/css/original'));
-	app.use(express.static('./views/assets/css/custom'));
+	app.use( express.static( './views' ) );
+	app.use( express.static( './views/assets/js/original' ) );
+	app.use( express.static( './views/assets/js/custom' ) );
+	app.use( express.static( './views/assets/css/original' ) );
+	app.use( express.static( './views/assets/css/custom' ) );
 
-	app.engine('.html', require('ejs').renderFile);
+	app.engine( '.html', require( 'ejs' ).renderFile );
 	//app.enable( 'trust proxy' );
-	
-	app.get(/^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function (req, res)
-	{
-		res.render('room.html');
-	});
 
-	app.get('/testing', function (req, res)
+	app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
 	{
-		res.render('testing.html');
-	});
+		res.render( 'room.html' );
+	} );
 
-	app.get('/', function(req, res, next)
+	app.get( '/testing', function( req, res )
 	{
-		console.log("/");
+		res.render( 'testing.html' );
+	} );
+
+	app.get( '/', function( req, res, next )
+	{
+		console.log( "/" );
 		//res.sendfile('./public/start.html');
-		res.render('start.html');
-	});
+		res.render( 'start.html' );
+	} );
 
-	app.get('/getRoomID', function (req, res){ self.emit('getRoomID', req, res); });
-	app.get('/joinRoom', function (req, res){ self.emit('joinRoom', req, res); });
-	app.get('/getPswdNotEmpty', function (req, res){ self.emit('getPswdNotEmpty', req, res); });
-	app.get('/getPeers', function (req, res){ self.emit('getPeers', req, res); });
+	app.get( '/getRoomID', function( req, res )
+	{
+		self.emit( 'getRoomID', req, res );
+	} );
+	app.get( '/joinRoom', function( req, res )
+	{
+		self.emit( 'joinRoom', req, res );
+	} );
+	app.get( '/getRoomStatus', function( req, res )
+	{
+		self.emit( 'getRoomStatus', req, res );
+	} );
+	app.get( '/getPeers', function( req, res )
+	{
+		self.emit( 'getPeers', req, res );
+	} );
 
-	var ExpressPeerServer = require('peer').ExpressPeerServer;
-	var server = require('http').createServer(app);
-	var expresspeerserver = ExpressPeerServer(server, { debug: true });
+	var ExpressPeerServer = require( 'peer' ).ExpressPeerServer;
+	var server            = require( 'http' ).createServer( app );
+	var expresspeerserver = ExpressPeerServer( server, { debug : true } );
 
-	expresspeerserver.on('connection', function(id) { self.emit('peerConnection', id); });
-	expresspeerserver.on('disconnect', function(id) { self.emit('peerDisconnect', id); });
-	
+	expresspeerserver.on( 'connection', function( id )
+	{
+		self.emit( 'peerConnection', id );
+	} );
+	expresspeerserver.on( 'disconnect', function( id )
+	{
+		self.emit( 'peerDisconnect', id );
+	} );
+
 	this.peerServer = expresspeerserver;
 
-	app.use('/peerjs', expresspeerserver);
+	app.use( '/peerjs', expresspeerserver );
 
-	var timesyncServer = require('timesync/server');
-	app.use('/timesync', timesyncServer.requestHandler);
+	var timesyncServer = require( 'timesync/server' );
+	app.use( '/timesync', timesyncServer.requestHandler );
 
-	server.listen(server_port, server_ip_address);
+	server.listen( server_port, server_ip_address );
 }
-util.inherits(initServer, events.EventEmitter);
+util.inherits( initServer, events.EventEmitter );
 
 module.exports = new initServer();

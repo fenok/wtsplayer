@@ -5,21 +5,25 @@ wtsplayer.peerController = function()
 	this.externals =
 	{
 		stateController    : {
-			getStateData            : null,
-			onStateRecieved         : null,
-			onWaitingStatusRecieved : null,
-			onPeerDeleted           : null,
-			onJoinedRoom            : null
+			getStateData  : null,
+			onRecieved    : null,
+			onPeerDeleted : null,
+			onJoinedRoom  : null
 		},
 		elementsController : {
-			outputSystemMessage : null,
-			onMessageRecieved   : null,
-			onGotPswdNotEmpty   : null
+			outputSystemMessage  : null,
+			onRecieved           : null,
+			onGotRoomStatus    : null,
+			getDataSource        : null,
+			onPeerDeleted        : null,
+			onJoinedRoom         : null,
+			onConnectionProblems : null,
+			onGotAudioStream     : null
 		},
 		sessionController  : {
-			getRoomID   : null,
-			getPassword : null,
-			setNick     : null
+			get  : null,
+			set  : null,
+			vars : null
 		}
 	};
 
@@ -29,12 +33,34 @@ wtsplayer.peerController = function()
 
 	var _self = this;
 
-	var _ts;
-	//--
+	this.sending = Object.freeze( {
+		MESSAGE        : 0,
+		WAITING_STATUS : 1,
+		STATE          : 2,
+		NICK           : 3,
+		DATA_SOURCE    : 4,
+		DROPPED_CALL   : 5,
+		CALL_ME        : 6,
+		INITIAL_INFO   : 7
+	} );
 
-	//Function to be used to get synced timestamp
-	//Defaults to local timestamp
-	this.currentTimestamp = Date.now;
+	this.getting = Object.freeze( {
+		SELF_ID            : 0,
+		OTHER_PEERS_ID     : 1,
+		SELF_IS_SUPER_PEER : 2
+	} );
+
+	this.responses = Object.freeze( {
+		JOINED         : 0,
+		CREATED        : 1,
+		JOINED_BEFORE  : 2,
+		WRONG_PASSWORD : 3,
+		PUBLIC_ROOM    : 4,
+		PRIVATE_ROOM   : 5,
+		NO_ROOM        : 6
+	} );
+
+	var _ts;
 	//--
 
 	var _peer;
@@ -44,14 +70,14 @@ wtsplayer.peerController = function()
 	var _dataConnections = {};
 	//--
 
-	//Timeout after which it is considered that some peers are unreachable on join (connection could not open).
-	//TODO: check the documentation to be absolutely sure
-	var _joinTimeout = 6000; //ms
+	//Timeout after which peers gets refreshed from the server
+	var _joinTimeout = 3000; //ms
 	//--
 
 	var _audioStream = null;
 	var _calls       = {};
 
+	//Get audioStream, connect to server and get 'password of the room is not empty' bool or 'undefined'
 	function start()
 	{
 		getAudioStream( function()
@@ -60,18 +86,18 @@ wtsplayer.peerController = function()
 			{
 				$.ajax(
 					{
-						url      : '/getPswdNotEmpty?roomID=' + encodeURIComponent( __sessionController.getRoomID() ),
+						url      : '/getRoomStatus?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ),
 						dataType : 'json',
-						success  : function( pswdNotEmpty )
+						success  : function( status )
 						{
-							__elementsController.onGotPswdNotEmpty( pswdNotEmpty );
+							__elementsController.onGotRoomStatus( status );
 						}
 					} );
 			} );
 		} );
 	}
 
-	// Get access to the microphone
+	// Get audioStream
 	function getAudioStream( callback )
 	{
 		navigator.getUserMedia = (
@@ -122,25 +148,27 @@ wtsplayer.peerController = function()
 				debug : 1
 			} );
 
-		//Connected to server -- start joining room or creating one
-		//Joining uses data from session
 		_peer.on( 'open', function( id )
 		{
-			__sessionController.setNick( id );
+			__sessionController.set( __sessionController.vars.NICK, id );
 			__elementsController.outputSystemMessage( "Your id is: " + id );
 			callback();
 		} );
 
 		_peer.on( 'connection', function( conn )
 		{
-			//Send current state ASAP!!
+			//Send initial info ASAP!!
 			conn.on( 'open', function()
 			{
-				data =
-				{
-					type      : 'initialStateChangedNotification',
-					stateData : __stateController.getStateData()
-				};
+				var data =
+					{
+						type : _self.sending.INITIAL_INFO,
+						data : {
+							state      : __stateController.getStateData(),
+							dataSource : __elementsController.getDataSource(),
+							nick       : __sessionController.get( __sessionController.vars.NICK )
+						}
+					};
 				conn.send( data );
 			} );
 
@@ -148,41 +176,36 @@ wtsplayer.peerController = function()
 			connectionHandler( conn );
 		} );
 
+		//Handle incoming call
+		callHandler();
+	}
+
+	function callHandler()
+	{
 		_peer.on( 'call', function( call )
 		{
-			if ( _audioStream !== null )
-			{
-				call.answer( _audioStream );
 
-				call.on( 'error', function( err )
-				{
-					console.error( "Error on answering call:" );
-					console.error( err );
-				} );
+			call.answer( _audioStream );
+			_calls[ call.peer ] = call;
+			applyCallHandlers( call.peer );
+		} );
+	}
 
-				call.on( 'stream', function( stream )
-				{
-					console.error( "!! - Got incoming stream" );
-				} );
+	function applyCallHandlers( peer )
+	{
+		_calls[ peer ].on( 'error', function( err )
+		{
+			console.error( err );
+		} );
 
-				_calls[ call.peer ] = call;
-			}
-			else
-			{
-				//Answering with no stream to tell the other side to close connection
-				//TODO: AMIRIGHT?
-				call.answer();
-				call.on( 'stream', function()
-				{
-					console.error( call.open );
-					//setTimeout( function()
-					//{
-					call.close();
-					console.error( "closed stream" );
-					console.error( call.open );
-					//}, 5000);
-				} );
-			}
+		_calls[ peer ].on( 'stream', function( stream )
+		{
+			__elementsController.onGotAudioStream( peer, stream );
+		} );
+
+		_calls[ peer ].on( 'close', function()
+		{
+			console.log( "Firefox console? Update code..." );
 		} );
 	}
 
@@ -199,18 +222,25 @@ wtsplayer.peerController = function()
 				console.log( "connectionHandler -- data" );
 				switch ( data.type )
 				{
-					case 'message':
-						__elementsController.onMessageRecieved( data.messageData );
+					case _self.sending.CALL_ME:
+						callToPeer( conn.peer );
 						break;
-					case 'initialStateChangedNotification':
-					case 'stateChangedNotification':
-						__stateController.onStateRecieved( data.stateData );
+					case _self.sending.INITIAL_INFO:
+						__stateController.onRecieved( _self.sending.STATE, conn.peer, data.data.state );
+						__elementsController.onRecieved( _self.sending.DATA_SOURCE, conn.peer, data.data.dataSource );
+						__elementsController.onRecieved( _self.sending.NICK, conn.peer, data.data.nick );
 						break;
-					case 'waitingStatusChangeNotification':
-						__stateController.onWaitingStatusRecieved( data.waitingStatusData );
+					case _self.sending.MESSAGE:
+					case _self.sending.DATA_SOURCE:
+					case _self.sending.NICK:
+						__elementsController.onRecieved( data.type, conn.peer, data.data );
+						break;
+					case _self.sending.STATE:
+					case _self.sending.WAITING_STATUS:
+						__stateController.onRecieved( data.type, conn.peer, data.data );
 						break;
 					default:
-						alert( 'Unrecognized data' );
+						alert( 'Unrecognized data.type' );
 						break;
 				}
 			} );
@@ -221,22 +251,136 @@ wtsplayer.peerController = function()
 			console.log( "connectionHandler -- close" );
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
+			if ( _calls[ conn.peer ] )
+			{
+				delete _calls[ conn.peer ];
+			}
 			__stateController.onPeerDeleted( conn.peer );
+			__elementsController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
 
 		conn.on( 'error', function( err )
 		{
-			console.log( "connectionHandler -- error" );
-			delete _dataConnections[ conn.peer ];
-			__stateController.onPeerDeleted( conn.peer );
-			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
+			//TODO: make sure that close event always fires after fatal error
+			console.error( err.name + ': ' + err.message );
 		} );
 	}
 
-	//Joining room
-	//expectedAction = 'create' || 'join'
-	//TODO: discuss
+	function syncTime( callback )
+	{
+		_ts = timesync.create(
+			{
+				server   : '/timesync',
+				interval : null
+			} );
+
+		_ts.on( 'sync', function( state )
+		{
+			if ( state === 'end' )
+			{
+				_self.currentTimestamp = _ts.now;
+				callback();
+			}
+		} );
+
+		_ts.sync();
+	}
+
+	function callToPeer( peer )
+	{
+		_calls[ peer ] = _peer.call( peer, _audioStream );
+		applyCallHandlers( peer );
+	}
+
+	function askForCall()
+	{
+		_self.send( _self.sending.CALL_ME );
+	}
+
+	function controlInitialStateRecieving( peer, callback )
+	{
+		console.log( "getting initial state from: " + peer );
+		var callIsNeeded = true;
+		_dataConnections[ peer ].on( 'data', function( data )
+		{
+			if ( data.type === _self.sending.INITIAL_INFO )
+			{
+				if ( callIsNeeded )
+				{
+					callback();
+					callIsNeeded = false;
+				}
+			}
+		} );
+
+		_dataConnections[ peer ].on( 'close', function()
+		{
+			if ( callIsNeeded )
+			{
+				callback();
+				callIsNeeded = false;
+			}
+		} );
+		//TODO: make sure that close event always fires after fatal error
+	}
+
+	function connectToPeer( peer, successCallback )
+	{
+		console.log( "connecting to: " + peer );
+		var conn = _peer.connect( peer, { serialization : 'json' } );
+		connectionHandler( conn );
+		conn.on( 'open', function()
+		{
+			successCallback();
+		} );
+	}
+
+	function getPeers( callback )
+	{
+		$.ajax(
+			{
+				url      : '/getPeers?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ) + '&password=' + encodeURIComponent( __sessionController.get( __sessionController.vars.PASSWORD ) ),
+				dataType : 'json',
+				success  : function( data )
+				{
+					callback( data );
+				}
+			} );
+	}
+
+	function getPeers_initial( callback, reportStatusCallback )
+	{
+		$.ajax(
+			{
+				url      : '/joinRoom?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ) + '&password=' + encodeURIComponent( __sessionController.get( __sessionController.vars.PASSWORD ) ) + '&peerID=' + encodeURIComponent( _peer.id ),
+				dataType : 'json',
+				success  : function( data )
+				{
+					!reportStatusCallback || reportStatusCallback( data.type );
+					__elementsController.outputSystemMessage( data.type );
+					switch ( data.type )
+					{
+						case _self.responses.JOINED:
+							callback( data.peers );
+							break;
+						default:
+							alert( 'Unrecognized response' );
+						case _self.responses.CREATED:
+						case _self.responses.JOINED_BEFORE:
+						case _self.responses.WRONG_PASSWORD:
+							callback( [] );
+							break;
+					}
+				}
+			} );
+	}
+
+	//SPECIAL
+
+	//Creating or joining room, reporting result, connect to all peers, get all initial states (aka initial data)
+	//when connected to all -- time sync
+	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( reportStatusCallback )
 	{
 		getPeers_initial( function( peers )
@@ -244,12 +388,15 @@ wtsplayer.peerController = function()
 			console.log( "got initial peers" );
 			var peersToConnect     = peers;
 			var initialStatesToGet = peersToConnect.length;
-			var callsToMake        = _audioStream === null ? 0 : peersToConnect.length;
 			var timeIsSynced       = false;
 
 			var onConnectedToAllPeers = function()
 			{
 				console.log( "connected to all peers" );
+				if ( _audioStream === null )
+				{
+					askForCall();
+				}
 				syncTime( function()
 				{
 					timeIsSynced = true;
@@ -264,10 +411,11 @@ wtsplayer.peerController = function()
 
 			var onJoinConditionChanged = function()
 			{
-				if ( peersToConnect.length === 0 && initialStatesToGet === 0 && callsToMake === 0 && timeIsSynced )
+				if ( peersToConnect.length === 0 && initialStatesToGet === 0 && timeIsSynced )
 				{
-					__elementsController.outputSystemMessage( "Connected, recieved, called to all, synced time" );
+					__elementsController.outputSystemMessage( "Connected, recieved, synced time" );
 					__stateController.onJoinedRoom();
+					__elementsController.onJoinedRoom();
 				}
 			};
 
@@ -287,16 +435,10 @@ wtsplayer.peerController = function()
 						}
 
 					} );
-					if ( callsToMake )
+
+					if ( _audioStream !== null )
 					{
-						callToPeer( peer, function()
-						{
-							console.log( "called to: " + peer );
-							if ( --callsToMake === 0 )
-							{
-								onJoinConditionChanged();
-							}
-						} )
+						callToPeer( peer );
 					}
 
 					peersToConnect = peersToConnect.filter( function( e )
@@ -327,10 +469,6 @@ wtsplayer.peerController = function()
 										return e !== peer;
 									} );
 									--initialStatesToGet;
-									if ( callsToMake )
-									{
-										--callsToMake;
-									}
 									if ( peersToConnect.length === 0 )
 									{
 										onConnectedToAllPeers();
@@ -339,6 +477,7 @@ wtsplayer.peerController = function()
 								else
 								{
 									__elementsController.outputSystemMessage( "Connection takes too long; most likely some peers are unreachable" );
+									__elementsController.onConnectionProblems();
 								}
 							} );
 						}
@@ -348,219 +487,52 @@ wtsplayer.peerController = function()
 		}, reportStatusCallback );
 	};
 
-	function syncTime( callback )
+	//GENERIC
+	this.send = function( type, data )
 	{
-		_ts = timesync.create(
+		var message =
 			{
-				server   : '/timesync',
-				interval : null
-			} );
-
-		_ts.on( 'sync', function( state )
+				type : type,
+				data : data
+			};
+		for ( var prop in _dataConnections )
 		{
-			if ( state === 'end' )
-			{
-				_self.currentTimestamp = _ts.now;
-				callback();
-			}
-		} );
+			_dataConnections[ prop ].send( message );
+		}
+	};
 
-		_ts.sync();
-	}
-
-	function callToPeer( peer, callback )
+	//GENERIC
+	this.get = function( what )
 	{
-		var callIsNeeded = true;
-		_calls[ peer ]   = _peer.call( peer, _audioStream );
-		_calls[ peer ].on( 'error', function( err )
+		switch ( what )
 		{
-			console.error( "error on call" );
-			console.error( err );
-			if ( callIsNeeded )
-			{
-				callback();
-				callIsNeeded = false;
-			}
-		} );
-
-		_calls[ peer ].on( 'stream', function( stream )
-		{
-			console.error( "!! got incoming stream" );
-			if ( callIsNeeded )
-			{
-				callback();
-				callIsNeeded = false;
-			}
-		} );
-
-		_calls[ peer ].on( 'close', function()
-		{
-			console.error( "closed" );
-			if ( callIsNeeded )
-			{
-				callback();
-				callIsNeeded = false;
-			}
-		} );
-	}
-
-	function controlInitialStateRecieving( peer, callback )
-	{
-		console.log( "getting initial state from: " + peer );
-		var callIsNeeded = true;
-		_dataConnections[ peer ].on( 'data', function( data )
-		{
-			if ( data.type === 'initialStateChangedNotification' )
-			{
-				if ( callIsNeeded )
+			case _self.getting.SELF_ID:
+				return _peer.id;
+				break;
+			case _self.getting.OTHER_PEERS_ID:
+				return Object.getOwnPropertyNames( _dataConnections );
+				break;
+			case _self.getting.SELF_IS_SUPER_PEER:
+				var superPeerID = _peer.id;
+				for ( var prop in _dataConnections )
 				{
-					callback();
-					callIsNeeded = false;
-				}
-			}
-		} );
-
-		_dataConnections[ peer ].on( 'close', function()
-		{
-			if ( callIsNeeded )
-			{
-				callback();
-				callIsNeeded = false;
-			}
-		} );
-
-		_dataConnections[ peer ].on( 'error', function( err )
-		{
-			if ( callIsNeeded )
-			{
-				callback();
-				callIsNeeded = false;
-			}
-		} );
-	}
-
-	function connectToPeer( peer, successCallback )
-	{
-		console.log( "connecting to: " + peer );
-		var conn = _peer.connect( peer, { serialization : 'json' } );
-		connectionHandler( conn );
-		conn.on( 'open', function()
-		{
-			successCallback();
-		} );
-	}
-
-	function getPeers( callback )
-	{
-		$.ajax(
-			{
-				url      : '/getPeers?roomID=' + encodeURIComponent( __sessionController.getRoomID() ) + '&password=' + encodeURIComponent( __sessionController.getPassword() ),
-				dataType : 'json',
-				success  : function( data )
-				{
-					callback( data );
-				}
-			} );
-	}
-
-	function getPeers_initial( callback, reportStatusCallback )
-	{
-		$.ajax(
-			{
-				url      : '/joinRoom?roomID=' + encodeURIComponent( __sessionController.getRoomID() ) + '&password=' + encodeURIComponent( __sessionController.getPassword() ) + '&peerID=' + encodeURIComponent( _peer.id ),
-				dataType : 'json',
-				success  : function( data )
-				{
-					!reportStatusCallback || reportStatusCallback( data.type );
-
-					switch ( data.type )
+					if ( prop > superPeerID )
 					{
-						case 'created':
-							__elementsController.outputSystemMessage( "Room created" );
-							callback( [] );
-							break;
-						case 'joined':
-							__elementsController.outputSystemMessage( "Joined room" );
-							callback( data.peers );
-							break;
-						case 'joinedBefore':
-							__elementsController.outputSystemMessage( "Already joined" );
-							callback( [] );
-							break;
-						case 'wrongPassword':
-							__elementsController.outputSystemMessage( "Wrong password" );
-							callback( [] );
-							break;
-						default:
-							alert( 'Unrecognized response' );
-							callback( [] );
-							break;
+						superPeerID = prop;
 					}
 				}
-			} );
-	}
-
-	this.sendState = function( stateData )
-	{
-		data =
-		{
-			type      : 'stateChangedNotification',
-			stateData : stateData
-		};
-		for ( var prop in _dataConnections )
-		{
-			_dataConnections[ prop ].send( data );
+				return ( superPeerID === _peer.id );
+				break;
+			default:
+				alert( "peerController.get: unrecognized 'what'" );
+				break;
 		}
 	};
 
-	this.sendWaitingStatus = function( waitingStatusData )
-	{
-		data =
-		{
-			type              : 'waitingStatusChangeNotification',
-			waitingStatusData : waitingStatusData
-		};
-		for ( var prop in _dataConnections )
-		{
-			_dataConnections[ prop ].send( data );
-		}
-	};
-
-	this.sendMessage = function( messageData )
-	{
-		data =
-		{
-			type        : 'message',
-			messageData : messageData
-		};
-		for ( var prop in _dataConnections )
-		{
-			_dataConnections[ prop ].send( data );
-		}
-	}
-
-	this.getSelfID = function()
-	{
-		return _peer.id;
-	};
-
-	this.getOtherPeersID = function()
-	{
-		return Object.getOwnPropertyNames( _dataConnections );
-	};
-
-	this.selfIsSuperPeer = function()
-	{
-		var superPeerID = _peer.id;
-		for ( var prop in _dataConnections )
-		{
-			if ( prop > superPeerID )
-			{
-				superPeerID = prop;
-			}
-		}
-		return ( superPeerID === _peer.id );
-	};
+	//Function to be used to get synced timestamp
+	//Defaults to local timestamp
+	this.currentTimestamp = Date.now;
+	//--
 
 	start();
 };
