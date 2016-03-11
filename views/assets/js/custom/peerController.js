@@ -49,10 +49,8 @@ wtsplayer.peerController = function()
 	var _joinTimeout = 6000; //ms
 	//--
 
-
-	var _audioStream      = null;
-	var _calls            = {};
-
+	var _audioStream = null;
+	var _calls       = {};
 
 	function start()
 	{
@@ -76,22 +74,40 @@ wtsplayer.peerController = function()
 	// Get access to the microphone
 	function getAudioStream( callback )
 	{
-		navigator.getUserMedia(
-			{ video : false, audio : true },
+		navigator.getUserMedia = (
+		navigator.getUserMedia ||
+		navigator.webkitGetUserMedia ||
+		navigator.mozGetUserMedia ||
+		navigator.msGetUserMedia);
 
-			function success( audioStream )
-			{
-				console.log( 'Successfully got the audioStream' );
-				_audioStream = audioStream;
-				callback();
-			},
+		var constraints = { video : false, audio : true };
+		var success     = function( audioStream )
+		{
+			console.log( 'Successfully got the audioStream' );
+			_audioStream = audioStream;
+			callback();
+		};
+		var error       = function( err )
+		{
+			console.log( err.name + ': ' + err.message );
+			console.log( 'Couldn\'t get the audioStream' );
+			callback();
+		};
 
-			function error( err )
-			{
-				console.log( 'Couldn\'t get the audioStream' );
-				callback();
-			}
-		);
+		if ( navigator.mediaDevices.getUserMedia )
+		{
+			var media = navigator.mediaDevices.getUserMedia( constraints );
+			media.then( success );
+			media.catch( error );
+		}
+		else if ( navigator.getUserMedia )
+		{
+			navigator.getUserMedia( constraints, success, error );
+		}
+		else
+		{
+			error( new Error( '*.getUserMedia is unsupported' ) );
+		}
 	}
 
 	function connectToServer( callback )
@@ -156,7 +172,16 @@ wtsplayer.peerController = function()
 				//Answering with no stream to tell the other side to close connection
 				//TODO: AMIRIGHT?
 				call.answer();
-				call.close();
+				call.on( 'stream', function()
+				{
+					console.error( call.open );
+					//setTimeout( function()
+					//{
+					call.close();
+					console.error( "closed stream" );
+					console.error( call.open );
+					//}, 5000);
+				} );
 			}
 		} );
 	}
@@ -167,11 +192,11 @@ wtsplayer.peerController = function()
 		_dataConnections[ conn.peer ] = conn;
 		conn.on( 'open', function()
 		{
-			console.log("connectionHandler -- open");
+			console.log( "connectionHandler -- open" );
 			__elementsController.outputSystemMessage( "Connected to " + conn.peer );
 			conn.on( 'data', function( data )
 			{
-				console.log("connectionHandler -- data");
+				console.log( "connectionHandler -- data" );
 				switch ( data.type )
 				{
 					case 'message':
@@ -193,7 +218,7 @@ wtsplayer.peerController = function()
 
 		conn.on( 'close', function()
 		{
-			console.log("connectionHandler -- close");
+			console.log( "connectionHandler -- close" );
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
 			__stateController.onPeerDeleted( conn.peer );
@@ -202,7 +227,7 @@ wtsplayer.peerController = function()
 
 		conn.on( 'error', function( err )
 		{
-			console.log("connectionHandler -- error");
+			console.log( "connectionHandler -- error" );
 			delete _dataConnections[ conn.peer ];
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.outputSystemMessage( "Failed to connect and closed connection to " + conn.peer + ". " + err.name + ": " + err.message );
@@ -216,7 +241,7 @@ wtsplayer.peerController = function()
 	{
 		getPeers_initial( function( peers )
 		{
-			console.log("got initial peers");
+			console.log( "got initial peers" );
 			var peersToConnect     = peers;
 			var initialStatesToGet = peersToConnect.length;
 			var callsToMake        = _audioStream === null ? 0 : peersToConnect.length;
@@ -224,7 +249,7 @@ wtsplayer.peerController = function()
 
 			var onConnectedToAllPeers = function()
 			{
-				console.log("connected to all peers");
+				console.log( "connected to all peers" );
 				syncTime( function()
 				{
 					timeIsSynced = true;
@@ -248,14 +273,14 @@ wtsplayer.peerController = function()
 
 			peers.forEach( function( peer )
 			{
-				console.log("processing peer: " + peer);
+				console.log( "processing peer: " + peer );
 				connectToPeer( peer, function()
 				{
 					//success
-					console.log("connected to: " + peer);
+					console.log( "connected to: " + peer );
 					controlInitialStateRecieving( peer, function()
 					{
-						console.log("got initial state from: " + peer);
+						console.log( "got initial state from: " + peer );
 						if ( --initialStatesToGet === 0 )
 						{
 							onJoinConditionChanged();
@@ -266,7 +291,7 @@ wtsplayer.peerController = function()
 					{
 						callToPeer( peer, function()
 						{
-							console.log("called to: " + peer);
+							console.log( "called to: " + peer );
 							if ( --callsToMake === 0 )
 							{
 								onJoinConditionChanged();
@@ -302,8 +327,14 @@ wtsplayer.peerController = function()
 										return e !== peer;
 									} );
 									--initialStatesToGet;
-									if (callsToMake) --callsToMake;
-									if (peersToConnect.length === 0) onConnectedToAllPeers();
+									if ( callsToMake )
+									{
+										--callsToMake;
+									}
+									if ( peersToConnect.length === 0 )
+									{
+										onConnectedToAllPeers();
+									}
 								}
 								else
 								{
@@ -317,15 +348,15 @@ wtsplayer.peerController = function()
 		}, reportStatusCallback );
 	};
 
-	function syncTime(callback)
+	function syncTime( callback )
 	{
 		_ts = timesync.create(
 			{
-				server 		: '/timesync',
-				interval 	: null
+				server   : '/timesync',
+				interval : null
 			} );
 
-		_ts.on( 'sync', function ( state )
+		_ts.on( 'sync', function( state )
 		{
 			if ( state === 'end' )
 			{
@@ -337,51 +368,61 @@ wtsplayer.peerController = function()
 		_ts.sync();
 	}
 
-	function callToPeer(peer, callback)
+	function callToPeer( peer, callback )
 	{
 		var callIsNeeded = true;
-		_calls[ peer ] = _peer.call( peer, _audioStream );
-		_calls[ peer ].on('error', function(err)
+		_calls[ peer ]   = _peer.call( peer, _audioStream );
+		_calls[ peer ].on( 'error', function( err )
 		{
-			console.error("error on call");
-			console.error(err);
-			if (callIsNeeded)
+			console.error( "error on call" );
+			console.error( err );
+			if ( callIsNeeded )
 			{
 				callback();
 				callIsNeeded = false;
 			}
-		});
+		} );
 
-		_calls[ peer ].on('stream', function(stream)
+		_calls[ peer ].on( 'stream', function( stream )
 		{
-			console.error("!! got incoming stream");
-			if (callIsNeeded)
+			console.error( "!! got incoming stream" );
+			if ( callIsNeeded )
 			{
 				callback();
 				callIsNeeded = false;
 			}
-		});
+		} );
+
+		_calls[ peer ].on( 'close', function()
+		{
+			console.error( "closed" );
+			if ( callIsNeeded )
+			{
+				callback();
+				callIsNeeded = false;
+			}
+		} );
 	}
 
-	function controlInitialStateRecieving(peer, callback)
+	function controlInitialStateRecieving( peer, callback )
 	{
-		console.log("getting initial state from: " + peer);
+		console.log( "getting initial state from: " + peer );
 		var callIsNeeded = true;
 		_dataConnections[ peer ].on( 'data', function( data )
 		{
 			if ( data.type === 'initialStateChangedNotification' )
 			{
-				if (callIsNeeded)
+				if ( callIsNeeded )
 				{
 					callback();
 					callIsNeeded = false;
 				}
 			}
-		});
+		} );
 
 		_dataConnections[ peer ].on( 'close', function()
 		{
-			if (callIsNeeded)
+			if ( callIsNeeded )
 			{
 				callback();
 				callIsNeeded = false;
@@ -390,7 +431,7 @@ wtsplayer.peerController = function()
 
 		_dataConnections[ peer ].on( 'error', function( err )
 		{
-			if (callIsNeeded)
+			if ( callIsNeeded )
 			{
 				callback();
 				callIsNeeded = false;
@@ -400,7 +441,7 @@ wtsplayer.peerController = function()
 
 	function connectToPeer( peer, successCallback )
 	{
-		console.log("connecting to: " + peer);
+		console.log( "connecting to: " + peer );
 		var conn = _peer.connect( peer, { serialization : 'json' } );
 		connectionHandler( conn );
 		conn.on( 'open', function()

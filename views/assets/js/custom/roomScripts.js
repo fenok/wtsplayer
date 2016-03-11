@@ -1,6 +1,3 @@
-// Handle prefixed versions
-navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-
 ( function()
 {
 	var app =
