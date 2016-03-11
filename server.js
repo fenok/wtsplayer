@@ -20,13 +20,21 @@ function initServer()
 	app.engine( '.html', require( 'ejs' ).renderFile );
 	app.enable( 'trust proxy' );
 
-	http.get('*',function(req,res)
+	//console.log(req.hostname);
+	
+	
+	app.get('*',function(req,res,next)
 	{  
-		if(!req.secure && req.headers.host !== 'localhost')
+		if(!req.secure && req.hostname !== 'localhost')
 		{
-			res.redirect('https://' + req.headers.host + req.url)
+			res.redirect('https://' + req.headers.host + req.url);
+		}
+		else
+		{
+			next();
 		}
 	});
+	
 	
 	app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
 	{
