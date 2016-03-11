@@ -142,10 +142,11 @@ wtsplayer.peerController = function()
 		//Remember that OpenShift uses 8000 port
 		_peer = new Peer( '',
 			{
-				host  : location.hostname,
-				port  : location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
-				path  : '/peerjs',
-				debug : 1
+				host   : location.hostname,
+				port   : location.port || 8000 ,
+				path   : '/peerjs',
+				secure : true,
+				debug  : 1
 			} );
 
 		_peer.on( 'open', function( id )
