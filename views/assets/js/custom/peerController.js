@@ -149,6 +149,8 @@ wtsplayer.peerController = function()
 				debug  : 1
 			} );
 
+		console.log(location.hostname, location.port, location.protocol);
+
 		_peer.on( 'open', function( id )
 		{
 			__sessionController.set( __sessionController.vars.NICK, id );
