@@ -18,7 +18,7 @@ function initServer()
 	app.use( express.static( './views/assets/css/custom' ) );
 
 	app.engine( '.html', require( 'ejs' ).renderFile );
-	//app.enable( 'trust proxy' );
+	app.enable( 'trust proxy' );
 
 	app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
 	{
