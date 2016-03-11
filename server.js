@@ -20,6 +20,14 @@ function initServer()
 	app.engine( '.html', require( 'ejs' ).renderFile );
 	app.enable( 'trust proxy' );
 
+	http.get('*',function(req,res)
+	{  
+		if(!req.secure && req.headers.host !== 'localhost')
+		{
+			res.redirect('https://' + req.headers.host + req.url)
+		}
+	});
+	
 	app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
 	{
 		res.render( 'room.html' );
