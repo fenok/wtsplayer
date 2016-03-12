@@ -166,6 +166,7 @@ wtsplayer.stateController = function()
 		{
 			console.log( "Denied:" );
 			console.log( state );
+			console.log("currentState timestamp: ", _currentState.timestamp);
 			return;
 		}
 

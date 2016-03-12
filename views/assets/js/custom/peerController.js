@@ -270,7 +270,10 @@ wtsplayer.peerController = function()
 				switch ( data.type )
 				{
 					case _self.sending.CALL_ME:
-						callToPeer( conn.peer );
+						if ( _audioStream !== null )
+						{
+							callToPeer( conn.peer );
+						}
 						break;
 					case _self.sending.INITIAL_INFO:
 						__stateController.onRecieved( _self.sending.STATE, conn.peer, data.data.state );
