@@ -63,8 +63,8 @@ wtsplayer.peerController = function()
 
 	var _ts = timesync.create(
 		{
-			//server   : '/timesync',
-			peers    : [],
+			server   : '/timesync',
+			//peers    : [],
 			interval : null
 		} );
 	//--
@@ -287,7 +287,7 @@ wtsplayer.peerController = function()
 						__stateController.onRecieved( data.type, conn.peer, data.data );
 						break;
 					case _self.sending.TIMESYNC_INFO:
-						_ts.receive( conn.peer, data );
+						//_ts.receive( conn.peer, data );
 						break;
 					default:
 						alert( 'Unrecognized data.type' );
@@ -320,9 +320,9 @@ wtsplayer.peerController = function()
 	function syncTime( callback )
 	{
 
-		_ts.options.peers = _self.get( _self.getting.OTHER_PEERS_ID );
+		//_ts.options.peers = _self.get( _self.getting.OTHER_PEERS_ID );
 
-		_ts.send = function( id, data )
+		/*_ts.send = function( id, data )
 		{
 			console.error( 'send', id, data );
 			var conn = _dataConnections[ id ];
@@ -330,7 +330,7 @@ wtsplayer.peerController = function()
 			 {
 			 return conn.open;
 			 } )[ 0 ];*/
-
+/*
 			if ( conn )
 			{
 				console.error( "timesync: sending" );
@@ -341,7 +341,7 @@ wtsplayer.peerController = function()
 			{
 				console.error( new Error( 'Cannot send message: not connected to ' + id ).toString() );
 			}
-		};
+		};*/
 
 		_ts.on( 'change', function( offset )
 		{
@@ -353,7 +353,7 @@ wtsplayer.peerController = function()
 			if ( state == 'start' )
 			{
 				//ts.options.peers = openConnections();
-				console.log( 'syncing with peers [' + _ts.options.peers.join( ', ' ) + ']' );
+				//console.log( 'syncing with peers [' + _ts.options.peers.join( ', ' ) + ']' );
 			}
 			if ( state === 'end' )
 			{
