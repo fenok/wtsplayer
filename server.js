@@ -25,7 +25,8 @@ function initServer()
 	
 	app.get('*',function(req,res,next)
 	{  
-		if(!req.secure && req.hostname !== 'localhost')
+		console.log('baseUrl: '+req.path);
+		if(!req.secure && req.hostname !== 'localhost' && req.path !=='/peerjs/peerjs/id')
 		{
 			res.redirect('https://' + req.headers.host + req.url);
 		}
