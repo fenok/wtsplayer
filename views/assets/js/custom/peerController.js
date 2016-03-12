@@ -143,7 +143,7 @@ wtsplayer.peerController = function()
 		_peer = new Peer( '',
 			{
 				host   : location.hostname,
-				port   : location.protocol === 'https:' ? 443 : 8000 ,
+				port   : location.protocol === 'https:' ? 8443 : 8000 ,
 				path   : '/peerjs',
 				secure : location.protocol === 'https:',
 				debug  : 1
