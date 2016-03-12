@@ -207,11 +207,13 @@ wtsplayer.stateController = function()
 			{
 				_delayedPlayPauseTimeout = setTimeout( function()
 				{
+					__elementsController.outputSystemMessage("pause at " + __peerController.currentTimestamp());
 					__elementsController.pause();
 				}, offset );
 			}
 			else // magic delay was less than latency
 			{
+				__elementsController.outputSystemMessage("pause at " + __peerController.currentTimestamp());
 				__elementsController.pause();
 			}
 		}
