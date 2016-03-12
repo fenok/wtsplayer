@@ -360,7 +360,7 @@ wtsplayer.peerController = function()
 			}
 			if ( state === 'end' )
 			{
-				_self.currentTimestamp = _ts.now;
+				//_self.currentTimestamp = _ts.now;
 				callback();
 			}
 		} );
@@ -612,7 +612,7 @@ wtsplayer.peerController = function()
 
 	//Function to be used to get synced timestamp
 	//Defaults to local timestamp
-	this.currentTimestamp = Date.now;
+	this.currentTimestamp = _ts.now;//Date.now;
 	//--
 
 	start();
