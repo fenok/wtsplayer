@@ -324,15 +324,16 @@ wtsplayer.peerController = function()
 
 		_ts.send = function( id, data )
 		{
-			console.error('send', id, data);
-			var conn =  _dataConnections[ id ]; /*&& all.filter( function( conn )
-				{
-					return conn.open;
-				} )[ 0 ];*/
+			console.error( 'send', id, data );
+			var conn = _dataConnections[ id ];
+			/*&& all.filter( function( conn )
+			 {
+			 return conn.open;
+			 } )[ 0 ];*/
 
 			if ( conn )
 			{
-				console.error("timesync: sending");
+				console.error( "timesync: sending" );
 				data.type = _self.sending.TIMESYNC_INFO;
 				conn.send( data );
 			}
@@ -341,6 +342,11 @@ wtsplayer.peerController = function()
 				console.error( new Error( 'Cannot send message: not connected to ' + id ).toString() );
 			}
 		};
+
+		_ts.on( 'change', function( offset )
+		{
+			console.error( 'offset from system time:', offset, 'ms' );
+		} );
 
 		_ts.on( 'sync', function( state )
 		{
