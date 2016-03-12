@@ -41,7 +41,8 @@ wtsplayer.peerController = function()
 		DATA_SOURCE    : 4,
 		DROPPED_CALL   : 5,
 		CALL_ME        : 6,
-		INITIAL_INFO   : 7
+		INITIAL_INFO   : 7,
+		TIMESYNC_INFO  : 8
 	} );
 
 	this.getting = Object.freeze( {
@@ -265,7 +266,6 @@ wtsplayer.peerController = function()
 			__elementsController.outputSystemMessage( "Connected to " + conn.peer );
 			conn.on( 'data', function( data )
 			{
-				_ts.receive(conn.peer, data);
 				console.log( "connectionHandler -- data" );
 				switch ( data.type )
 				{
@@ -285,6 +285,9 @@ wtsplayer.peerController = function()
 					case _self.sending.STATE:
 					case _self.sending.WAITING_STATUS:
 						__stateController.onRecieved( data.type, conn.peer, data.data );
+						break;
+					case _self.sending.TIMESYNC_INFO:
+						_ts.receive( conn.peer, data );
 						break;
 					default:
 						alert( 'Unrecognized data.type' );
@@ -317,29 +320,35 @@ wtsplayer.peerController = function()
 	function syncTime( callback )
 	{
 
-		_ts.options.peers = _self.get(_self.getting.OTHER_PEERS_ID);
+		_ts.options.peers = _self.get( _self.getting.OTHER_PEERS_ID );
 
 		_ts.send = function( id, data )
 		{
-			//console.log('send', id, data);
-			var all  = _dataConnections[ id ];
-			var conn = all && all.filter( function( conn )
+			console.error('send', id, data);
+			var conn =  _dataConnections[ id ]; /*&& all.filter( function( conn )
 				{
 					return conn.open;
-				} )[ 0 ];
+				} )[ 0 ];*/
 
 			if ( conn )
 			{
+				console.error("timesync: sending");
+				data.type = _self.sending.TIMESYNC_INFO;
 				conn.send( data );
 			}
 			else
 			{
-				console.log( new Error( 'Cannot send message: not connected to ' + id ).toString() );
+				console.error( new Error( 'Cannot send message: not connected to ' + id ).toString() );
 			}
 		};
 
 		_ts.on( 'sync', function( state )
 		{
+			if ( state == 'start' )
+			{
+				//ts.options.peers = openConnections();
+				console.log( 'syncing with peers [' + _ts.options.peers.join( ', ' ) + ']' );
+			}
 			if ( state === 'end' )
 			{
 				_self.currentTimestamp = _ts.now;
