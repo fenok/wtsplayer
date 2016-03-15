@@ -12,7 +12,10 @@ var responses = Object.freeze( {
 	WRONG_PASSWORD : 3,
 	PUBLIC_ROOM    : 4,
 	PRIVATE_ROOM   : 5,
-	NO_ROOM        : 6
+	NO_ROOM        : 6,
+	NO_SUCH_PEER   : 7,
+	LEAVED         : 8,
+	LEAVED_BEFORE  : 9
 } );
 
 server.on( 'peerConnection', function( id )
@@ -22,6 +25,11 @@ server.on( 'peerConnection', function( id )
 server.on( 'peerDisconnect', function( id )
 {
 	console.log( 'disconnect: ' + id );
+	onPeerLeaved(id);
+} );
+
+function onPeerLeaved(id)
+{
 	if ( id in peers )
 	{
 		var roomID = peers[ id ];
@@ -35,7 +43,7 @@ server.on( 'peerDisconnect', function( id )
 		}
 		delete peers[ id ];
 	}
-} );
+}
 
 server.on( 'getRoomStatus', function( req, res )
 {
@@ -75,6 +83,51 @@ server.on( 'getPeers', function( req, res )
 	{
 		console.log( 'getPeers: denied' );
 		res.json( null );
+	}
+} );
+
+server.on( 'leaveRoom', function( req, res )
+{
+	console.log( 'leaveRoom' );
+	var peerID   = req.query.peerID;
+	var roomID   = req.query.roomID;
+	var password = req.query.password;
+	if ( peerID in this.peerServer._clients[ 'peerjs' ] )
+	//this PeerID is registered internally
+	//bad style but whatever
+	{
+		if ( roomID in rooms ) //room exists, join
+		{
+			if ( passwords[ roomID ] === password ) //can join
+			{
+				if ( peerID in peers )
+				{
+					onPeerLeaved(peerID);
+					res.json( { type : responses.LEAVED } );
+					console.log( 'leaved' );
+				}
+				else
+				{
+					res.json( { type : responses.LEAVED_BEFORE } );
+					console.log( 'leavedBefore' );
+				}
+			}
+			else //go fuck yourself
+			{
+				res.json( { type : responses.WRONG_PASSWORD } );
+				console.log( 'wrongPassword' );
+			}
+		}
+		else
+		{
+			res.json( { type : responses.NO_ROOM } );
+			console.log( 'no room' );
+		}
+	}
+	else
+	{
+		res.json( { type : responses.NO_SUCH_PEER } );
+		console.log( 'No such peer' );
 	}
 } );
 
@@ -124,6 +177,11 @@ server.on( 'joinRoom', function( req, res )
 			res.json( { type : responses.CREATED } );
 			console.log( 'created' );
 		}
+	}
+	else
+	{
+		res.json( { type : responses.NO_SUCH_PEER } );
+		console.log( 'No such peer' );
 	}
 } );
 

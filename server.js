@@ -70,6 +70,10 @@ function initServer()
 	{
 		self.emit( 'getPeers', req, res );
 	} );
+	app.get( '/leaveRoom', function( req, res )
+	{
+		self.emit( 'leaveRoom', req, res );
+	} );
 
 	var ExpressPeerServer = require( 'peer' ).ExpressPeerServer;
 	var server            = require( 'http' ).createServer( app );

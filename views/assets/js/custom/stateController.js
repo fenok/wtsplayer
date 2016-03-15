@@ -26,7 +26,25 @@ wtsplayer.stateController = function()
 
 	var _self = this;
 
-	var _currentState =
+	//delay (ms) to be applied before actual play/pause to prevent possible microdesync
+	//it is about to change
+	//TODO: may be calculated depending on actual latency in future
+	var _magicDelay = 500; //200ms
+
+	//Maximum difference (ms) between currentTimes of players when they are considered to be synced
+	var _desyncInterval = 200; //100ms
+
+	var _currentState;
+
+	var _delayedPlayPauseTimeout;
+
+	var _waitingStates;
+
+	var _joinedRoom;
+
+	function init()
+	{
+		_currentState =
 		{
 			name              : 'waiting', // or 'play' or 'pause'
 			timestamp         : -1, // bounded to playerTime AND is transition timestamp
@@ -35,19 +53,12 @@ wtsplayer.stateController = function()
 			previousStateName : 'waiting'
 		};
 
-	//delay (ms) to be applied before actual play/pause to prevent possible microdesync
-	//it is about to change
-	//TODO: may be calculated depending on actual latency in future
-	var _magicDelay = 500; //200ms
+		_delayedPlayPauseTimeout = null;
 
-	//Maximum difference (ms) between currentTimes of players when they are considered to be synced 
-	var _desyncInterval = 200; //100ms
+		_waitingStates = {};
 
-	var _delayedPlayPauseTimeout = null;
-
-	var _waitingStates = {};
-
-	var _joinedRoom = false;
+		_joinedRoom = false;
+	}
 
 	function syncTime( state )
 	{
@@ -166,7 +177,7 @@ wtsplayer.stateController = function()
 		{
 			console.log( "Denied:" );
 			console.log( state );
-			console.log("currentState timestamp: ", _currentState.timestamp);
+			console.log( "currentState timestamp: ", _currentState.timestamp );
 			return;
 		}
 
@@ -208,13 +219,13 @@ wtsplayer.stateController = function()
 			{
 				_delayedPlayPauseTimeout = setTimeout( function()
 				{
-					__elementsController.outputSystemMessage("pause at " + __peerController.currentTimestamp());
+					__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
 					__elementsController.pause();
 				}, offset );
 			}
 			else // magic delay was less than latency
 			{
-				__elementsController.outputSystemMessage("pause at " + __peerController.currentTimestamp());
+				__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
 				__elementsController.pause();
 			}
 		}
@@ -417,4 +428,11 @@ wtsplayer.stateController = function()
 			} );
 		sendCurrentState();
 	};
+
+	this.onLeavedRoom = function()
+	{
+		init();
+	};
+
+	init();
 };

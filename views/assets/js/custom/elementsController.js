@@ -143,21 +143,29 @@ wtsplayer.elementsController = function()
 		if ( document.mozFullScreen || document.webkitIsFullScreen )
 		{
 			if ( document.cancelFullScreen )
+			{
 				document.cancelFullScreen();
-			else if ( document.webkitCancelFullScreen )
+			} else if ( document.webkitCancelFullScreen )
+			{
 				document.webkitCancelFullScreen();
-			else if ( document.mozCancelFullScreen )
+			} else if ( document.mozCancelFullScreen )
+			{
 				document.mozCancelFullScreen();
+			}
 		}
 		else
 		{
 			var el = document.getElementById( "player" );
 			if ( el.requestFullScreen )
+			{
 				el.requestFullScreen();
-			else if ( el.webkitRequestFullScreen )
+			} else if ( el.webkitRequestFullScreen )
+			{
 				el.webkitRequestFullScreen();
-			else if ( el.mozRequestFullScreen )
+			} else if ( el.mozRequestFullScreen )
+			{
 				el.mozRequestFullScreen();
+			}
 		}
 	} );
 
@@ -250,7 +258,10 @@ wtsplayer.elementsController = function()
 			var timePassed = time - start;
 
 			// возможно небольшое превышение времени, в этом случае зафиксировать конец
-			if ( timePassed > duration ) timePassed = duration;
+			if ( timePassed > duration )
+			{
+				timePassed = duration;
+			}
 
 			// нарисовать состояние анимации в момент timePassed
 			draw( timePassed );
@@ -326,18 +337,26 @@ wtsplayer.elementsController = function()
 	};
 	function selectInput()
 	{
-		if ( _nick.value !== '' ) __sessionController.set( __sessionController.vars.NICK, _nick.value );
+		if ( _nick.value !== '' )
+		{
+			__sessionController.set( __sessionController.vars.NICK, _nick.value );
+		}
 		for ( var i = 0; i < _typeSrc.length; i++ )
+		{
 			if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
 			{
 				var type = _typeSrc[ i ].value;
 				break;
 			}
+		}
 
 		if ( type == "magnet" )
+		{
 			loadMagnet();
-		else if ( type == "local" )
+		} else if ( type == "local" )
+		{
 			loadLocal();
+		}
 
 		document.getElementById( "overlay" ).className = "close";
 	}
@@ -399,21 +418,6 @@ wtsplayer.elementsController = function()
 	{
 		//remove call from GUI
 		console.error( "elementsController: peer deleted -- " + id );
-	};
-
-	//SPECIAL
-	this.onJoinedRoom = function()
-	{
-		console.error( "elementsController: joined room" );
-		//Connection completed, player can communicate
-	};
-
-	//SPECIAL
-	this.onConnectionProblems = function()
-	{
-		console.error( "elementsController: connection problems" );
-		//Connection takes too long
-		//Display that and wait
 	};
 
 	//from -- id
