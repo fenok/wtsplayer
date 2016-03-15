@@ -195,7 +195,7 @@ wtsplayer.peerController = function()
 
 		_peer.on( 'connection', function( conn )
 		{
-			if ( conn.metadata.roomID !== '' && conn.metadata.roomID === __sessionController.get( __sessionController.vars.roomID ) && conn.metadata.password === __sessionController.get( __sessionController.vars.password ) )
+			if ( conn.metadata.roomID !== '' && conn.metadata.roomID === __sessionController.get( __sessionController.vars.ROOM_ID ) && conn.metadata.password === __sessionController.get( __sessionController.vars.PASSWORD ) )
 			{
 				//Send initial info ASAP!!
 				conn.on( 'open', function()
@@ -248,7 +248,7 @@ wtsplayer.peerController = function()
 	{
 		_peer.on( 'call', function( call )
 		{
-			if ( call.metadata.roomID !== '' && call.metadata.roomID === __sessionController.get( __sessionController.vars.roomID ) && call.metadata.password === __sessionController.get( __sessionController.vars.password ) )
+			if ( call.metadata.roomID !== '' && call.metadata.roomID === __sessionController.get( __sessionController.vars.ROOM_ID ) && call.metadata.password === __sessionController.get( __sessionController.vars.PASSWORD ) )
 			{
 				if ( _joinedVoiceChat )
 				{
@@ -368,6 +368,19 @@ wtsplayer.peerController = function()
 		//TODO: failCallback
 	};
 
+	this.getRoomID = function( callback )
+	{
+		$.ajax(
+			{
+				url      : '/getRoomID',
+				dataType : 'json',
+				success  : function( data )
+				{
+					callback( data );
+				}
+			} );
+	};
+
 	//SPECIAL
 
 	//Creating or joining room, reporting result, connect to all peers, get all initial states (aka initial data)
@@ -385,6 +398,17 @@ wtsplayer.peerController = function()
 					var peersToConnect     = peers;
 					var initialStatesToGet = peersToConnect.length;
 					var timeIsSynced       = _serverTimeSync;
+
+					var onJoinConditionChanged = function()
+					{
+						if ( peersToConnect.length === 0 && initialStatesToGet === 0 && timeIsSynced )
+						{
+							_joinedRoom = true;
+							__elementsController.outputSystemMessage( "Connected, recieved, synced time" );
+							__stateController.onJoinedRoom();
+							joinedCallback();
+						}
+					};
 
 					var onConnectedToAllPeers = function()
 					{
@@ -407,17 +431,6 @@ wtsplayer.peerController = function()
 					{
 						onConnectedToAllPeers();
 					}
-
-					var onJoinConditionChanged = function()
-					{
-						if ( peersToConnect.length === 0 && initialStatesToGet === 0 && timeIsSynced )
-						{
-							_joinedRoom = true;
-							__elementsController.outputSystemMessage( "Connected, recieved, synced time" );
-							__stateController.onJoinedRoom();
-							joinedCallback();
-						}
-					};
 
 					peers.forEach( function( peer )
 					{
@@ -681,7 +694,12 @@ wtsplayer.peerController = function()
 
 	function callToPeer( peer )
 	{
-		_calls[ peer ] = _peer.call( peer, _audioStream );
+		_calls[ peer ] = _peer.call( peer, _audioStream, {
+			metadata : {
+				roomID   : __sessionController.get( __sessionController.vars.ROOM_ID ),
+				password : __sessionController.get( __sessionController.vars.PASSWORD )
+			}
+		} );
 		applyCallHandlers( peer );
 	}
 

@@ -37,10 +37,10 @@ function initServer()
 	});
 	
 	
-	app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
+	/*app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
 	{
 		res.render( 'room.html' );
-	} );
+	} );*/
 
 	app.get( '/testing', function( req, res )
 	{
@@ -51,7 +51,7 @@ function initServer()
 	{
 		console.log( "/" );
 		//res.sendfile('./public/start.html');
-		res.render( 'start.html' );
+		res.render( 'room.html' );
 	} );
 
 	app.get( '/getRoomID', function( req, res )

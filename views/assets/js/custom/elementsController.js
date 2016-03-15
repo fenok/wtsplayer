@@ -17,10 +17,16 @@ wtsplayer.elementsController = function()
 			vars : null
 		},
 		peerController    : {
-			send      : null,
-			sending   : null,
-			joinRoom  : null,
-			responses : null
+			send               : null,
+			sending            : null,
+			joinRoom           : null,
+			connectToServer    : null,
+			dropAllConnections : null,
+			getRoomStatus      : null,
+			getRoomID          : null,
+			leaveRoom          : null,
+			joinVoiceChat      : null,
+			responses          : null
 		}
 	};
 
@@ -275,114 +281,116 @@ wtsplayer.elementsController = function()
 		} );
 	}
 
-	//SPECIAL
-	this.onGotRoomStatus = function( status )
-	{
-		//alert(status);
-		if ( status === __peerController.responses.NO_ROOM ) //создание комнаты
-		{
-			//TODO: переподключение при перезагрузке страницы
-			document.getElementById( "typeRoom" ).className = "";
-			_joinButton.onclick                             = createRoom;
-		}
-		else if ( status === __peerController.responses.PUBLIC_ROOM ) //пустой пароль
-		{
-			_joinButton.onclick = function()
-			{
-				__peerController.joinRoom( function( result )
-				{
-					//
-				} );
-				selectInput();
-			};
-		}
-		else
-		{
-			document.getElementById( "enterPswd" ).className = "";
-			_joinButton.onclick                              = joinRoom;
-		}
-		document.getElementById( "overlayContent" ).className = "";
+	/*
+	 //SPECIAL
+	 this.onGotRoomStatus = function( status )
+	 {
+	 //alert(status);
+	 if ( status === __peerController.responses.NO_ROOM ) //создание комнаты
+	 {
+	 //TODO: переподключение при перезагрузке страницы
+	 document.getElementById( "typeRoom" ).className = "";
+	 _joinButton.onclick                             = createRoom;
+	 }
+	 else if ( status === __peerController.responses.PUBLIC_ROOM ) //пустой пароль
+	 {
+	 _joinButton.onclick = function()
+	 {
+	 __peerController.joinRoom( function( result )
+	 {
+	 //
+	 } );
+	 selectInput();
+	 };
+	 }
+	 else
+	 {
+	 document.getElementById( "enterPswd" ).className = "";
+	 _joinButton.onclick                              = joinRoom;
+	 }
+	 document.getElementById( "overlayContent" ).className = "";
 
-	};
+	 };
 
-	function createRoom()
-	{
-		__sessionController.set( __sessionController.vars.PASSWORD, _passwordSet.value );
-		//if(__peerController.joinRoom('create'))
-		//	selectInput();
-		__peerController.joinRoom( function( result )
-		{
-			if ( result === __peerController.responses.CREATED )
-			{
-				selectInput();
-			}
-		} );
-	}
+	 function createRoom()
+	 {
+	 __sessionController.set( __sessionController.vars.PASSWORD, _passwordSet.value );
+	 //if(__peerController.joinRoom('create'))
+	 //	selectInput();
+	 __peerController.joinRoom( function( result )
+	 {
+	 if ( result === __peerController.responses.CREATED )
+	 {
+	 selectInput();
+	 }
+	 } );
+	 }
 
-	function joinRoom()
-	{
-		__sessionController.set( __sessionController.vars.PASSWORD, _passwordInput.value );
-		__peerController.joinRoom( function( result )
-		{
-			if ( result === __peerController.responses.JOINED )
-			{
-				selectInput();
-			}
-			else
-			{
-				document.getElementById( "wrongPassword" ).className = "";
-			}
-		} );
+	 function joinRoom()
+	 {
+	 __sessionController.set( __sessionController.vars.PASSWORD, _passwordInput.value );
+	 __peerController.joinRoom( function( result )
+	 {
+	 if ( result === __peerController.responses.JOINED )
+	 {
+	 selectInput();
+	 }
+	 else
+	 {
+	 document.getElementById( "wrongPassword" ).className = "";
+	 }
+	 } );
 
-	};
-	function selectInput()
-	{
-		if ( _nick.value !== '' )
-		{
-			__sessionController.set( __sessionController.vars.NICK, _nick.value );
-		}
-		for ( var i = 0; i < _typeSrc.length; i++ )
-		{
-			if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
-			{
-				var type = _typeSrc[ i ].value;
-				break;
-			}
-		}
+	 };
+	 function selectInput()
+	 {
+	 if ( _nick.value !== '' )
+	 {
+	 __sessionController.set( __sessionController.vars.NICK, _nick.value );
+	 }
+	 for ( var i = 0; i < _typeSrc.length; i++ )
+	 {
+	 if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
+	 {
+	 var type = _typeSrc[ i ].value;
+	 break;
+	 }
+	 }
 
-		if ( type == "magnet" )
-		{
-			loadMagnet();
-		} else if ( type == "local" )
-		{
-			loadLocal();
-		}
+	 if ( type == "magnet" )
+	 {
+	 loadMagnet();
+	 } else if ( type == "local" )
+	 {
+	 loadLocal();
+	 }
 
-		document.getElementById( "overlay" ).className = "close";
-	}
+	 document.getElementById( "overlay" ).className = "close";
+	 }
 
-	function loadMagnet()
-	{
-		torrentId   = document.getElementById( "magnet" ).value;
-		var _client = new WebTorrent();
-		_client.add( torrentId, function( torrent )
-		{
-			// Torrents can contain many files. Let's use the first.
-			var file = torrent.files[ 0 ];
+	 function loadMagnet()
+	 {
+	 torrentId   = document.getElementById( "magnet" ).value;
+	 var _client = new WebTorrent();
+	 _client.add( torrentId, function( torrent )
+	 {
+	 // Torrents can contain many files. Let's use the first.
+	 var file = torrent.files[ 0 ];
 
-			// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-			file.renderTo( '#video', function( err, elem )
-			{
-			} );
-		} );
-	}
+	 // Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+	 file.renderTo( '#video', function( err, elem )
+	 {
+	 } );
+	 } );
+	 }
 
-	function loadLocal()
-	{
-		var file                               = document.getElementById( "localURL" ).files[ 0 ];
-		var url                                = URL.createObjectURL( file );
-		document.getElementById( "video" ).src = url;
-	}
+	 function loadLocal()
+	 {
+	 var file                               = document.getElementById( "localURL" ).files[ 0 ];
+	 var url                                = URL.createObjectURL( file );
+	 document.getElementById( "video" ).src = url;
+	 }
+	 */
 
 	//what -- peerController.sending enum
 	//from -- peerID
@@ -426,6 +434,116 @@ wtsplayer.elementsController = function()
 	{
 		console.error( "elementsController: got audioStream" );
 	};
+
+	this.init = function()
+	{
+
+
+		__peerController.connectToServer( function()
+		{
+			if ( window.location.hash === '' )
+			{
+				//fresh load
+				__peerController.getRoomID( function( potentialRoomID )
+				{
+					torrentId   = document.getElementById( "magnet" ).value;
+					var _client = new WebTorrent();
+					_client.add( torrentId, function( torrent )
+					{
+						// Torrents can contain many files. Let's use the first.
+						var file = torrent.files[ 0 ];
+
+						// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+						file.renderTo( '#video', function( err, elem )
+						{
+						} );
+					} );
+
+					__peerController.getRoomStatus(function(status)
+					{
+						if (status === __peerController.responses.NO_ROOM)
+						{
+							__sessionController.set(__sessionController.vars.ROOM_ID, potentialRoomID);
+							__sessionController.set(__sessionController.vars.CONNECTED, false);
+							console.log("session:",__sessionController.get(__sessionController.vars.ROOM_ID),
+							__sessionController.get(__sessionController.vars.CONNECTED));
+							__peerController.joinRoom(
+								[__peerController.responses.CREATED],
+								function()
+								{
+									//joined
+									__sessionController.set(__sessionController.vars.CONNECTED, true);
+									window.location.hash = '#'+potentialRoomID.toString();
+									document.getElementById( "overlay" ).className = "close";
+									__peerController.joinVoiceChat(function()
+									{
+										console.log("started voice chat");
+									});
+								}, function()
+								{
+									//connectionProblems
+								}, function(response)
+								{
+									//unexpected response
+								});
+						}
+					});
+				} );
+
+			}
+			else
+			{
+				if (__sessionController.get(__sessionController.vars.ROOM_ID) === window.location.hash.substr(1))
+				{
+
+				}
+				else
+				{
+					__sessionController.set(__sessionController.vars.ROOM_ID, window.location.hash.substr(1));
+					__sessionController.set(__sessionController.vars.CONNECTED, false);
+					__peerController.getRoomStatus(function(status)
+					{
+						if(status === __peerController.responses.PUBLIC_ROOM)
+						{
+							__peerController.joinRoom([__peerController.responses.JOINED],
+							function()
+							{
+								//success
+								torrentId   = document.getElementById( "magnet" ).value;
+								var _client = new WebTorrent();
+								_client.add( torrentId, function( torrent )
+								{
+									// Torrents can contain many files. Let's use the first.
+									var file = torrent.files[ 0 ];
+
+									// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+									file.renderTo( '#video', function( err, elem )
+									{
+									} );
+								} );
+								__peerController.joinVoiceChat(function()
+								{
+									console.log("started voice chat");
+								});
+								document.getElementById( "overlay" ).className = "close";
+							},
+							function()
+							{
+								//connectionProblems
+							},
+							function(response)
+							{
+								//unexpected response
+							})
+						}
+					})
+				}
+			}
+		} );
+
+		//console.log(window.location.hash);
+	}
+
 	//Initializing _playPauseButton object
 	switchToWaiting();
 };
