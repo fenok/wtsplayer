@@ -435,10 +435,8 @@ wtsplayer.elementsController = function()
 		console.error( "elementsController: got audioStream" );
 	};
 
-	this.init = function()
+	function init()
 	{
-
-
 		__peerController.connectToServer( function()
 		{
 			if ( window.location.hash === '' )
@@ -543,6 +541,8 @@ wtsplayer.elementsController = function()
 
 		//console.log(window.location.hash);
 	}
+
+	window.onload = init;
 
 	//Initializing _playPauseButton object
 	switchToWaiting();

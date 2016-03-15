@@ -519,8 +519,6 @@ wtsplayer.peerController = function()
 
 	this.leaveRoom = function( callback )
 	{
-		__stateController.onLeavedRoom();
-
 		$.ajax(
 			{
 				url      : '/leaveRoom?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ) + '&password=' + encodeURIComponent( __sessionController.get( __sessionController.vars.PASSWORD ) ) + '&peerID=' + encodeURIComponent( _peer.id ),
@@ -548,6 +546,8 @@ wtsplayer.peerController = function()
 			_dataConnections[ prop ].close();
 			delete _dataConnections[ prop ];
 		}
+
+		__stateController.onLeavedRoom();
 	};
 
 	/*
