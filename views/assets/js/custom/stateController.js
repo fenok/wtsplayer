@@ -311,7 +311,7 @@ wtsplayer.stateController = function()
 	//SPECIAL
 	this.onPlayerPlay = function( playerTime )
 	{
-		if ( _currentState.name !== 'play' )
+		if ( _currentState.name !== 'play' && _joinedRoom )
 		{
 			console.log( "Updating from onPlayerPlay:" );
 			//console.log( stateData.state );
@@ -331,7 +331,7 @@ wtsplayer.stateController = function()
 	//SPECIAL
 	this.onPlayerPause = function( playerTime )
 	{
-		if ( _currentState.name !== 'pause' )
+		if ( _currentState.name !== 'pause' && _joinedRoom )
 		{
 			console.log( "Updating from onPlayerPause:" );
 			//console.log( stateData.state );
@@ -354,15 +354,18 @@ wtsplayer.stateController = function()
 		console.log( "Updating from onPlayerSeek:" );
 		//console.log( stateData.state );
 
-		updateCurrentState(
-			{
-				name              : 'waiting',
-				timestamp         : __peerController.currentTimestamp(),
-				playerTime        : playerTime,
-				lastAction        : _currentState.lastAction,
-				previousStateName : _currentState.name
-			} );
-		sendCurrentState();
+		if ( _joinedRoom )
+		{
+			updateCurrentState(
+				{
+					name              : 'waiting',
+					timestamp         : __peerController.currentTimestamp(),
+					playerTime        : playerTime,
+					lastAction        : _currentState.lastAction,
+					previousStateName : _currentState.name
+				} );
+			sendCurrentState();
+		}
 	};
 
 	//SPECIAL

@@ -14,20 +14,14 @@ wtsplayer.peerController = function()
 		elementsController : {
 			outputSystemMessage : null,
 			onRecieved          : null,
-			getDataSource       : null,
+			getInitialData      : null,
 			onPeerDeleted       : null,
 			onGotAudioStream    : null
-		},
-		sessionController  : {
-			get  : null,
-			set  : null,
-			vars : null
 		}
 	};
 
 	var __stateController    = this.externals.stateController;
 	var __elementsController = this.externals.elementsController;
-	var __sessionController  = this.externals.sessionController;
 
 	var _self = this;
 
@@ -44,9 +38,12 @@ wtsplayer.peerController = function()
 	} );
 
 	this.getting = Object.freeze( {
-		SELF_ID            : 0,
-		OTHER_PEERS_ID     : 1,
-		SELF_IS_SUPER_PEER : 2
+		SELF_ID             : 0,
+		OTHER_PEERS_ID      : 1,
+		SELF_IS_SUPER_PEER  : 2,
+		CONNECTED_TO_SERVER : 3,
+		JOINED_ROOM         : 4,
+		JOINED_VOICE_CHAT   : 5
 	} );
 
 	this.responses = Object.freeze( {
@@ -72,6 +69,9 @@ wtsplayer.peerController = function()
 	var _connectedToServer;
 	var _joinedRoom;
 	var _joinedVoiceChat;
+
+	var currentRoomID;
+	var currentPassword;
 
 	var _ts = _serverTimeSync ?
 		timesync.create(
@@ -102,6 +102,9 @@ wtsplayer.peerController = function()
 		_joinedRoom        = false;
 		_joinedVoiceChat   = false;
 
+		currentRoomID   = '';
+		currentPassword = '';
+
 		if ( !_serverTimeSync )
 		{
 			_ts.options.peers = [];
@@ -121,7 +124,7 @@ wtsplayer.peerController = function()
 	 If time is being synced with server, callback is called after connecting to PeerJS and syncing time
 	 Otherwise callback is called on connection to PeerJS server
 	 */
-	this.connectToServer = function( callback )
+	this.connectToServer = function( callback, failCallback )
 	{
 		//Creating peer
 		//Remember that OpenShift uses 8000 port
@@ -176,26 +179,31 @@ wtsplayer.peerController = function()
 
 		_peer.on( 'open', function( id )
 		{
-			__sessionController.set( __sessionController.vars.NICK, id );
 			__elementsController.outputSystemMessage( "Your id is: " + id );
 			if ( _serverTimeSync )
 			{
 				syncTime_Server( function()
 				{
 					_connectedToServer = true;
-					callback();
+					callback( id );
 				} );
 			}
 			else
 			{
 				_connectedToServer = true;
-				callback();
+				callback( id );
 			}
+		} );
+
+		peer.on( 'error', function( err )
+		{
+			console.error( err.toString() );
+			failCallback( err );
 		} );
 
 		_peer.on( 'connection', function( conn )
 		{
-			if ( conn.metadata.roomID !== '' && conn.metadata.roomID === __sessionController.get( __sessionController.vars.ROOM_ID ) && conn.metadata.password === __sessionController.get( __sessionController.vars.PASSWORD ) )
+			if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
 			{
 				//Send initial info ASAP!!
 				conn.on( 'open', function()
@@ -204,9 +212,8 @@ wtsplayer.peerController = function()
 						{
 							type : _self.sending.INITIAL_INFO,
 							data : {
-								state      : __stateController.getStateData(),
-								dataSource : __elementsController.getDataSource(),
-								nick       : __sessionController.get( __sessionController.vars.NICK )
+								state   : __stateController.getStateData(),
+								initial : __elementsController.getInitialData()
 							}
 						};
 					conn.send( data );
@@ -248,7 +255,7 @@ wtsplayer.peerController = function()
 	{
 		_peer.on( 'call', function( call )
 		{
-			if ( call.metadata.roomID !== '' && call.metadata.roomID === __sessionController.get( __sessionController.vars.ROOM_ID ) && call.metadata.password === __sessionController.get( __sessionController.vars.PASSWORD ) )
+			if ( call.metadata.roomID !== '' && call.metadata.roomID === currentRoomID && call.metadata.password === currentPassword )
 			{
 				if ( _joinedVoiceChat )
 				{
@@ -308,8 +315,7 @@ wtsplayer.peerController = function()
 						break;
 					case _self.sending.INITIAL_INFO:
 						__stateController.onRecieved( _self.sending.STATE, conn.peer, data.data.state );
-						__elementsController.onRecieved( _self.sending.DATA_SOURCE, conn.peer, data.data.dataSource );
-						__elementsController.onRecieved( _self.sending.NICK, conn.peer, data.data.nick );
+						__elementsController.onRecieved( _self.sending.INITIAL_INFO, conn.peer, data.data.initial );
 						break;
 					case _self.sending.MESSAGE:
 					case _self.sending.DATA_SOURCE:
@@ -354,31 +360,50 @@ wtsplayer.peerController = function()
 		} );
 	}
 
-	this.getRoomStatus = function( successCallback, failCallback )
+	this.getRoomStatus = function( roomID, successCallback, failCallback )
 	{
-		$.ajax(
-			{
-				url      : '/getRoomStatus?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ),
-				dataType : 'json',
-				success  : function( status )
+		if ( _connectedToServer )
+		{
+			$.ajax(
 				{
-					successCallback( status );
-				}
-			} );
-		//TODO: failCallback
+					url      : '/getRoomStatus?roomID=' + encodeURIComponent( roomID ),
+					dataType : 'json',
+					success  : function( status )
+					{
+						successCallback( status );
+					}
+				} );
+		}
+		else
+		{
+			var err = new Error( "You must be connected to server" );
+			console.error( err.toString() );
+			failCallback( err );
+		}
+		//TODO: failCallback in ajax
 	};
 
-	this.getRoomID = function( callback )
+	this.getRoomID = function( successCallback, failCallback )
 	{
-		$.ajax(
-			{
-				url      : '/getRoomID',
-				dataType : 'json',
-				success  : function( data )
+		if ( _connectedToServer )
+		{
+			$.ajax(
 				{
-					callback( data );
-				}
-			} );
+					url      : '/getRoomID',
+					dataType : 'json',
+					success  : function( data )
+					{
+						successCallback( data );
+					}
+				} );
+		}
+		else
+		{
+			var err = new Error( "You must be connected to server" );
+			console.error( err.toString() );
+			failCallback( err );
+		}
+		//TODO: failCallback in ajax
 	};
 
 	//SPECIAL
@@ -386,10 +411,13 @@ wtsplayer.peerController = function()
 	//Creating or joining room, reporting result, connect to all peers, get all initial states (aka initial data)
 	//when connected to all -- time sync
 	//also calling to all peers, though it's not necessary for joining
-	this.joinRoom = function( successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback )
+	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
+		//TODO: failCallback on ajax
 		if ( _connectedToServer )
 		{
+			currentRoomID   = roomID;
+			currentPassword = password;
 			getPeers_initial( function( peers, response )
 			{
 				if ( successResponsesArray.indexOf( response ) !== -1 )
@@ -521,7 +549,7 @@ wtsplayer.peerController = function()
 	{
 		$.ajax(
 			{
-				url      : '/leaveRoom?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ) + '&password=' + encodeURIComponent( __sessionController.get( __sessionController.vars.PASSWORD ) ) + '&peerID=' + encodeURIComponent( _peer.id ),
+				url      : '/leaveRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
 				dataType : 'json',
 				success  : function( data )
 				{
@@ -530,7 +558,8 @@ wtsplayer.peerController = function()
 				}
 			} );
 
-		__sessionController.set( __sessionController.vars.ROOM_ID, '' );
+		currentRoomID   = '';
+		currentPassword = '';
 
 		_joinedVoiceChat = false;
 		_audioStream     = null;
@@ -553,7 +582,7 @@ wtsplayer.peerController = function()
 	/*
 
 	 */
-	this.joinVoiceChat = function( joinInitiatedCallback )
+	this.joinVoiceChat = function( joinInitiatedCallback, failCallback )
 	{
 		if ( _joinedRoom )
 		{
@@ -566,7 +595,9 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			console.error( new Error( "Unable to join voice chat before joining room" ).toString() );
+			var err = new Error( "Unable to join voice chat before joining room" );
+			console.error( err.toString() );
+			failCallback( err );
 			//return;
 		}
 	};
@@ -696,8 +727,8 @@ wtsplayer.peerController = function()
 	{
 		_calls[ peer ] = _peer.call( peer, _audioStream, {
 			metadata : {
-				roomID   : __sessionController.get( __sessionController.vars.ROOM_ID ),
-				password : __sessionController.get( __sessionController.vars.PASSWORD )
+				roomID   : currentRoomID,
+				password : currentPassword
 			}
 		} );
 		applyCallHandlers( peer );
@@ -742,8 +773,8 @@ wtsplayer.peerController = function()
 			serialization : 'json',
 			reliable      : _reliableDataChannels,
 			metadata      : {
-				roomID   : __sessionController.get( __sessionController.vars.ROOM_ID ),
-				password : __sessionController.get( __sessionController.vars.PASSWORD )
+				roomID   : currentRoomID,
+				password : currentPassword
 			}
 		} );
 		connectionHandler( conn );
@@ -757,7 +788,7 @@ wtsplayer.peerController = function()
 	{
 		$.ajax(
 			{
-				url      : '/getPeers?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ) + '&password=' + encodeURIComponent( __sessionController.get( __sessionController.vars.PASSWORD ) ),
+				url      : '/getPeers?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ),
 				dataType : 'json',
 				success  : function( data )
 				{
@@ -770,7 +801,7 @@ wtsplayer.peerController = function()
 	{
 		$.ajax(
 			{
-				url      : '/joinRoom?roomID=' + encodeURIComponent( __sessionController.get( __sessionController.vars.ROOM_ID ) ) + '&password=' + encodeURIComponent( __sessionController.get( __sessionController.vars.PASSWORD ) ) + '&peerID=' + encodeURIComponent( _peer.id ),
+				url      : '/joinRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
 				dataType : 'json',
 				success  : function( data )
 				{
@@ -811,6 +842,15 @@ wtsplayer.peerController = function()
 	{
 		switch ( what )
 		{
+			case _self.getting.CONNECTED_TO_SERVER:
+				return _connectedToServer;
+				break;
+			case _self.getting.JOINED_ROOM:
+				return _joinedRoom;
+				break;
+			case _self.getting.JOINED_VOICE_CHAT:
+				return _joinedVoiceChat;
+				break;
 			case _self.getting.SELF_ID:
 				return _peer.id;
 				break;

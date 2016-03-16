@@ -11,11 +11,6 @@ wtsplayer.elementsController = function()
 			onPlayerWaiting : null,
 			onPlayerCanPlay : null
 		},
-		sessionController : {
-			set  : null,
-			get  : null,
-			vars : null
-		},
 		peerController    : {
 			send               : null,
 			sending            : null,
@@ -31,7 +26,6 @@ wtsplayer.elementsController = function()
 	};
 
 	var __stateController   = this.externals.stateController;
-	var __sessionController = this.externals.sessionController;
 	var __peerController    = this.externals.peerController;
 
 	var _self = this;
@@ -408,6 +402,9 @@ wtsplayer.elementsController = function()
 			case __peerController.sending.NICK:
 				//nicks[from] = data
 				break;
+			case __peerController.sending.INITIAL_INFO:
+				//deal with data, passed by _self.getInitialData()
+				break;
 			default:
 				alert( "elementsController.onRecieved: unrecognized 'what'" );
 				break
@@ -415,8 +412,9 @@ wtsplayer.elementsController = function()
 	};
 
 	//SINGLE GET
-	this.getDataSource = function()
+	this.getInitialData = function()
 	{
+		//nick, dataSource, maybe something else
 		var data = "shitload of nothing";
 		return (data);
 	};
@@ -541,6 +539,42 @@ wtsplayer.elementsController = function()
 
 		//console.log(window.location.hash);
 	}
+
+	var _session = {};
+
+	var _sessionVars = Object.freeze( {
+		PASSWORD : 0,
+		ROOM_ID  : 1,
+		NICK     : 2
+	} );
+
+	function initSession()
+	{
+		if ( window.name ) //Session has been set before
+		{
+			_session = JSON.parse( window.name );
+		}
+		else //New session
+		{
+			_session[ _sessionVars.PASSWORD ]  = '';
+			_session[ _sessionVars.ROOM_ID ]   = '';
+
+			window.name = JSON.stringify( _session );
+		}
+	}
+
+	function getFromSession( what, data )
+	{
+		_session[ what ] = data;
+		window.name      = JSON.stringify( _session );
+	}
+
+	function setToSession( what )
+	{
+		return _session[ what ];
+	};
+
+	initSession();
 
 	window.onload = init;
 

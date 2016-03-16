@@ -3,7 +3,6 @@
 	var app =
 		{
 			peerController     : new wtsplayer.peerController(),
-			sessionController  : new wtsplayer.sessionController(),
 			stateController    : new wtsplayer.stateController(),
 			elementsController : new wtsplayer.elementsController()
 		};
