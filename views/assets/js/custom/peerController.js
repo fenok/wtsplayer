@@ -590,26 +590,20 @@ wtsplayer.peerController = function()
 		_self.send( _self.sending.DROPPED_CALL );
 	};
 
-	/*
 
-	 */
-	this.joinVoiceChat = function( joinInitiatedCallback, failCallback )
+
+	this.joinVoiceChat = function(audioStream)
 	{
-		if ( _joinedRoom )
+		if (_joinedRoom && !_joinedVoiceChat)
 		{
-			getAudioStream( function()
-			{
-				_joinedVoiceChat = true;
-				initiateCallToAllPeers();
-				joinInitiatedCallback();
-			} );
+			_audioStream = audioStream;
+			_joinedVoiceChat = true;
+			initiateCallToAllPeers();
 		}
 		else
 		{
-			var err = new Error( "Unable to join voice chat before joining room" );
+			var err = new Error( "Joining voice chat denied. You can only join one when you are joined to room and not joined to the voice chat already." );
 			console.error( err.toString() );
-			failCallback( err );
-			//return;
 		}
 	};
 
@@ -625,45 +619,6 @@ wtsplayer.peerController = function()
 			{
 				callToPeer( peer );
 			} );
-		}
-	}
-
-	// Get audioStream
-	function getAudioStream( callback )
-	{
-		navigator.getUserMedia = (
-		navigator.getUserMedia ||
-		navigator.webkitGetUserMedia ||
-		navigator.mozGetUserMedia ||
-		navigator.msGetUserMedia);
-
-		var constraints = { video : false, audio : true };
-		var success     = function( audioStream )
-		{
-			console.log( 'Successfully got the audioStream' );
-			_audioStream = audioStream;
-			callback();
-		};
-		var error       = function( err )
-		{
-			console.log( err.name + ': ' + err.message );
-			console.log( 'Couldn\'t get the audioStream' );
-			callback();
-		};
-
-		if ( navigator.mediaDevices.getUserMedia )
-		{
-			var media = navigator.mediaDevices.getUserMedia( constraints );
-			media.then( success );
-			media.catch( error );
-		}
-		else if ( navigator.getUserMedia )
-		{
-			navigator.getUserMedia( constraints, success, error );
-		}
-		else
-		{
-			error( new Error( '*.getUserMedia is unsupported' ) );
 		}
 	}
 
