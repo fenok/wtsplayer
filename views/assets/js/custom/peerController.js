@@ -16,7 +16,9 @@ wtsplayer.peerController = function()
 			onRecieved          : null,
 			getInitialData      : null,
 			onPeerDeleted       : null,
-			onGotAudioStream    : null
+			onGotAudioStream    : null,
+			onPeerJoinedVoiceChat : null,
+			onPeerLeavedVoiceChat : null
 		}
 	};
 
@@ -259,6 +261,7 @@ wtsplayer.peerController = function()
 			{
 				if ( _joinedVoiceChat )
 				{
+					__elementsController.onPeerJoinedVoiceChat(conn.peer);
 					call.answer( _audioStream );
 					_calls[ call.peer ] = call;
 					applyCallHandlers( call.peer );
@@ -290,7 +293,10 @@ wtsplayer.peerController = function()
 
 		_calls[ peer ].on( 'close', function()
 		{
-			console.log( "Firefox console? Update code..." );
+			if (util.browser === 'Firefox')
+			{
+				console.log( "mediaConnection's 'close' event worked on Firefox! Time to remove the DROPPED_CALL workaround." );
+			}
 		} );
 	}
 
@@ -308,9 +314,13 @@ wtsplayer.peerController = function()
 				switch ( data.type )
 				{
 					case _self.sending.CALL_ME:
-						if ( _audioStream !== null )
+						if (_joinedVoiceChat)
 						{
-							callToPeer( conn.peer );
+							__elementsController.onPeerJoinedVoiceChat( conn.peer );
+							if ( _audioStream !== null )
+							{
+								callToPeer( conn.peer );
+							}
 						}
 						break;
 					case _self.sending.INITIAL_INFO:
@@ -325,6 +335,14 @@ wtsplayer.peerController = function()
 					case _self.sending.STATE:
 					case _self.sending.WAITING_STATUS:
 						__stateController.onRecieved( data.type, conn.peer, data.data );
+						break;
+					case _self.sending.DROPPED_CALL:
+						if ( _calls[ conn.peer ] )
+						{
+							_calls[ conn.peer ].close();
+							delete _calls[ conn.peer ];
+							__elementsController.onPeerLeavedVoiceChat(conn.peer);
+						}
 						break;
 					case _self.sending.TIMESYNC_INFO:
 						if ( !_serverTimeSync )
@@ -346,7 +364,9 @@ wtsplayer.peerController = function()
 			delete _dataConnections[ conn.peer ];
 			if ( _calls[ conn.peer ] )
 			{
+				_calls[ conn.peer ].close();
 				delete _calls[ conn.peer ];
+				__elementsController.onPeerLeavedVoiceChat(conn.peer);
 			}
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.onPeerDeleted( conn.peer );
@@ -561,13 +581,7 @@ wtsplayer.peerController = function()
 		currentRoomID   = '';
 		currentPassword = '';
 
-		_joinedVoiceChat = false;
-		_audioStream     = null;
-		for ( var prop in _calls )
-		{
-			_calls[ prop ].close();
-			delete _calls[ prop ];
-		}
+		_self.leaveVoiceChat();
 
 		_joinedRoom = false;
 		for ( var prop in _dataConnections )
@@ -577,6 +591,18 @@ wtsplayer.peerController = function()
 		}
 
 		__stateController.onLeavedRoom();
+	};
+
+	this.leaveVoiceChat = function()
+	{
+		_joinedVoiceChat = false;
+		_audioStream     = null;
+		for ( var prop in _calls )
+		{
+			_calls[ prop ].close();
+			delete _calls[ prop ];
+		}
+		_self.send(_self.sending.DROPPED_CALL);
 	};
 
 	/*
