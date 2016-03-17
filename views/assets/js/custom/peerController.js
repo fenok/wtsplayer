@@ -12,11 +12,13 @@ wtsplayer.peerController = function()
 			onLeavedRoom  : null
 		},
 		elementsController : {
-			outputSystemMessage : null,
-			onRecieved          : null,
-			getInitialData      : null,
-			onPeerDeleted       : null,
-			onGotAudioStream    : null
+			outputSystemMessage   : null,
+			onRecieved            : null,
+			getInitialData        : null,
+			onPeerDeleted         : null,
+			onGotAudioStream      : null,
+			onPeerJoinedVoiceChat : null,
+			onPeerLeavedVoiceChat : null
 		}
 	};
 
@@ -195,7 +197,7 @@ wtsplayer.peerController = function()
 			}
 		} );
 
-		peer.on( 'error', function( err )
+		_peer.on( 'error', function( err )
 		{
 			console.error( err.toString() );
 			failCallback( err );
@@ -259,6 +261,7 @@ wtsplayer.peerController = function()
 			{
 				if ( _joinedVoiceChat )
 				{
+					__elementsController.onPeerJoinedVoiceChat( call.peer );
 					call.answer( _audioStream );
 					_calls[ call.peer ] = call;
 					applyCallHandlers( call.peer );
@@ -290,7 +293,10 @@ wtsplayer.peerController = function()
 
 		_calls[ peer ].on( 'close', function()
 		{
-			console.log( "Firefox console? Update code..." );
+			if ( util.browser === 'Firefox' )
+			{
+				console.log( "mediaConnection's 'close' event worked on Firefox! Time to remove the DROPPED_CALL workaround." );
+			}
 		} );
 	}
 
@@ -308,9 +314,13 @@ wtsplayer.peerController = function()
 				switch ( data.type )
 				{
 					case _self.sending.CALL_ME:
-						if ( _audioStream !== null )
+						if ( _joinedVoiceChat )
 						{
-							callToPeer( conn.peer );
+							__elementsController.onPeerJoinedVoiceChat( conn.peer );
+							if ( _audioStream !== null )
+							{
+								callToPeer( conn.peer );
+							}
 						}
 						break;
 					case _self.sending.INITIAL_INFO:
@@ -325,6 +335,14 @@ wtsplayer.peerController = function()
 					case _self.sending.STATE:
 					case _self.sending.WAITING_STATUS:
 						__stateController.onRecieved( data.type, conn.peer, data.data );
+						break;
+					case _self.sending.DROPPED_CALL:
+						if ( _calls[ conn.peer ] )
+						{
+							_calls[ conn.peer ].close();
+							delete _calls[ conn.peer ];
+							__elementsController.onPeerLeavedVoiceChat( conn.peer );
+						}
 						break;
 					case _self.sending.TIMESYNC_INFO:
 						if ( !_serverTimeSync )
@@ -346,7 +364,9 @@ wtsplayer.peerController = function()
 			delete _dataConnections[ conn.peer ];
 			if ( _calls[ conn.peer ] )
 			{
+				_calls[ conn.peer ].close();
 				delete _calls[ conn.peer ];
+				__elementsController.onPeerLeavedVoiceChat( conn.peer );
 			}
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.onPeerDeleted( conn.peer );
@@ -364,15 +384,11 @@ wtsplayer.peerController = function()
 	{
 		if ( _connectedToServer )
 		{
-			$.ajax(
-				{
-					url      : '/getRoomStatus?roomID=' + encodeURIComponent( roomID ),
-					dataType : 'json',
-					success  : function( status )
-					{
-						successCallback( status );
-					}
-				} );
+			GETFromServer('/getRoomStatus?roomID=' + encodeURIComponent( roomID ),
+			function(status)
+			{
+				successCallback( status );
+			}, failCallback);
 		}
 		else
 		{
@@ -380,22 +396,17 @@ wtsplayer.peerController = function()
 			console.error( err.toString() );
 			failCallback( err );
 		}
-		//TODO: failCallback in ajax
 	};
 
 	this.getRoomID = function( successCallback, failCallback )
 	{
 		if ( _connectedToServer )
 		{
-			$.ajax(
+			GETFromServer('/getRoomID',
+				function(data)
 				{
-					url      : '/getRoomID',
-					dataType : 'json',
-					success  : function( data )
-					{
-						successCallback( data );
-					}
-				} );
+					successCallback( data );
+				}, failCallback);
 		}
 		else
 		{
@@ -403,7 +414,6 @@ wtsplayer.peerController = function()
 			console.error( err.toString() );
 			failCallback( err );
 		}
-		//TODO: failCallback in ajax
 	};
 
 	//SPECIAL
@@ -413,7 +423,6 @@ wtsplayer.peerController = function()
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
-		//TODO: failCallback on ajax
 		if ( _connectedToServer )
 		{
 			currentRoomID   = roomID;
@@ -517,7 +526,7 @@ wtsplayer.peerController = function()
 										}
 									} );
 								}
-							} );
+							}, failCallback );
 						}
 					}, _joinTimeout );
 				}
@@ -536,7 +545,7 @@ wtsplayer.peerController = function()
 						unexpectedResponseCallback( response );
 					}
 				}
-			} );
+			}, failCallback );
 		}
 		else
 		{
@@ -545,29 +554,19 @@ wtsplayer.peerController = function()
 		}
 	};
 
-	this.leaveRoom = function( callback )
+	this.leaveRoom = function( callback, failCallback )
 	{
-		$.ajax(
-			{
-				url      : '/leaveRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
-				dataType : 'json',
-				success  : function( data )
-				{
-					//TODO: check data.type? That doesn't matter at all though...
-					callback();
-				}
-			} );
+		GETFromServer('/leaveRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
+		function(data)
+		{
+			//TODO: check data.type? That doesn't matter at all though...
+			callback();
+		}, failCallback);
 
 		currentRoomID   = '';
 		currentPassword = '';
 
-		_joinedVoiceChat = false;
-		_audioStream     = null;
-		for ( var prop in _calls )
-		{
-			_calls[ prop ].close();
-			delete _calls[ prop ];
-		}
+		_self.leaveVoiceChat();
 
 		_joinedRoom = false;
 		for ( var prop in _dataConnections )
@@ -579,26 +578,32 @@ wtsplayer.peerController = function()
 		__stateController.onLeavedRoom();
 	};
 
-	/*
-
-	 */
-	this.joinVoiceChat = function( joinInitiatedCallback, failCallback )
+	this.leaveVoiceChat = function()
 	{
-		if ( _joinedRoom )
+		_joinedVoiceChat = false;
+		_audioStream     = null;
+		for ( var prop in _calls )
 		{
-			getAudioStream( function()
-			{
-				_joinedVoiceChat = true;
-				initiateCallToAllPeers();
-				joinInitiatedCallback();
-			} );
+			_calls[ prop ].close();
+			delete _calls[ prop ];
+		}
+		_self.send( _self.sending.DROPPED_CALL );
+	};
+
+
+
+	this.joinVoiceChat = function(audioStream)
+	{
+		if (_joinedRoom && !_joinedVoiceChat)
+		{
+			_audioStream = audioStream;
+			_joinedVoiceChat = true;
+			initiateCallToAllPeers();
 		}
 		else
 		{
-			var err = new Error( "Unable to join voice chat before joining room" );
+			var err = new Error( "Joining voice chat denied. You can only join one when you are joined to room and not joined to the voice chat already." );
 			console.error( err.toString() );
-			failCallback( err );
-			//return;
 		}
 	};
 
@@ -614,45 +619,6 @@ wtsplayer.peerController = function()
 			{
 				callToPeer( peer );
 			} );
-		}
-	}
-
-	// Get audioStream
-	function getAudioStream( callback )
-	{
-		navigator.getUserMedia = (
-		navigator.getUserMedia ||
-		navigator.webkitGetUserMedia ||
-		navigator.mozGetUserMedia ||
-		navigator.msGetUserMedia);
-
-		var constraints = { video : false, audio : true };
-		var success     = function( audioStream )
-		{
-			console.log( 'Successfully got the audioStream' );
-			_audioStream = audioStream;
-			callback();
-		};
-		var error       = function( err )
-		{
-			console.log( err.name + ': ' + err.message );
-			console.log( 'Couldn\'t get the audioStream' );
-			callback();
-		};
-
-		if ( navigator.mediaDevices.getUserMedia )
-		{
-			var media = navigator.mediaDevices.getUserMedia( constraints );
-			media.then( success );
-			media.catch( error );
-		}
-		else if ( navigator.getUserMedia )
-		{
-			navigator.getUserMedia( constraints, success, error );
-		}
-		else
-		{
-			error( new Error( '*.getUserMedia is unsupported' ) );
 		}
 	}
 
@@ -784,43 +750,61 @@ wtsplayer.peerController = function()
 		} );
 	}
 
-	function getPeers( callback )
+	function getPeers( callback, failCallback )
 	{
-		$.ajax(
-			{
-				url      : '/getPeers?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ),
-				dataType : 'json',
-				success  : function( data )
-				{
-					callback( data );
-				}
-			} );
+		GETFromServer('/getPeers?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ),
+		function(data)
+		{
+			callback( data );
+		}, failCallback);
 	}
 
-	function getPeers_initial( callback )
+	function getPeers_initial( callback, failCallback )
 	{
-		$.ajax(
+		GETFromServer( '/joinRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
+			function( data )
 			{
-				url      : '/joinRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
-				dataType : 'json',
-				success  : function( data )
+				__elementsController.outputSystemMessage( data.type );
+				switch ( data.type )
 				{
-					__elementsController.outputSystemMessage( data.type );
-					switch ( data.type )
-					{
-						case _self.responses.JOINED:
-							callback( data.peers, data.type );
-							break;
-						default:
-							alert( 'Unrecognized response' );
-						case _self.responses.CREATED:
-						case _self.responses.JOINED_BEFORE:
-						case _self.responses.WRONG_PASSWORD:
-							callback( [], data.type );
-							break;
-					}
+					case _self.responses.JOINED:
+						callback( data.peers, data.type );
+						break;
+					default:
+						alert( 'Unrecognized response' );
+					case _self.responses.CREATED:
+					case _self.responses.JOINED_BEFORE:
+					case _self.responses.WRONG_PASSWORD:
+						callback( [], data.type );
+						break;
 				}
-			} );
+			}, failCallback );
+	}
+
+	function GETFromServer( url, callback, failCallback )
+	{
+		var xhr = new XMLHttpRequest();
+
+		xhr.open( 'GET', url, true );
+
+		xhr.send();
+
+		xhr.onreadystatechange = function()
+		{
+			if ( this.readyState === 4 )
+			{
+				if ( this.status === 200 )
+				{
+					callback( JSON.parse( this.responseText ) );
+				}
+				else
+				{
+					var err = new Error( this.status ? this.statusText : 'You lost the server. How could you?' );
+					console.error( err.toString() );
+					failCallback( err );
+				}
+			}
+		}
 	}
 
 	//GENERIC
