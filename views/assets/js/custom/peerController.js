@@ -197,7 +197,7 @@ wtsplayer.peerController = function()
 			}
 		} );
 
-		peer.on( 'error', function( err )
+		_peer.on( 'error', function( err )
 		{
 			console.error( err.toString() );
 			failCallback( err );

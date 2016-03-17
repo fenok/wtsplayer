@@ -1,120 +1,130 @@
-navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+var wtsplayer = wtsplayer || {};
 
-var _calls = {};
-var _audioStream;
-
-var _peer;
-
-function joinRoom()
+wtsplayer.stateController_dummy = function()
 {
-	console.log("joining");
-	$.ajax(
+	this.getStateData = function()
 	{
-		url 		: '/joinRoom?roomID=9557a600-e464-11e5-b7c3-59892a49a946&password=""&peerID=' + encodeURIComponent( _peer.id ),
-		dataType 	: 'json',
-		success 	: function( data )
-		{
-			switch ( data.type )
-			{
-				case 'created':
-					console.log("created");
-					break;
-				case 'joined':
-					console.log("joined");
-					data.peers.forEach( function( value )
-					{
-						_calls[ value ] = _peer.call( value, _audioStream );
-						_calls[ value ].on('error', function(err)
-						{
-							console.log("error on call");
-						});
+		console.log(arguments.callee.name, arguments)
+	};
 
-						_calls[ value ].on('stream', function(stream)
-						{
-							var audio = $('<audio autoplay />').appendTo('body');
-							audio[0].src = (URL || webkitURL || mozURL).createObjectURL(stream);
-							console.log("got incoming stream");
-						});
-					} );
-					break;
-				default:
-					console.log( 'something went terribly wrong' );
-					break;
-			}
-		}
-	} );
+	this.onRecieved = function( what, from, data )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPeerDeleted = function( id )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPlayerPlay = function( playerTime )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPlayerPause = function( playerTime )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPlayerSeek = function( playerTime )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPlayerWaiting = function()
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPlayerCanPlay = function()
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onJoinedRoom = function()
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onLeavedRoom = function()
+	{
+		console.log(arguments.callee.name, arguments)
+	};
 };
 
-function connect()
+wtsplayer.elementsController_dummy = function()
 {
-	console.log("connecting");
-	_peer = new Peer( '',
+	this.wait = function()
 	{
-		host 	: location.hostname,
-		port 	: location.port || ( location.protocol === 'https:' ? 443 : 8000 ),
-		path 	: '/peerjs',
-		debug 	: 3
-	} );
-	
-	_peer.on('call', function(call)
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.play = function()
 	{
-		console.log("answered call");
-		call.answer( _audioStream );
+		console.log(arguments.callee.name, arguments)
+	};
 
-		call.on('error', function(err)
-		{
-			console.log("error on answering");
-		});
-
-		call.on('stream', function(stream)
-		{
-			console.log("got incoming stream");
-			var audio = $('<audio autoplay />').appendTo('body');
-			audio[0].src = (URL || webkitURL || mozURL).createObjectURL(stream);
-		});
-
-		_calls[ call.peer ] = call;
-	});
-	
-	_peer.on( 'open', function( id )
+	this.pause = function()
 	{
-		joinRoom();
-	});
-}
+		console.log(arguments.callee.name, arguments)
+	};
 
-function getLocalAudioStream()
+	this.seek = function( playerTime )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.getPlayerCurrentTime = function()
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onMessageRecieved = function( messageData )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.outputSystemMessage = function( message )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onRecieved = function( what, from, data )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.getInitialData = function()
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onPeerDeleted = function( id )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+
+	this.onGotAudioStream = function( from, stream )
+	{
+		console.log(arguments.callee.name, arguments)
+	};
+};
+
+var app =
+	{
+		peerController     : new wtsplayer.peerController(),
+		stateController    : new wtsplayer.stateController_dummy(),
+		elementsController : new wtsplayer.elementsController_dummy()
+	};
+
+for ( var controllerName in app )
 {
-	console.log("getting")
-	navigator.getUserMedia (
-		{video: false, audio: true},
-
-		function success(audioStream)
+	for ( var externalControllerName in app[ controllerName ].externals )
+	{
+		for ( var method in app[ controllerName ].externals[ externalControllerName ] )
 		{
-			console.log("got mic");
-			_audioStream = audioStream;
-			connect();
-		},
-
-		function error(err)
-		{
-			console.log("error getting mic");
+			app[ controllerName ].externals[ externalControllerName ][ method ] = app[ externalControllerName ][ method ];
 		}
-	);
+	}
 }
-
-getLocalAudioStream();
-
-function test()
-{
-	//alert(this.vrbl);
-	--this.vrbl;
-}
-
-function testCaller()
-{
-	this.vrbl = 5;
-	test.call(this);
-	alert(this.vrbl);
-}
-
-testCaller();
