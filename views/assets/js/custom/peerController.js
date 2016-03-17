@@ -261,7 +261,7 @@ wtsplayer.peerController = function()
 			{
 				if ( _joinedVoiceChat )
 				{
-					__elementsController.onPeerJoinedVoiceChat( conn.peer );
+					__elementsController.onPeerJoinedVoiceChat( call.peer );
 					call.answer( _audioStream );
 					_calls[ call.peer ] = call;
 					applyCallHandlers( call.peer );
