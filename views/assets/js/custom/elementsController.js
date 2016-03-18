@@ -40,7 +40,7 @@ wtsplayer.elementsController = function()
 	var _fullscreenButton  = document.getElementById( "fullscreen" );
 	var _backOvervayBut    = document.getElementById( "backOverlayBut" );
 
-	var _retryButton   = document.getElementById( "retryButton" );
+	var _generateId    = document.getElementById( "generateId" );
 	var _roomIdInput   = document.getElementById( "roomId" );
 	var _wrongId       = document.getElementById( "wrongId" );
 	var _wrongPassword = document.getElementById( "wrongPassword" );
@@ -48,8 +48,7 @@ wtsplayer.elementsController = function()
 	var _nick          = document.getElementById( "nick" );
 	var _passwordInput = document.getElementById( "passwordInput" );
 	var _overlay       = document.getElementById( "overlay" );
-	//var _overlayContent	= document.getElementById( "overlayContent" );
-	var _joinButton = document.getElementById( "joinButton" );
+	var _joinButton    = document.getElementById( "joinButton" );
 
 	var _typeSrc   = document.getElementsByName( "typeSrc" );
 	var _magnet    = document.getElementById( "magnet" );
@@ -281,6 +280,14 @@ wtsplayer.elementsController = function()
 
 		} );
 	}
+	
+	_generateId.onclick = function()
+	{
+		__peerController.getRoomID(function(id)
+		{
+			_roomIdInput.value = id;
+		})
+	}
 
 	//what -- peerController.sending enum
 	//from -- peerID
@@ -376,20 +383,27 @@ wtsplayer.elementsController = function()
 		_joinButton.value   = "Создать эту комнату";
 		_title.innerHTML    = "Ошибка 404";
 		_roomIdInput.value  = window.location.hash.substr( 1 );
-		_joinButton.onclick = createRoom;
-		_overlay.className  = "error";
+		_joinButton.onclick = function()
+		{
+			_passwordInput.value = "";
+			window.location.hash = "";
+			_title.innerHTML     = "Создание комнаты";
+			_joinButton.onclick  = createRoom;
+			_overlay.className   = "create";
+		}
+		_overlay.className   = "error";
 	}
 
 	function error406()
 	{
 		_session.clear();
-		_joinButton.value = "Создать комнату";
-		_title.innerHTML  = "Это не та комната";
-		__peerController.getRoomID( function( potentialRoomID )
+		_joinButton.value   = "Создать комнату";
+		_title.innerHTML    = "Это не та комната";
+		_joinButton.onclick = function()
 		{
-			_roomIdInput.value = potentialRoomID;
-		} );
-		_joinButton.onclick = createRoom;
+			window.location.hash = "";
+			init();
+		}
 		_overlay.className  = "error";
 	}
 
@@ -436,23 +450,26 @@ wtsplayer.elementsController = function()
 
 	function selectInput( ret )
 	{
-		if ( _nick.value !== '' )
+		if ( _nick.value !== _session.nick )
 		{
 			_session.nick = _nick.value;
+		}
+		if ( _passwordInput.value !== '' )
+		{
+			_session.password = _passwordInput.value;
 		}
 		for ( var i = 0; i < _typeSrc.length; i++ )
 		{
 			if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
 			{
-				var type = _typeSrc[ i ].value;
-				if ( type == "magnet" )
+				_session.type_src = _typeSrc[ i ].value;
+				if ( _session.type_src == "magnet" )
 				{
 					_session.video_src = _magnet.value;
-				} else if ( type == "local" )
+				} else if ( _session.type_src == "local" )
 				{
 					_session.video_src = URL.createObjectURL( _localURL.files[ 0 ] );
 				}
-				_session.ready_src = type;
 				break;
 			}
 		}
@@ -465,17 +482,18 @@ wtsplayer.elementsController = function()
 
 	function enterRoom( roomId )
 	{
-		if ( roomId && _session.room_id === '' )
+		if ( roomId )
 		{
 			_session.room_id  = roomId;
-			_session.password = _passwordInput.value;
 			if ( window.location.hash === '' )
 			{
 				window.location.hash = '#' + roomId;
 			}
+			_wrongPassword.className = "close";
+			_wrongId.className = "close";
 		}
 
-		if ( _session.ready_src === '' )
+		if ( _session.video_src === '' )
 		{
 			_title.innerHTML    = "";
 			_joinButton.value   = "Войти в комнату";
@@ -487,7 +505,7 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			if ( _session.ready_src )
+			if ( _session.type_src != "magnet" )
 			{
 				_video.src = _session.video_src;
 			} else
@@ -529,6 +547,7 @@ wtsplayer.elementsController = function()
 		if ( id )
 		{
 			_session.nick = id;
+			_nick.value = id;
 		}
 		_video.src = "";
 		if ( window.location.hash === '' )
@@ -536,11 +555,12 @@ wtsplayer.elementsController = function()
 			__peerController.getRoomID( function( potentialRoomID )
 			{
 				_session.clear();
-				_joinButton.value   = "Создать комнату";
-				_roomIdInput.value  = potentialRoomID;
-				_title.innerHTML    = "Создание комнаты";
-				_joinButton.onclick = createRoom;
-				_overlay.className  = "create";
+				_passwordInput.value = "";
+				_joinButton.value    = "Создать комнату";
+				_roomIdInput.value   = potentialRoomID;
+				_title.innerHTML     = "Создание комнаты";
+				_joinButton.onclick  = createRoom;
+				_overlay.className   = "create";
 			} );
 		}
 		else
@@ -664,10 +684,10 @@ wtsplayer.elementsController = function()
 				return (this[ 2 ]);
 			}
 		},
-		"ready_src" : {
+		"type_src" : {
 			set    : function( n )
 			{
-				this[ 3 ] = (n != "magnet");
+				this[ 3 ] = n;
 				this.rewrite();
 			}, get : function()
 			{

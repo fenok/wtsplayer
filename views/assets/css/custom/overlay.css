@@ -1,3 +1,6 @@
+.close{
+	display: none!important;
+}
 #overlay{
   position: fixed;
   width: 100%;
@@ -20,12 +23,14 @@
   opacity: 1;
 }
 /*.craete .join .password .error*/
-.password #overlayContent *:not(#typeRoom), .error #overlayContent *, 
-.password #typeRoom *, .join #typeRoom, .closeContent #overlayContent{
+.password #overlayContent > *:not(#typeRoom), .error #overlayContent *, 
+.password #typeRoom *:not(#wrongPassword), 
+.join #typeRoom, .closeContent #overlayContent, 
+.password .close#wrongPassword{
 	display:none;
 }
 .password #joinButton,	.error #joinButton, 
-.password #title, 		.error #title, .password #wrongPassword {
+.password #title, 		.error #title{
 	display:inline!important;
 }
 .password #typeRoom #passwordInput{
@@ -75,6 +80,7 @@ input[name="typeSrc"]:checked + label + input{
 	opacity: 1!important;
 }
 #wrongPassword {
+	display: inline-block;
 	margin: 0 0 1.25% 45.5%;
 	color: red;
 }
@@ -85,8 +91,4 @@ input[name="typeSrc"]:checked + label + input{
 	border-radius: 5px;
 	background: skyblue;
 	opacity: 0;
-}
-
-.close{
-	display: none!important;
 }
