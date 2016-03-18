@@ -128,7 +128,7 @@ wtsplayer.elementsController = function()
 	{
 		var messageData =
 			{
-				nick    : __sessionController.get( __sessionController.vars.NICK ) || 'Someone',
+				nick    : _session.nick || 'Someone',
 				message : _messageInput.value
 			};
 		__peerController.send( __peerController.sending.MESSAGE, messageData );
@@ -279,10 +279,8 @@ wtsplayer.elementsController = function()
 	 //SPECIAL
 	 this.onGotRoomStatus = function( status )
 	 {
-	 //alert(status);
 	 if ( status === __peerController.responses.NO_ROOM ) //создание комнаты
 	 {
-	 //TODO: переподключение при перезагрузке страницы
 	 document.getElementById( "typeRoom" ).className = "";
 	 _joinButton.onclick                             = createRoom;
 	 }
@@ -340,7 +338,7 @@ wtsplayer.elementsController = function()
 	 {
 	 if ( _nick.value !== '' )
 	 {
-	 __sessionController.set( __sessionController.vars.NICK, _nick.value );
+	 _session.nick = _nick.value;
 	 }
 	 for ( var i = 0; i < _typeSrc.length; i++ )
 	 {
@@ -433,6 +431,40 @@ wtsplayer.elementsController = function()
 		console.error( "elementsController: got audioStream" );
 	};
 
+	function enterRoom()
+	{
+		_session.room_id = window.location.hash.substr(1);
+		if (_session.ready_src === undefined)
+		{
+			//перекинуть на оверлей
+		}
+		else
+		{
+			if (_session.ready_src) 
+				_video.src = _session.video_src;
+			else
+			{
+				 var _client = new WebTorrent();
+				 _client.add( _session.video_src, function( torrent )
+				 {
+					 // Torrents can contain many files. Let's use the first.
+					 var file = torrent.files[ 0 ];
+
+					 // Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+					 file.renderTo( '#video', function( err, elem ) { });
+				 });
+			}
+			__peerController.joinVoiceChat(function()
+			{
+				console.log("started voice chat");
+			});
+			document.getElementById( "overlay" ).className = "close";
+			//отображение плеера
+			//получение всех аудио
+		}
+	}
+	
+	
 	function init()
 	{
 		__peerController.connectToServer( function()
@@ -442,20 +474,10 @@ wtsplayer.elementsController = function()
 				//fresh load
 				__peerController.getRoomID( function( potentialRoomID )
 				{
-					torrentId   = document.getElementById( "magnet" ).value;
-					var _client = new WebTorrent();
-					_client.add( torrentId, function( torrent )
-					{
-						// Torrents can contain many files. Let's use the first.
-						var file = torrent.files[ 0 ];
+					
+					//TODO: отображение оверлея и ввод данных для создания комнаты
 
-						// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-						file.renderTo( '#video', function( err, elem )
-						{
-						} );
-					} );
-
-					__peerController.getRoomStatus(function(status)
+				/*__peerController.getRoomStatus(function(status)
 					{
 						if (status === __peerController.responses.NO_ROOM)
 						{
@@ -483,46 +505,26 @@ wtsplayer.elementsController = function()
 									//unexpected response
 								});
 						}
-					});
+					});*/
 				} );
 
 			}
 			else
 			{
-				if (__sessionController.get(__sessionController.vars.ROOM_ID) === window.location.hash.substr(1))
+				if (_session.room_id === window.location.hash.substr(1))
 				{
 
 				}
 				else
 				{
-					__sessionController.set(__sessionController.vars.ROOM_ID, window.location.hash.substr(1));
-					__sessionController.set(__sessionController.vars.CONNECTED, false);
+					_session.room_id = "";
+					_session.password = "";
 					__peerController.getRoomStatus(function(status)
 					{
 						if(status === __peerController.responses.PUBLIC_ROOM)
 						{
-							__peerController.joinRoom([__peerController.responses.JOINED],
-							function()
-							{
-								//success
-								torrentId   = document.getElementById( "magnet" ).value;
-								var _client = new WebTorrent();
-								_client.add( torrentId, function( torrent )
-								{
-									// Torrents can contain many files. Let's use the first.
-									var file = torrent.files[ 0 ];
-
-									// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-									file.renderTo( '#video', function( err, elem )
-									{
-									} );
-								} );
-								__peerController.joinVoiceChat(function()
-								{
-									console.log("started voice chat");
-								});
-								document.getElementById( "overlay" ).className = "close";
-							},
+							_session.room_id = window.location.hash.substr(1);
+							__peerController.joinRoom([__peerController.responses.JOINED], enterRoom(),
 							function()
 							{
 								//connectionProblems
@@ -532,6 +534,10 @@ wtsplayer.elementsController = function()
 								//unexpected response
 							})
 						}
+						else if(status === __peerController.responses.PRIVATE_ROOM)
+						{
+							//Отображение окна ввода пароля
+						}
 					})
 				}
 			}
@@ -540,41 +546,25 @@ wtsplayer.elementsController = function()
 		//console.log(window.location.hash);
 	}
 
-	var _session = {};
-
-	var _sessionVars = Object.freeze( {
-		PASSWORD : 0,
-		ROOM_ID  : 1,
-		NICK     : 2
-	} );
-
-	function initSession()
+	if ( window.name ) //Session has been set before
 	{
-		if ( window.name ) //Session has been set before
-		{
-			_session = JSON.parse( window.name );
-		}
-		else //New session
-		{
-			_session[ _sessionVars.PASSWORD ]  = '';
-			_session[ _sessionVars.ROOM_ID ]   = '';
-
-			window.name = JSON.stringify( _session );
-		}
+		_session = JSON.parse( window.name );
 	}
-
-	function getFromSession( what, data )
+	else //New session
 	{
-		_session[ what ] = data;
-		window.name      = JSON.stringify( _session );
+		var _session = ['',''];
+		window.name = JSON.stringify( _session );
 	}
-
-	function setToSession( what )
-	{
-		return _session[ what ];
-	};
-
-	initSession();
+	
+	_session.rewrite = function() {	window.name = JSON.stringify( this );}
+	
+	Object.defineProperties(_session,{
+		"password":		{set:function(n){this[0]=n;this.rewrite();},get:function(){return(this[0]);}},
+		"room_id":		{set:function(n){this[1]=n;this.rewrite();},get:function(){return(this[1]);}},
+		"nick":			{set:function(n){this[2]=n;this.rewrite();},get:function(){return(this[2]);}},
+		"ready_src":	{set:function(n){this[3]=(n!="torrent");this.rewrite();},get:function(){return(this[3]);}},
+		"video_src":	{set:function(n){this[4]=n;this.rewrite();},get:function(){return(this[4]);}}
+	})
 
 	window.onload = init;
 
