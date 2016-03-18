@@ -98,6 +98,8 @@ wtsplayer.peerController = function()
 	var _audioStream;
 	var _calls;
 
+	var _activeRequests;
+
 	function init()
 	{
 		_connectedToServer = false;
@@ -116,6 +118,8 @@ wtsplayer.peerController = function()
 
 		_audioStream = null;
 		_calls       = {};
+
+		_activeRequests = [];
 	}
 
 	/*
@@ -245,6 +249,8 @@ wtsplayer.peerController = function()
 
 	this.dropAllConnections = function( callback )
 	{
+		_self.abortActiveRequests();
+
 		if ( peer && !peer.destroyed )
 		{
 			_peer.on( 'close', function()
@@ -258,6 +264,14 @@ wtsplayer.peerController = function()
 		{
 			init();
 			callback();
+		}
+	};
+
+	this.abortActiveRequests = function()
+	{
+		for (var ind = 0; ind < _activeRequests.length; ++ind)
+		{
+			_activeRequests[ind].abort();
 		}
 	};
 
@@ -813,6 +827,11 @@ wtsplayer.peerController = function()
 		{
 			if ( this.readyState === 4 )
 			{
+				_activeRequests     = _activeRequests.filter( function( e )
+				{
+					return e !== this;
+				} );
+
 				if ( this.status === 200 )
 				{
 					callback( JSON.parse( this.responseText ) );
@@ -824,7 +843,21 @@ wtsplayer.peerController = function()
 					failCallback( err );
 				}
 			}
-		}
+		};
+
+		xhr.onabort = function()
+		{
+			_activeRequests     = _activeRequests.filter( function( e )
+			{
+				return e !== this;
+			} );
+
+			var err = new Error( "Request aborted" );
+			console.error( err.toString() );
+			failCallback( err );
+		};
+
+		_activeRequests.push(xhr);
 	}
 
 	//GENERIC
