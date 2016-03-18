@@ -443,7 +443,7 @@ wtsplayer.peerController = function()
 							_joinedRoom = true;
 							__elementsController.outputSystemMessage( "Connected, recieved, synced time" );
 							__stateController.onJoinedRoom();
-							joinedCallback();
+							joinedCallback( roomID ); //TODO: remove ASAP!!
 						}
 					};
 
