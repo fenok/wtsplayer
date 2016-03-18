@@ -481,6 +481,7 @@ wtsplayer.peerController = function()
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
+		//TODO: reject joining to empty room
 		if ( _connectedToServer && !_joinedRoom && currentRoomID === '' )
 		{
 			currentRoomID   = roomID;
@@ -601,6 +602,7 @@ wtsplayer.peerController = function()
 					}
 					else
 					{
+						currentRoomID = '';
 						unexpectedResponseCallback( response );
 					}
 				}
