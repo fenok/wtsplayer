@@ -9,8 +9,9 @@
 	</head>
 	<body>
 		<div id="overlay">
-			<div id="overlayContent" class="close"> 
-				<h2>Источник видео:</h2>
+			<div id="overlayContent" class="">
+				<h1 id="title">Создание комнаты</h1>
+				<h3>Источник видео:</h3>
 				<input type ="radio" id="but_1" name = "typeSrc" value = "magnet" checked>
 				<label for="but_1">Введите magnet-ссылку:</label>
 				<input type="text" id="magnet" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
@@ -23,20 +24,20 @@
 				<label for="but_3">Выберите файл:</label>
 				<input type="file" id="localURL">
 				<br>
-				<div id="typeRoom" class="close">
-					<h2>Выберите тип команты:</h2>
+				<div id="typeRoom">
+					<h3>Идентефикатор комнаты:</h3>
+					<input id="roomId"><input type="button" id="generateId" value="Сменить ID">
+					<span id="wrongId" class="close">Неверный идентификатор!</span>
+					<h3>Выберите тип команты:</h3>
 					<input type = "radio" id="but_5" name = "b" checked>
 					<label id="adress_5" for="but_5">Открытая комната</label>
 					<input type = "radio" id="but_6" name = "b">
 					<label for="but_6">Частная комната</label>
-					<input id="passwordSet" type="password" placeholder=" Введите пароль">
-					<br>
-				</div>
-				<div id="enterPswd" class="close">
-					Введите пароль для входа в комнату:
 					<input id="passwordInput" type="password" placeholder=" Введите пароль">
 					<span id="wrongPassword" class="close">Неверный пароль!</span>
+					<br>
 				</div>
+					
 				<label for="nick">Введите ник для чата:</label>
 				<input id="nick">
 				
