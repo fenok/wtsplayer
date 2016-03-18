@@ -33,6 +33,7 @@ wtsplayer.elementsController = function()
 
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
+	var _volume			   = document.getElementById( "volume" );
 	var _seekRange         = document.getElementById( "playerSeekRange" );
 	var _currentTimeOutput = document.getElementById( "playerCurrentTimeOutput" );
 	var _sendMessageButton = document.getElementById( "sendMessageButton" );
@@ -126,6 +127,11 @@ wtsplayer.elementsController = function()
 
 	} );
 
+	_volume.onchange = function(event)
+	{
+		_video.volume = event.target.value;
+	}
+	
 	_sendMessageButton.addEventListener( 'click', sendMsg );
 
 	_messageInput.onkeydown = function( e )
