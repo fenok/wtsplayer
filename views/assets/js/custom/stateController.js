@@ -44,6 +44,7 @@ wtsplayer.stateController = function()
 
 	function init()
 	{
+		//TODO: switch strings to enums
 		_currentState =
 		{
 			name              : 'waiting', // or 'play' or 'pause'

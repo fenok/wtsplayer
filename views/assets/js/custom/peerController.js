@@ -126,113 +126,121 @@ wtsplayer.peerController = function()
 	 If time is being synced with server, callback is called after connecting to PeerJS and syncing time
 	 Otherwise callback is called on connection to PeerJS server
 	 */
+	//TODO: more paranoidal flags
 	this.connectToServer = function( callback, failCallback )
 	{
-		//Creating peer
-		//Remember that OpenShift uses 8000 port
-		_peer = new Peer( '',
-			{
-				host   : location.hostname,
-				port   : location.protocol === 'https:' ? 8443 : 8000,
-				path   : '/peerjs',
-				secure : location.protocol === 'https:',
-				config : {
-					'iceServers' : [
-						{ url : 'stun:stun01.sipphone.com' },
-						{ url : 'stun:stun.ekiga.net' },
-						{ url : 'stun:stun.fwdnet.net' },
-						{ url : 'stun:stun.ideasip.com' },
-						{ url : 'stun:stun.iptel.org' },
-						{ url : 'stun:stun.rixtelecom.se' },
-						{ url : 'stun:stun.schlund.de' },
-						{ url : 'stun:stun.l.google.com:19302' },
-						{ url : 'stun:stun1.l.google.com:19302' },
-						{ url : 'stun:stun2.l.google.com:19302' },
-						{ url : 'stun:stun3.l.google.com:19302' },
-						{ url : 'stun:stun4.l.google.com:19302' },
-						{ url : 'stun:stunserver.org' },
-						{ url : 'stun:stun.softjoys.com' },
-						{ url : 'stun:stun.voiparound.com' },
-						{ url : 'stun:stun.voipbuster.com' },
-						{ url : 'stun:stun.voipstunt.com' },
-						{ url : 'stun:stun.voxgratia.org' },
-						{ url : 'stun:stun.xten.com' },
-						{
-							url        : 'turn:numb.viagenie.ca',
-							credential : 'muazkh',
-							username   : 'webrtc@live.com'
-						},
-						{
-							url        : 'turn:192.158.29.39:3478?transport=udp',
-							credential : 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-							username   : '28224511:1379330808'
-						},
-						{
-							url        : 'turn:192.158.29.39:3478?transport=tcp',
-							credential : 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-							username   : '28224511:1379330808'
-						}
-					]
-				},
-				debug  : 1
-			} );
-
-		console.log( location.hostname, location.port, location.protocol );
-
-		_peer.on( 'open', function( id )
+		if ( !_connectedToServer )
 		{
-			__elementsController.outputSystemMessage( "Your id is: " + id );
-			if ( _serverTimeSync )
+			//Creating peer
+			//Remember that OpenShift uses 8000 port
+			_peer = new Peer( '',
+				{
+					host   : location.hostname,
+					port   : location.protocol === 'https:' ? 8443 : 8000,
+					path   : '/peerjs',
+					secure : location.protocol === 'https:',
+					config : {
+						'iceServers' : [
+							{ url : 'stun:stun01.sipphone.com' },
+							{ url : 'stun:stun.ekiga.net' },
+							{ url : 'stun:stun.fwdnet.net' },
+							{ url : 'stun:stun.ideasip.com' },
+							{ url : 'stun:stun.iptel.org' },
+							{ url : 'stun:stun.rixtelecom.se' },
+							{ url : 'stun:stun.schlund.de' },
+							{ url : 'stun:stun.l.google.com:19302' },
+							{ url : 'stun:stun1.l.google.com:19302' },
+							{ url : 'stun:stun2.l.google.com:19302' },
+							{ url : 'stun:stun3.l.google.com:19302' },
+							{ url : 'stun:stun4.l.google.com:19302' },
+							{ url : 'stun:stunserver.org' },
+							{ url : 'stun:stun.softjoys.com' },
+							{ url : 'stun:stun.voiparound.com' },
+							{ url : 'stun:stun.voipbuster.com' },
+							{ url : 'stun:stun.voipstunt.com' },
+							{ url : 'stun:stun.voxgratia.org' },
+							{ url : 'stun:stun.xten.com' },
+							{
+								url        : 'turn:numb.viagenie.ca',
+								credential : 'muazkh',
+								username   : 'webrtc@live.com'
+							},
+							{
+								url        : 'turn:192.158.29.39:3478?transport=udp',
+								credential : 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+								username   : '28224511:1379330808'
+							},
+							{
+								url        : 'turn:192.158.29.39:3478?transport=tcp',
+								credential : 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+								username   : '28224511:1379330808'
+							}
+						]
+					},
+					debug  : 1
+				} );
+
+			console.log( location.hostname, location.port, location.protocol );
+
+			_peer.on( 'open', function( id )
 			{
-				syncTime_Server( function()
+				__elementsController.outputSystemMessage( "Your id is: " + id );
+				if ( _serverTimeSync )
+				{
+					syncTime_Server( function()
+					{
+						_connectedToServer = true;
+						callback( id );
+					} );
+				}
+				else
 				{
 					_connectedToServer = true;
 					callback( id );
-				} );
-			}
-			else
-			{
-				_connectedToServer = true;
-				callback( id );
-			}
-		} );
+				}
+			} );
 
-		_peer.on( 'error', function( err )
-		{
-			console.error( err.toString() );
-			failCallback( err );
-		} );
-
-		_peer.on( 'connection', function( conn )
-		{
-			if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
+			_peer.on( 'error', function( err )
 			{
-				//Send initial info ASAP!!
-				conn.on( 'open', function()
+				console.error( err.toString() );
+				failCallback( err );
+			} );
+
+			_peer.on( 'connection', function( conn )
+			{
+				if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
 				{
-					var data =
-						{
-							type : _self.sending.INITIAL_INFO,
-							data : {
-								state   : __stateController.getStateData(),
-								initial : __elementsController.getInitialData()
-							}
-						};
-					conn.send( data );
-				} );
+					//Send initial info ASAP!!
+					conn.on( 'open', function()
+					{
+						var data =
+							{
+								type : _self.sending.INITIAL_INFO,
+								data : {
+									state   : __stateController.getStateData(),
+									initial : __elementsController.getInitialData()
+								}
+							};
+						conn.send( data );
+					} );
 
-				//Handle incoming connections with universal handler
-				connectionHandler( conn );
-			}
-			else
-			{
-				console.error( new Error( "Connection from foreign peer. Extremely rare yet possible. May not be actual error." ).toString() );
-				conn.close();
-			}
-		} );
+					//Handle incoming connections with universal handler
+					connectionHandler( conn );
+				}
+				else
+				{
+					console.error( new Error( "Connection from foreign peer. Extremely rare yet possible. May not be actual error." ).toString() );
+					conn.close();
+				}
+			} );
 
-		//Handle incoming call
-		callHandler();
+			//Handle incoming call
+			callHandler();
+		}
+		else
+		{
+			failCallback( new Error( "Can't connect to server: already connected" ) );
+		}
 	};
 
 	this.dropAllConnections = function( callback )
@@ -384,11 +392,11 @@ wtsplayer.peerController = function()
 	{
 		if ( _connectedToServer )
 		{
-			GETFromServer('/getRoomStatus?roomID=' + encodeURIComponent( roomID ),
-			function(status)
-			{
-				successCallback( status );
-			}, failCallback);
+			GETFromServer( '/getRoomStatus?roomID=' + encodeURIComponent( roomID ),
+				function( status )
+				{
+					successCallback( status );
+				}, failCallback );
 		}
 		else
 		{
@@ -402,11 +410,11 @@ wtsplayer.peerController = function()
 	{
 		if ( _connectedToServer )
 		{
-			GETFromServer('/getRoomID',
-				function(data)
+			GETFromServer( '/getRoomID',
+				function( data )
 				{
 					successCallback( data );
-				}, failCallback);
+				}, failCallback );
 		}
 		else
 		{
@@ -423,7 +431,7 @@ wtsplayer.peerController = function()
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
-		if ( _connectedToServer )
+		if ( _connectedToServer && !_joinedRoom )
 		{
 			currentRoomID   = roomID;
 			currentPassword = password;
@@ -535,10 +543,11 @@ wtsplayer.peerController = function()
 					console.log( "unexpected response" );
 					if ( response === _self.responses.CREATED || response === _self.responses.JOINED )
 					{
+						_joinedRoom = true;
 						_self.leaveRoom( function()
 						{
 							unexpectedResponseCallback( response );
-						} )
+						}, failCallback )
 					}
 					else
 					{
@@ -549,61 +558,72 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			console.error( new Error( "Unable to join room before connecting to server" ).toString() );
+			console.error( new Error( "Can't join room: not connected to server or already joined room" ).toString() );
 			//return;
 		}
 	};
 
 	this.leaveRoom = function( callback, failCallback )
 	{
-		GETFromServer('/leaveRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
-		function(data)
+		if ( _connectedToServer && _joinedRoom )
 		{
-			//TODO: check data.type? That doesn't matter at all though...
-			callback();
-		}, failCallback);
+			GETFromServer( '/leaveRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
+				function( data )
+				{
+					//TODO: check data.type? That doesn't matter at all though...
+					callback();
+				}, failCallback );
 
-		currentRoomID   = '';
-		currentPassword = '';
+			currentRoomID   = '';
+			currentPassword = '';
 
-		_self.leaveVoiceChat();
+			_self.leaveVoiceChat();
 
-		_joinedRoom = false;
-		for ( var prop in _dataConnections )
-		{
-			_dataConnections[ prop ].close();
-			delete _dataConnections[ prop ];
+			_joinedRoom = false;
+			for ( var prop in _dataConnections )
+			{
+				_dataConnections[ prop ].close();
+				delete _dataConnections[ prop ];
+			}
+
+			__stateController.onLeavedRoom();
 		}
-
-		__stateController.onLeavedRoom();
+		else
+		{
+			failCallback( new Error( "Can't leave room: not connected to server or not joined room" ) );
+		}
 	};
 
 	this.leaveVoiceChat = function()
 	{
-		_joinedVoiceChat = false;
-		_audioStream     = null;
-		for ( var prop in _calls )
+		if ( _connectedToServer && _joinedRoom && _joinedVoiceChat )
 		{
-			_calls[ prop ].close();
-			delete _calls[ prop ];
+			_joinedVoiceChat = false;
+			_audioStream     = null;
+			for ( var prop in _calls )
+			{
+				_calls[ prop ].close();
+				delete _calls[ prop ];
+			}
+			_self.send( _self.sending.DROPPED_CALL );
 		}
-		_self.send( _self.sending.DROPPED_CALL );
+		else
+		{
+			console.error( new Error( "Can't leave voice chat: not connected to server, not joined room or not joined voice chat" ).toString() );
+		}
 	};
 
-
-
-	this.joinVoiceChat = function(audioStream)
+	this.joinVoiceChat = function( audioStream )
 	{
-		if (_joinedRoom && !_joinedVoiceChat)
+		if ( _connectedToServer && _joinedRoom && !_joinedVoiceChat )
 		{
-			_audioStream = audioStream;
+			_audioStream     = audioStream;
 			_joinedVoiceChat = true;
 			initiateCallToAllPeers();
 		}
 		else
 		{
-			var err = new Error( "Joining voice chat denied. You can only join one when you are joined to room and not joined to the voice chat already." );
-			console.error( err.toString() );
+			console.error( new Error( "Can't join voice chat: not connected to server, not joined room or already joined voice chat" ).toString() );
 		}
 	};
 
@@ -752,11 +772,11 @@ wtsplayer.peerController = function()
 
 	function getPeers( callback, failCallback )
 	{
-		GETFromServer('/getPeers?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ),
-		function(data)
-		{
-			callback( data );
-		}, failCallback);
+		GETFromServer( '/getPeers?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ),
+			function( data )
+			{
+				callback( data );
+			}, failCallback );
 	}
 
 	function getPeers_initial( callback, failCallback )
@@ -810,14 +830,21 @@ wtsplayer.peerController = function()
 	//GENERIC
 	this.send = function( type, data )
 	{
-		var message =
-			{
-				type : type,
-				data : data
-			};
-		for ( var prop in _dataConnections )
+		if ( _connectedToServer )
 		{
-			_dataConnections[ prop ].send( message );
+			var message =
+				{
+					type : type,
+					data : data
+				};
+			for ( var prop in _dataConnections )
+			{
+				_dataConnections[ prop ].send( message );
+			}
+		}
+		else
+		{
+			console.error( new Error( "Can't send data: not connected to server" ).toString() );
 		}
 	};
 
