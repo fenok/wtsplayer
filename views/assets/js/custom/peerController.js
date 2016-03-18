@@ -69,6 +69,7 @@ wtsplayer.peerController = function()
 	//--
 
 	var _connectedToServer;
+	var _connectingToServer;
 	var _joinedRoom;
 	var _joinedVoiceChat;
 
@@ -103,6 +104,7 @@ wtsplayer.peerController = function()
 	function init()
 	{
 		_connectedToServer = false;
+		_connectingToServer = false;
 		_joinedRoom        = false;
 		_joinedVoiceChat   = false;
 
@@ -133,8 +135,9 @@ wtsplayer.peerController = function()
 	//TODO: more paranoidal flags
 	this.connectToServer = function( callback, failCallback )
 	{
-		if ( !_connectedToServer )
+		if ( !_connectedToServer && !_connectingToServer)
 		{
+			_connectingToServer = true;
 			//Creating peer
 			//Remember that OpenShift uses 8000 port
 			_peer = new Peer( '',
@@ -193,12 +196,14 @@ wtsplayer.peerController = function()
 				{
 					syncTime_Server( function()
 					{
+						_connectingToServer = false;
 						_connectedToServer = true;
 						callback( id );
 					} );
 				}
 				else
 				{
+					_connectingToServer = false;
 					_connectedToServer = true;
 					callback( id );
 				}
@@ -243,7 +248,7 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			failCallback( new Error( "Can't connect to server: already connected" ) );
+			failCallback( new Error( "Can't connect to server: already connected or connecting" ) );
 		}
 	};
 
@@ -267,13 +272,44 @@ wtsplayer.peerController = function()
 		}
 	};
 
-	this.abortActiveRequests = function()
+	this.fakeReload = function(callback, failCallback)
+	{
+		if (_connectedToServer)
+		{
+			abortActiveRequests();
+			if (currentRoomID !== '') //started joining or joined
+			{
+				_joinedRoom = true;
+				_self.leaveRoom(callback, failCallback);
+			}
+			else
+			{
+				callback();
+			}
+		}
+		else
+		{
+			if (_connectingToServer)
+			{
+				_self.dropAllConnections(function()
+				{
+					_self.connectToServer(callback, failCallback);
+				});
+			}
+			else
+			{
+				_self.connectToServer(callback, failCallback);
+			}
+		}
+	};
+
+	function abortActiveRequests()
 	{
 		for (var ind = 0; ind < _activeRequests.length; ++ind)
 		{
 			_activeRequests[ind].abort();
 		}
-	};
+	}
 
 	function callHandler()
 	{
@@ -445,7 +481,7 @@ wtsplayer.peerController = function()
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
-		if ( _connectedToServer && !_joinedRoom )
+		if ( _connectedToServer && !_joinedRoom && currentRoomID === '' )
 		{
 			currentRoomID   = roomID;
 			currentPassword = password;
@@ -572,7 +608,7 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			console.error( new Error( "Can't join room: not connected to server or already joined room" ).toString() );
+			console.error( new Error( "Can't join room: not connected to server, already joined room or already joining room" ).toString() );
 			//return;
 		}
 	};
@@ -854,7 +890,7 @@ wtsplayer.peerController = function()
 
 			var err = new Error( "Request aborted" );
 			console.error( err.toString() );
-			failCallback( err );
+			//failCallback( err );
 		};
 
 		_activeRequests.push(xhr);
