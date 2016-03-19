@@ -260,6 +260,7 @@ wtsplayer.peerController = function()
 		{
 			_peer.on( 'close', function()
 			{
+				__stateController.onLeavedRoom();
 				init();
 				callback();
 			} );
@@ -267,6 +268,7 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
+			__stateController.onLeavedRoom();
 			init();
 			callback();
 		}
