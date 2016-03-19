@@ -103,10 +103,10 @@ wtsplayer.peerController = function()
 
 	function init()
 	{
-		_connectedToServer = false;
+		_connectedToServer  = false;
 		_connectingToServer = false;
-		_joinedRoom        = false;
-		_joinedVoiceChat   = false;
+		_joinedRoom         = false;
+		_joinedVoiceChat    = false;
 
 		currentRoomID   = '';
 		currentPassword = '';
@@ -135,7 +135,7 @@ wtsplayer.peerController = function()
 	//TODO: more paranoidal flags
 	this.connectToServer = function( callback, failCallback )
 	{
-		if ( !_connectedToServer && !_connectingToServer)
+		if ( !_connectedToServer && !_connectingToServer )
 		{
 			_connectingToServer = true;
 			//Creating peer
@@ -197,14 +197,14 @@ wtsplayer.peerController = function()
 					syncTime_Server( function()
 					{
 						_connectingToServer = false;
-						_connectedToServer = true;
+						_connectedToServer  = true;
 						callback( id );
 					} );
 				}
 				else
 				{
 					_connectingToServer = false;
-					_connectedToServer = true;
+					_connectedToServer  = true;
 					callback( id );
 				}
 			} );
@@ -272,15 +272,15 @@ wtsplayer.peerController = function()
 		}
 	};
 
-	this.fakeReload = function(callback, failCallback)
+	this.fakeReload = function( callback, failCallback )
 	{
-		if (_connectedToServer)
+		if ( _connectedToServer )
 		{
 			abortActiveRequests();
-			if (currentRoomID !== '') //started joining or joined
+			if ( currentRoomID !== '' ) //started joining or joined
 			{
 				_joinedRoom = true;
-				_self.leaveRoom(callback, failCallback);
+				_self.leaveRoom( callback, failCallback );
 			}
 			else
 			{
@@ -289,25 +289,25 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			if (_connectingToServer)
+			if ( _connectingToServer )
 			{
-				_self.dropAllConnections(function()
+				_self.dropAllConnections( function()
 				{
-					_self.connectToServer(callback, failCallback);
-				});
+					_self.connectToServer( callback, failCallback );
+				} );
 			}
 			else
 			{
-				_self.connectToServer(callback, failCallback);
+				_self.connectToServer( callback, failCallback );
 			}
 		}
 	};
 
 	function abortActiveRequests()
 	{
-		for (var ind = 0; ind < _activeRequests.length; ++ind)
+		for ( var ind = 0; ind < _activeRequests.length; ++ind )
 		{
-			_activeRequests[ind].abort();
+			_activeRequests[ ind ].abort();
 		}
 	}
 
@@ -865,7 +865,7 @@ wtsplayer.peerController = function()
 		{
 			if ( this.readyState === 4 )
 			{
-				_activeRequests     = _activeRequests.filter( function( e )
+				_activeRequests = _activeRequests.filter( function( e )
 				{
 					return e !== this;
 				} );
@@ -885,7 +885,7 @@ wtsplayer.peerController = function()
 
 		xhr.onabort = function()
 		{
-			_activeRequests     = _activeRequests.filter( function( e )
+			_activeRequests = _activeRequests.filter( function( e )
 			{
 				return e !== this;
 			} );
@@ -895,7 +895,7 @@ wtsplayer.peerController = function()
 			//failCallback( err );
 		};
 
-		_activeRequests.push(xhr);
+		_activeRequests.push( xhr );
 	}
 
 	//GENERIC
@@ -954,6 +954,11 @@ wtsplayer.peerController = function()
 				alert( "peerController.get: unrecognized 'what'" );
 				break;
 		}
+	};
+
+	this.getYoutubeVideoInfo = function( ID, callback, failCallback )
+	{
+		GETFromServer( '/getYoutubeVideoInfo?ID=' + encodeURIComponent( ID ), callback, failCallback );
 	};
 
 	//Function to be used to get synced timestamp

@@ -25,10 +25,10 @@ server.on( 'peerConnection', function( id )
 server.on( 'peerDisconnect', function( id )
 {
 	console.log( 'disconnect: ' + id );
-	onPeerLeaved(id);
+	onPeerLeaved( id );
 } );
 
-function onPeerLeaved(id)
+function onPeerLeaved( id )
 {
 	if ( id in peers )
 	{
@@ -44,6 +44,35 @@ function onPeerLeaved(id)
 		delete peers[ id ];
 	}
 }
+
+server.on( 'getYoutubeVideoInfo', function( req, res )
+{
+	var http = require( 'http' );
+
+	var options = {
+		host : 'www.youtube.com',
+		path : '/get_video_info?video_id=' + encodeURIComponent(req.query.ID)
+	};
+
+	var callback = function( response )
+	{
+		var info = '';
+
+		response.on( 'data', function( chunk )
+		{
+			info += chunk;
+		} );
+
+		response.on( 'end', function()
+		{
+			console.log( 'Got youtube video info' );
+			res.json( info );
+			//TODO: fail response
+		} );
+	};
+
+	http.request( options, callback ).end();
+} );
 
 server.on( 'getRoomStatus', function( req, res )
 {
@@ -102,7 +131,7 @@ server.on( 'leaveRoom', function( req, res )
 			{
 				if ( peerID in peers )
 				{
-					onPeerLeaved(peerID);
+					onPeerLeaved( peerID );
 					res.json( { type : responses.LEAVED } );
 					console.log( 'leaved' );
 				}

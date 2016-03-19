@@ -54,6 +54,10 @@ function initServer()
 		res.render( 'room.html' );
 	} );
 
+	app.get( '/getYoutubeVideoInfo', function( req, res )
+	{
+		self.emit( 'getYoutubeVideoInfo', req, res );
+	} );
 	app.get( '/getRoomID', function( req, res )
 	{
 		self.emit( 'getRoomID', req, res );
