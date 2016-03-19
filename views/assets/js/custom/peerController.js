@@ -315,6 +315,7 @@ wtsplayer.peerController = function()
 
 	function callHandler()
 	{
+		//TODO: fake call between two silent peers, set _calls[<silent>] = null; add answers: NOT_IN_VOICE_CHAT, FAKE_CALL
 		_peer.on( 'call', function( call )
 		{
 			if ( call.metadata.roomID !== '' && call.metadata.roomID === currentRoomID && call.metadata.password === currentPassword )
