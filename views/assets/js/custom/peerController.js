@@ -821,6 +821,15 @@ wtsplayer.peerController = function()
 		connectionHandler( conn );
 		conn.on( 'open', function()
 		{
+			var data =
+				{
+					type : _self.sending.INITIAL_INFO,
+					data : {
+						state   : null,
+						initial : __elementsController.getInitialData()
+					}
+				};
+			conn.send(data);
 			successCallback();
 		} );
 	}
