@@ -11,6 +11,7 @@ function initServer()
 	var express = require( 'express' );
 	var app     = express();
 
+	//TODO: update paths and corresponding html
 	app.use( express.static( './views' ) );
 	app.use( express.static( './views/assets/js/original' ) );
 	app.use( express.static( './views/assets/js/custom' ) );
