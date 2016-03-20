@@ -34,7 +34,7 @@ wtsplayer.peerController = function()
 		NICK           : 3,
 		DATA_SOURCE    : 4,
 		DROPPED_CALL   : 5,
-		CALL_ME        : 6,
+		FAKE_CALL      : 6,
 		INITIAL_INFO   : 7,
 		TIMESYNC_INFO  : 8
 	} );
@@ -59,6 +59,11 @@ wtsplayer.peerController = function()
 		NO_SUCH_PEER   : 7,
 		LEAVED         : 8,
 		LEAVED_BEFORE  : 9
+	} );
+
+	this.callTypes = Object.freeze( {
+		INITIAL : 0,
+		ANSWER  : 1
 	} );
 
 	var _serverTimeSync       = true;
@@ -315,14 +320,19 @@ wtsplayer.peerController = function()
 
 	function callHandler()
 	{
-		//TODO: fake call between two silent peers, set _calls[<silent>] = null; add answers: NOT_IN_VOICE_CHAT, FAKE_CALL
 		_peer.on( 'call', function( call )
 		{
 			if ( call.metadata.roomID !== '' && call.metadata.roomID === currentRoomID && call.metadata.password === currentPassword )
 			{
 				if ( _joinedVoiceChat )
 				{
-					__elementsController.onPeerJoinedVoiceChat( call.peer );
+					if ( _audioStream === null && call.metadata.callType === _self.callTypes.INITIAL )
+					{
+						_dataConnections[ call.peer ].send( {
+							type : _self.sending.FAKE_CALL,
+							data : _self.callTypes.ANSWER
+						} );
+					}
 					call.answer( _audioStream );
 					_calls[ call.peer ] = call;
 					applyCallHandlers( call.peer );
@@ -349,6 +359,7 @@ wtsplayer.peerController = function()
 
 		_calls[ peer ].on( 'stream', function( stream )
 		{
+			__elementsController.onPeerJoinedVoiceChat( peer );
 			__elementsController.onGotAudioStream( peer, stream );
 		} );
 
@@ -374,14 +385,29 @@ wtsplayer.peerController = function()
 				console.log( "connectionHandler -- data" );
 				switch ( data.type )
 				{
-					case _self.sending.CALL_ME:
+					case _self.sending.FAKE_CALL:
 						if ( _joinedVoiceChat )
 						{
-							__elementsController.onPeerJoinedVoiceChat( conn.peer );
-							if ( _audioStream !== null )
+							if ( data.data === _self.callTypes.ANSWER )
 							{
-								callToPeer( conn.peer );
+								if ( _calls[ conn.peer ] === undefined )
+								{
+									_calls[ conn.peer ] = null;
+								}
 							}
+							else
+							{
+								if ( _audioStream !== null )
+								{
+									callToPeer( conn.peer, _self.callTypes.ANSWER );
+								}
+								else
+								{
+									conn.send( { type : _self.sending.FAKE_CALL, data : _self.callTypes.ANSWER } );
+									_calls[ conn.peer ] = null;
+								}
+							}
+							__elementsController.onPeerJoinedVoiceChat( conn.peer );
 						}
 						break;
 					case _self.sending.INITIAL_INFO:
@@ -398,9 +424,12 @@ wtsplayer.peerController = function()
 						__stateController.onRecieved( data.type, conn.peer, data.data );
 						break;
 					case _self.sending.DROPPED_CALL:
-						if ( _calls[ conn.peer ] )
+						if ( _calls[ conn.peer ] !== undefined )
 						{
-							_calls[ conn.peer ].close();
+							if ( _calls[ conn.peer ] !== null )
+							{
+								_calls[ conn.peer ].close();
+							}
 							delete _calls[ conn.peer ];
 							__elementsController.onPeerLeavedVoiceChat( conn.peer );
 						}
@@ -423,9 +452,12 @@ wtsplayer.peerController = function()
 			console.log( "connectionHandler -- close" );
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
-			if ( _calls[ conn.peer ] )
+			if ( _calls[ conn.peer ] !== undefined )
 			{
-				_calls[ conn.peer ].close();
+				if ( _calls[ conn.peer ] !== null )
+				{
+					_calls[ conn.peer ].close();
+				}
 				delete _calls[ conn.peer ];
 				__elementsController.onPeerLeavedVoiceChat( conn.peer );
 			}
@@ -657,7 +689,10 @@ wtsplayer.peerController = function()
 			_audioStream     = null;
 			for ( var prop in _calls )
 			{
-				_calls[ prop ].close();
+				if ( _calls[ prop ] !== null )
+				{
+					_calls[ prop ].close();
+				}
 				delete _calls[ prop ];
 			}
 			_self.send( _self.sending.DROPPED_CALL );
@@ -692,7 +727,7 @@ wtsplayer.peerController = function()
 		{
 			_self.get( _self.getting.OTHER_PEERS_ID ).forEach( function( peer )
 			{
-				callToPeer( peer );
+				callToPeer( peer, _self.callTypes.INITIAL );
 			} );
 		}
 	}
@@ -764,12 +799,13 @@ wtsplayer.peerController = function()
 		_ts.sync();
 	}
 
-	function callToPeer( peer )
+	function callToPeer( peer, callType )
 	{
 		_calls[ peer ] = _peer.call( peer, _audioStream, {
 			metadata : {
 				roomID   : currentRoomID,
-				password : currentPassword
+				password : currentPassword,
+				callType : callType
 			}
 		} );
 		applyCallHandlers( peer );
@@ -777,7 +813,7 @@ wtsplayer.peerController = function()
 
 	function askForCall()
 	{
-		_self.send( _self.sending.CALL_ME );
+		_self.send( _self.sending.FAKE_CALL, _self.callTypes.INITIAL );
 	}
 
 	function controlInitialStateRecieving( peer, callback )
@@ -829,7 +865,7 @@ wtsplayer.peerController = function()
 						initial : __elementsController.getInitialData()
 					}
 				};
-			conn.send(data);
+			conn.send( data );
 			successCallback();
 		} );
 	}
