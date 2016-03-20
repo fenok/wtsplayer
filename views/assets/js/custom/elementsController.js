@@ -132,6 +132,8 @@ wtsplayer.elementsController = function()
 		_video.volume = event.target.value;
 	}
 	
+	
+	
 	_sendMessageButton.addEventListener( 'click', sendMsg );
 
 	_messageInput.onkeydown = function( e )
