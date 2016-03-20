@@ -18,7 +18,8 @@ wtsplayer.peerController = function()
 			onPeerDeleted         : null,
 			onGotAudioStream      : null,
 			onPeerJoinedVoiceChat : null,
-			onPeerLeavedVoiceChat : null
+			onPeerLeavedVoiceChat : null,
+			onPeerConnected       : null
 		}
 	};
 
@@ -224,6 +225,7 @@ wtsplayer.peerController = function()
 			{
 				if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
 				{
+					__elementsController.onPeerConnected( conn.peer );
 					//Send initial info ASAP!!
 					conn.on( 'open', function()
 					{
@@ -516,7 +518,7 @@ wtsplayer.peerController = function()
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
-		if ( _connectedToServer && !_joinedRoom && currentRoomID === '' && roomID !== '')
+		if ( _connectedToServer && !_joinedRoom && currentRoomID === '' && roomID !== '' )
 		{
 			currentRoomID   = roomID;
 			currentPassword = password;
