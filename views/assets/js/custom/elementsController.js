@@ -12,17 +12,18 @@ wtsplayer.elementsController = function()
 			onPlayerCanPlay : null
 		},
 		peerController  : {
-			send               : null,
-			sending            : null,
-			joinRoom           : null,
-			connectToServer    : null,
-			dropAllConnections : null,
-			getRoomStatus      : null,
-			getRoomID          : null,
-			leaveRoom          : null,
-			joinVoiceChat      : null,
-			responses          : null,
-			fakeReload         : null
+			send                : null,
+			sending             : null,
+			joinRoom            : null,
+			connectToServer     : null,
+			dropAllConnections  : null,
+			getRoomStatus       : null,
+			getRoomID           : null,
+			leaveRoom           : null,
+			joinVoiceChat       : null,
+			responses           : null,
+			fakeReload          : null,
+			getYoutubeVideoInfo : null
 		}
 	};
 
@@ -54,6 +55,7 @@ wtsplayer.elementsController = function()
 	var _typeSrc   = document.getElementsByName( "typeSrc" );
 	var _magnet    = document.getElementById( "magnet" );
 	var _globalURL = document.getElementById( "globalURL" );
+	var _quality   = document.getElementById( "quality" );
 	var _localURL  = document.getElementById( "localURL" );
 
 	var _session;
@@ -132,7 +134,62 @@ wtsplayer.elementsController = function()
 		_video.volume = event.target.value;
 	}
 	
-	
+	_globalURL.onchange = function()
+	{
+		function parse(d)
+		{
+		  var res, i$, ref$, len$, a, ref1$;
+		  if (d.startsWith("http")) {
+			return d;
+		  } else if (d.indexOf(",") != -1) {
+			return d.split(",").map(parse);
+		  } else if (d.indexOf("&") != -1) {
+			res = {};
+			for (i$ = 0, len$ = (ref$ = d.split("&")).length; i$ < len$; ++i$) {
+			  a = ref$[i$];
+			  a = a.split("=");
+			  if (res[a[0]]) {
+				if (!$.isArray(res[a[0]])) {
+				  res[a[0]] = [res[a[0]]];
+				}
+				(ref1$ = res[a[0]])[ref1$.length] = parse(unescape(a[1]));
+			  } else {
+				res[a[0]] = parse(unescape(a[1]));
+			  }
+			}
+			return res;
+		  } else if (!isNaN(d)) {
+			return +d;
+		  } else if (d === 'True' || d === 'False') {
+			return d === 'True';
+		  } else {
+			return d;
+		  }
+		};
+		
+		var rx = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+		var res = this.value.match(rx);
+		console.log(res);
+		if (res!==null)
+			__peerController.getYoutubeVideoInfo(res[1],function(text)
+			{
+				console.log(text);
+				var obj = parse(text);
+				console.log(obj);
+				console.log(obj.url_encoded_fmt_stream_map);
+				for (var i=0; i<obj.url_encoded_fmt_stream_map.length; i)
+				{
+					console.log(i);
+					var opt = document.createElement("option");
+					
+					opt.innerHTML = obj.url_encoded_fmt_stream_map[i].quality;
+					opt.value = obj.url_encoded_fmt_stream_map[i].url;
+					console.log(opt);
+					_quality.appendChild(opt);
+				}
+				
+			})
+	}
 	
 	_sendMessageButton.addEventListener( 'click', sendMsg );
 

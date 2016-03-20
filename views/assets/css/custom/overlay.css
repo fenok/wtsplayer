@@ -48,7 +48,7 @@
 }
 	
 #globalURL{
-	width: 65.5%;
+	width: 50%;
 	background: skyblue;
 	border: 0;
 	margin-bottom: 8px;
@@ -58,11 +58,14 @@
 	margin-bottom: 7px;
 	width: 256px;
 }
+#quality {
+	width: 14%;
+}
 
 input[name="typeSrc"] + label + input{
 	opacity: 0.35;
 }
-input[name="typeSrc"]:checked + label + input{
+input[name="typeSrc"]:checked + label + input, input[name="typeSrc"]:checked + label + input + select{
 	opacity: 1!important;
 }
 #joinButton {
