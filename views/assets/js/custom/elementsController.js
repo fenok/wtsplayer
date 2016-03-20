@@ -169,27 +169,23 @@ wtsplayer.elementsController = function()
 		
 		var rx = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
 		var res = this.value.match(rx);
-		console.log(res);
 		if (res!==null)
 			__peerController.getYoutubeVideoInfo(res[1],function(text)
 			{
-				console.log(text);
 				var obj = parse(text);
-				console.log(obj);
-				console.log(obj.url_encoded_fmt_stream_map);
-				for (var i=0; i<obj.url_encoded_fmt_stream_map.length; i)
+				_quality.innerHTML = "";
+				for (var i=0; i<obj.url_encoded_fmt_stream_map.length; i++)
 				{
-					console.log(i);
 					var opt = document.createElement("option");
-					
 					opt.innerHTML = obj.url_encoded_fmt_stream_map[i].quality;
 					opt.value = obj.url_encoded_fmt_stream_map[i].url;
-					console.log(opt);
 					_quality.appendChild(opt);
 				}
 				
 			})
 	}
+	
+	
 	
 	_sendMessageButton.addEventListener( 'click', sendMsg );
 
@@ -534,7 +530,11 @@ wtsplayer.elementsController = function()
 				} else if ( _session.type_src == "local" )
 				{
 					_session.video_src = URL.createObjectURL( _localURL.files[ 0 ] );
+				} else
+				{
+					_session.video_src = _quality.value;
 				}
+				
 				break;
 			}
 		}
