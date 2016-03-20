@@ -62,7 +62,7 @@
 	width: 14%;
 }
 
-input[name="typeSrc"] + label + input{
+input[name="typeSrc"] + label + input, input[name="typeSrc"] + label + input + select{
 	opacity: 0.35;
 }
 input[name="typeSrc"]:checked + label + input, input[name="typeSrc"]:checked + label + input + select{

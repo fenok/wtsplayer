@@ -57,8 +57,11 @@ wtsplayer.elementsController = function()
 	var _globalURL = document.getElementById( "globalURL" );
 	var _quality   = document.getElementById( "quality" );
 	var _localURL  = document.getElementById( "localURL" );
+	
+	var _audioChatStatus = document.getElementById( "audioChatStatus" );
 
 	var _session;
+	var _videoSrcChange = false;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
 	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
@@ -397,46 +400,43 @@ wtsplayer.elementsController = function()
 		console.error( "elementsController: got audioStream" );
 	};
 
-	/*
 	 // Get audioStream
-	 function getAudioStream( callback )
-	 {
-	 navigator.getUserMedia = (
-	 navigator.getUserMedia ||
-	 navigator.webkitGetUserMedia ||
-	 navigator.mozGetUserMedia ||
-	 navigator.msGetUserMedia);
+	function getAndSendAudioStream()
+	{
+		navigator.getUserMedia = (
+		navigator.getUserMedia ||
+		navigator.webkitGetUserMedia ||
+		navigator.mozGetUserMedia ||
+		navigator.msGetUserMedia);
 
-	 var constraints = { video : false, audio : true };
-	 var success     = function( audioStream )
-	 {
-	 console.log( 'Successfully got the audioStream' );
-	 _audioStream = audioStream;
-	 callback();
-	 };
-	 var error       = function( err )
-	 {
-	 console.log( err.name + ': ' + err.message );
-	 console.log( 'Couldn\'t get the audioStream' );
-	 callback();
-	 };
+		var constraints = { video : false, audio : true };
+		var success     = function( audioStream )
+		{
+			console.log( 'Successfully got the audioStream' );
+			__peerController.joinVoiceChat(audioStream);
+		};
+		var error       = function( err )
+		{
+			console.error( err.toString() );
+			console.log( 'Couldn\'t get the audioStream' );
+			__peerController.joinVoiceChat(null);
+		};
 
-	 if ( navigator.mediaDevices.getUserMedia )
-	 {
-	 var media = navigator.mediaDevices.getUserMedia( constraints );
-	 media.then( success );
-	 media.catch( error );
-	 }
-	 else if ( navigator.getUserMedia )
-	 {
-	 navigator.getUserMedia( constraints, success, error );
-	 }
-	 else
-	 {
-	 error( new Error( '*.getUserMedia is unsupported' ) );
-	 }
-	 }
-	 */
+		if ( navigator.mediaDevices.getUserMedia )
+		{
+			var media = navigator.mediaDevices.getUserMedia( constraints );
+			media.then( success );
+			media.catch( error );
+		}
+		else if ( navigator.getUserMedia )
+		{
+			navigator.getUserMedia( constraints, success, error );
+		}
+		else
+		{
+			error( new Error( '*.getUserMedia is unsupported' ) );
+		}
+	}
 
 	function error404()
 	{
@@ -514,8 +514,10 @@ wtsplayer.elementsController = function()
 		if ( _nick.value !== _session.nick )
 		{
 			_session.nick = _nick.value;
+			if (ret === false)
+				__peerController.send(__peerController.sending.NICK, _session.nick);
 		}
-		if ( _passwordInput.value !== '' )
+		if ( _session.password !== _passwordInput.value && _passwordInput.value !== '' )
 		{
 			_session.password = _passwordInput.value;
 		}
@@ -523,21 +525,40 @@ wtsplayer.elementsController = function()
 		{
 			if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
 			{
-				_session.type_src = _typeSrc[ i ].value;
-				if ( _session.type_src == "magnet" )
+				if(_session.type_src !== _typeSrc[i].value) _session.type_src = _typeSrc[ i ].value;
+				if ( _session.type_src == "magnet")
 				{
-					_session.video_src = _magnet.value;
-				} else if ( _session.type_src == "local" )
+					if ( _session.video_src !== _magnet.value ) 
+					{
+						_session.video_src = _magnet.value;
+						_videoSrcChange = true;
+					}
+				} else if ( _session.type_src == "local")
 				{
-					_session.video_src = URL.createObjectURL( _localURL.files[ 0 ] );
+					if (_localURL.files[0])
+					{
+						if (_localURL.files[0].lastModified != _session.local_info[0] || _localURL.files[0].size != _session.local_info[1])
+						{
+							_session.video_src = URL.createObjectURL( _localURL.files[0] );
+							_session.local_info = [_localURL.files[0].lastModified, _localURL.files[0].size];
+							_videoSrcChange = true;
+						}
+					}
 				} else
 				{
-					_session.video_src = _quality.value;
+					if (_session.video_src !== _quality.value) 
+					{
+						_session.video_src = _quality.value;
+						_videoSrcChange = true;
+					}
 				}
-				
 				break;
 			}
 		}
+		if ( ret === false && _videoSrcChange && _session.type_src != "local" )
+			__peerController.send(__peerController.sending.DATA_SOURCE, [_session.type_src, _session.video_src]);
+		if(_session.audiochat_status != _audioChatStatus.checked) 
+			_session.audiochat_status = _audioChatStatus.checked;
 
 		if ( !ret )
 		{
@@ -570,36 +591,40 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			if ( _session.type_src != "magnet" )
+			if (_videoSrcChange)
 			{
-				_video.src = _session.video_src;
-			} else
-			{
-				_video.removeAttribute( "src" );
-
-				var _client = new WebTorrent();
-				_client.add( _session.video_src, function( torrent )
+				if ( _session.type_src != "magnet" )
 				{
-					// Torrents can contain many files. Let's use the first.
-					var file = torrent.files[ 0 ];
+					_video.src = _session.video_src;
+				} else
+				{
+					_video.removeAttribute( "src" );
 
-					// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-					file.renderTo( '#video', function( err, elem )
+					var _client = new WebTorrent();
+					_client.add( _session.video_src, function( torrent )
 					{
+						// Torrents can contain many files. Let's use the first.
+						var file = torrent.files[ 0 ];
+
+						// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+						file.renderTo( '#video', function( err, elem )
+						{
+						} );
 					} );
-				} );
+				}
+				_videoSrcChange = false;
 			}
 
-			//получение всех аудио
-			/*__peerController.joinVoiceChat(function()
-			 {
-			 console.log("started voice chat");
-			 });*/
+			//аудио-чат
+			if (_session.audiochat_status)
+				if (!(__peerController.get(__peerController.getting.JOINED_VOICE_CHAT))) getAndSendAudioStream();
+			else
+				if (__peerController.get(__peerController.getting.JOINED_VOICE_CHAT)) __peerController.leaveVoiceChat();
 
 			//отображение плеера
 			_joinButton.onclick = function()
 			{
-				selectInput()
+				selectInput(false)
 			};
 			_joinButton.value   = "Вернуться";
 			_title.innerHTML    = "";
@@ -701,7 +726,7 @@ wtsplayer.elementsController = function()
 	}
 	else //New session
 	{
-		_session    = [ '', '', '', '', '' ];
+		_session    = [ '', '', '', '', '', '', '' ];
 		window.name = JSON.stringify( _session );
 	}
 
@@ -715,6 +740,7 @@ wtsplayer.elementsController = function()
 		this[ 1 ] = "";
 		this[ 3 ] = "";
 		this[ 4 ] = "";
+		this[ 5 ] = "";
 		this.rewrite();
 	};
 
@@ -767,6 +793,26 @@ wtsplayer.elementsController = function()
 			}, get : function()
 			{
 				return (this[ 4 ]);
+			}
+		},
+		"local_info" : {
+			set    : function( n )
+			{
+				this[ 5 ] = n;
+				this.rewrite();
+			}, get : function()
+			{
+				return (this[ 5 ]);
+			}
+		},
+		"audiochat_status" : {
+			set    : function( n )
+			{
+				this[ 6 ] = n;
+				this.rewrite();
+			}, get : function()
+			{
+				return (this[ 6 ]);
 			}
 		}
 	} );
