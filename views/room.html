@@ -42,7 +42,7 @@
 				<label for="audioChatStatus">Использование аудио-чата</label>
 				<br><br>
 				<label for="nick">Введите ник для чата:</label>
-				<input id="nick">
+				<input id="nick" maxlength="20">
 				<br>
 				<input id="joinButton" type="button" value="Join room">			
 			</div>
@@ -53,6 +53,7 @@
 				<br>
 				<div id = "videoControls">
 					<div>
+						<div id = "peerList"><table id = "peerTable"></table></div>
 						<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
 						<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
 						<div id = "vol" style="display:inline; position:relative;">
@@ -61,10 +62,7 @@
 							</div>
 							<img id = "volume_button" src="/volume.svg" height="25px">
 						</div>
-						<div id = "peers" style="display:inline; position:relative;">
-							<div id = "peerList"><table id = "peerTable"></table></div>
-							<input type="button" id="peerListButton">
-						</div>
+						<input type="button" id="peerListButton">
 						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
 						<input id = "fullscreen" type = "button" value = "Fullscreen">
 						<input id = "backOverlayBut" type = "button" value = "Back">

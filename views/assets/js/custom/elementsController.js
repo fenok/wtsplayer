@@ -508,14 +508,8 @@ wtsplayer.elementsController = function()
 		_peers[ peer ][ _peerVars.AUDIO ]          = document.createElement( "audio" );
 		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
 		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
-
-		var label = document.createElement( 'label' );
-		label.for = "range_" + peer;
-
-		_peers[ peer ][ _peerVars.ROW ][ 2 ].innerHTML = '';
-		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( label );
 		_peers[ peer ][ _peerVars.MUTED ] = false;
-
+		
 		var img     = document.createElement( "img" );
 		img.style   = "width : 20px;";
 		img.src     = "/volume.svg";
@@ -524,8 +518,8 @@ wtsplayer.elementsController = function()
 			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
 			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
 		};
-
-		label.appendChild( img );
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].innerHTML = '';
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( img );
 
 		_peers[ peer ][ _peerVars.RANGE ]         = document.createElement( "input" );
 		_peers[ peer ][ _peerVars.RANGE ].type    = "range";
@@ -555,7 +549,7 @@ wtsplayer.elementsController = function()
 		{
 			console.log( "Отправка аудио-потока" );
 			__peerController.joinVoiceChat( audio );
-			_audioStream = audio.getAudioTracks()[ 0 ];
+			_audioStream = audio;
 		};
 
 		var constraints = { video : false, audio : true };
@@ -796,8 +790,10 @@ wtsplayer.elementsController = function()
 				__peerController.leaveVoiceChat();
 				if ( _audioStream !== null )
 				{
-					_audioStream.stop();
+					_audioStream.getAudioTracks()[ 0 ].stop();
 				}
+				for (var id in _peers)
+					_self.onPeerLeavedVoiceChat( id );
 			}
 
 			//отображение плеера

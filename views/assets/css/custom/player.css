@@ -31,6 +31,7 @@
 #player{
   width: 90%;
   height: 90%;
+  position: relative;
 }
 
 #player:-webkit-full-screen{
@@ -168,12 +169,18 @@
 /* Элементы аудио-чата */
 #peerList{
 	position: absolute;
-	bottom: 30px;
-	left: 0;
+	bottom: 257px;
+	right: 0;
 	min-height: 100px;
 	min-width:  50px;
 	background-color: #fff;
 	display: none;
+}
+#player:-moz-full-screen #peerList{
+	bottom: 30px;
+}
+#player:-webkit-full-screen #peerList{
+	bottom: 30px;
 }
 /* Элементы чата */
 #player:-moz-full-screen #send:hover #chat{
