@@ -57,7 +57,7 @@
   bottom: -30px;
 }
 #player #playerSeekRange{
-  width: calc( 100% - 320px );
+  width: calc( 100% - 350px );
   margin: 0 5px;
 }
 /* Стилизация слайдеров */
@@ -160,6 +160,16 @@
   font-size: 20px;
   text-align: center;
   text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+}
+/* Элементы аудио-чата */
+#peerList{
+	position: absolute;
+	bottom: 30px;
+	left: 0;
+	min-height: 100px;
+	min-width:  50px;
+	background-color: #fff;
+	display: none;
 }
 /* Элементы чата */
 #player:-moz-full-screen #send:hover #chat{

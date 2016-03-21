@@ -59,8 +59,19 @@ wtsplayer.elementsController = function()
 	var _localURL  = document.getElementById( "localURL" );
 	
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
+	var _peerList 		 = document.getElementById( "peerList" );
+	var _peerTable		 = document.getElementById( "peerTable" );
+	var _peerListButton	 = document.getElementById( "peerListButton" );
 
 	var _session;
+	var _peers;
+	var _peerVars = Object.freeze({
+		NICK 		: 0,
+		VIDEO_SRC 	: 1,
+		ROW 		: 2,
+		AUDIO		: 3,
+		RANGE		: 4
+	});
 	var _videoSrcChange = false;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
@@ -364,43 +375,86 @@ wtsplayer.elementsController = function()
 				_self.onMessageRecieved( data );
 				break;
 			case __peerController.sending.DATA_SOURCE:
-				//dataSources[from] = data
+				//_peers[from][1] = data
 				break;
 			case __peerController.sending.NICK:
-				//nicks[from] = data
+				_peers[from][_peerVars.NICK] = data;
+				_peers[from][_peerVars.ROW][1].innerHTML = data;
 				break;
 			case __peerController.sending.INITIAL_INFO:
-				//deal with data, passed by _self.getInitialData()
+				_peers[from][_peerVars.NICK] = data[0];
+				_peers[peerId][_peerVars.ROW][1].innerHTML = data[0];
+				_peers[from][_peerVars.VIDEO_SRC] = data[1];
 				break;
 			default:
 				alert( "elementsController.onRecieved: unrecognized 'what'" );
 				break
 		}
 	};
+	
+	_peerListButton.onclick = function()
+	{
+		if (_peerList.style.display == "block")
+			_peerList.style.display = "none";
+		else
+			_peerList.style.display = "block";
+	}
+	
+	this.onPeerConnected = function(peerId)
+	{
+		_peers[peerId][_peerVars.ROW] = [];
+		_peers[peerId][_peerVars.ROW][0] = document.createElement("tr");
+		_peerTable.appendChild(_peers[peerId][_peerVars.ROW][0]);
+		_peers[peerId][_peerVars.ROW][1] = document.createElement("td");
+		_peers[peerId][_peerVars.ROW][0].appendChild(_peers[peerId][_peerVars.ROW][1]);
+		_peers[peerId][_peerVars.ROW][2] = document.createElement("td");
+		_peers[peerId][_peerVars.ROW][0].appendChild(_peers[peerId][_peerVars.ROW][2]);
+	}
 
 	//SINGLE GET
 	this.getInitialData = function()
 	{
-		//nick, dataSource, maybe something else
-		var data = "shitload of nothing";
-		return (data);
+		return ([_session.nick, [_session.type_src, _session.video_src]]);
 	};
 
 	//SPECIAL
 	this.onPeerDeleted = function( id )
 	{
-		//remove call from GUI
-		console.error( "elementsController: peer deleted -- " + id );
+		if (_peers[id])
+		{
+			if (_peers[id][_peerVars.AUDIO]) _peers[id][_peerVars.AUDIO].remove();
+			if (_peers[id][_peerVars.RANGE]) _peers[id][_peerVars.RANGE].remove();
+			if (_peers[id][_peerVars.ROW][0]) _peers[id][_peerVars.ROW][0].remove();
+			delete _peers[id];			
+		}
 	};
-
-	//from -- id
-	//SPECIAL
-	this.onGotAudioStream = function( from, stream )
+	
+	this.onPeerLeavedVoiceChat = function( id )
 	{
-		console.error( "elementsController: got audioStream" );
-	};
+		if (_peers[id])
+		{
+			if (_peers[id][_peerVars.AUDIO]) _peers[id][_peerVars.AUDIO].remove();
+			if (_peers[id][_peerVars.RANGE]) _peers[id][_peerVars.RANGE].remove();
+		}
+	}
 
-	 // Get audioStream
+	this.onGotAudioStream = function(peer,audioStream)
+	{
+		_peers[peer][_peerVars.AUDIO] = document.createElement("audio");
+		_peers[peer][_peerVars.AUDIO].src = audioStream;
+		_peers[peer][_peerVars.AUDIO].autoplay = "autoplay";
+		
+		_peers[peer][_peerVars.RANGE] = document.createElement("input");
+		_peers[peer][_peerVars.RANGE].type = "range";
+		_peers[peer][_peerVars.RANGE].value = "1";
+		_peers[peer][_peerVars.RANGE].min = "0";
+		_peers[peer][_peerVars.RANGE].max = "1";
+		_peers[peer][_peerVars.RANGE].step = "0.01";
+		_peers[peer][_peerVars.RANGE].onchange = function(event){_peers[peer][_peerVars.AUDIO].volume = event.target.value;}
+		_peers[peer][_peerVars.ROW][2].appendChild(_peers[peer][_peerVars.RANGE]);
+	}
+	
+	// Get audioStream
 	function getAndSendAudioStream()
 	{
 		navigator.getUserMedia = (
@@ -437,6 +491,7 @@ wtsplayer.elementsController = function()
 			error( new Error( '*.getUserMedia is unsupported' ) );
 		}
 	}
+	
 
 	function error404()
 	{
