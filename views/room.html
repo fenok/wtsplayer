@@ -25,6 +25,10 @@
 				<label for="but_3">Выберите файл:</label>
 				<input type="file" id="localURL">
 				<br>
+				<input type ="radio" id="but_4" name = "typeSrc" value="youtubeID_embedded">
+				<label for="but_4">Youtube (встроенный плеер):</label>
+				<input type="text" id="youtubeID_embedded">
+				<br>
 				<div id="typeRoom">
 					<h3>Идентефикатор комнаты:</h3>
 					<input id="roomId"><input type="button" id="generateId" value="Сменить ID">
@@ -49,7 +53,7 @@
 		</div>
 		<div id="playerExternal">
 			<div id = "player">
-				<video id = "video"></video>
+				<div id = "video"></div>
 				<br>
 				<div id = "videoControls">
 					<div>

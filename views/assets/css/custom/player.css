@@ -11,7 +11,13 @@
   top: 10px;
 }
 #video{
-  width:400px; 
+  /*just in case*/
+  /*vertical-align: bottom; */
+  /*object-fit: contain;*/
+  display: inline-flex;
+  pointer-events: none;
+  /*--*/
+  width:400px;
   background:black;
 }
 #playerExternal{

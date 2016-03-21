@@ -56,11 +56,12 @@ wtsplayer.elementsController = function()
 	var _overlay       = document.getElementById( "overlay" );
 	var _joinButton    = document.getElementById( "joinButton" );
 
-	var _typeSrc   = document.getElementsByName( "typeSrc" );
-	var _magnet    = document.getElementById( "magnet" );
-	var _globalURL = document.getElementById( "globalURL" );
-	var _quality   = document.getElementById( "quality" );
-	var _localURL  = document.getElementById( "localURL" );
+	var _typeSrc            = document.getElementsByName( "typeSrc" );
+	var _magnet             = document.getElementById( "magnet" );
+	var _globalURL          = document.getElementById( "globalURL" );
+	var _quality            = document.getElementById( "quality" );
+	var _localURL           = document.getElementById( "localURL" );
+	var _youtubeID_embedded = document.getElementById( "youtubeID_embedded" );
 
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
 	var _peerList        = document.getElementById( "peerList" );
@@ -143,12 +144,13 @@ wtsplayer.elementsController = function()
 		__stateController.onPlayerCanPlay();
 	} );
 
-	_video.addEventListener( 'play', function() //DEBUG
-	{
-		console.log( "Actual play timestamp:" + new Date().getTime() ); //DEBUG
-		console.log( "And the playerTime is:" + _video.currentTime ); //DEBUG
+	/*
+	 _video.addEventListener( 'play', function() //DEBUG
+	 {
+	 console.log( "Actual play timestamp:" + new Date().getTime() ); //DEBUG
+	 console.log( "And the playerTime is:" + _video.currentTime ); //DEBUG
 
-	} );
+	 } );*/
 
 	_volume.oninput       = function( event )
 	{
@@ -216,11 +218,11 @@ wtsplayer.elementsController = function()
 			}
 		};
 
-		var rx  = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
-		var res = this.value.match( rx );
+		var res = parseYoutubeLinkIntoID( this.value );
+
 		if ( res !== null )
 		{
-			__peerController.getYoutubeVideoInfo( res[ 1 ], function( text )
+			__peerController.getYoutubeVideoInfo( res, function( text )
 			{
 				var obj            = parse( text );
 				_quality.innerHTML = "";
@@ -245,6 +247,20 @@ wtsplayer.elementsController = function()
 			sendMsg();
 		}
 	};
+
+	function parseYoutubeLinkIntoID( link )
+	{
+		var rx  = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+		var res = link.match( rx );
+		if ( res === null )
+		{
+			return null;
+		}
+		else
+		{
+			return res[ 1 ];
+		}
+	}
 
 	function sendMsg()
 	{
@@ -303,10 +319,14 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.wait = function()
 	{
+		if ( _video.play === undefined )
+		{
+			return;
+		}
 		_video.play();
 		_video.pause();
 		switchToWaiting();
-		if ( _video.readyState === 4 )
+		if ( _video.pausedAndCanPlay === true )
 		{
 			setTimeout( function()
 			{
@@ -508,12 +528,12 @@ wtsplayer.elementsController = function()
 		_peers[ peer ][ _peerVars.AUDIO ]          = document.createElement( "audio" );
 		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
 		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
-		_peers[ peer ][ _peerVars.MUTED ] = false;
-		
-		var img     = document.createElement( "img" );
-		img.style   = "width : 20px;";
-		img.src     = "/volume.svg";
-		img.onclick = function( event )
+		_peers[ peer ][ _peerVars.MUTED ]          = false;
+
+		var img                                        = document.createElement( "img" );
+		img.style                                      = "width : 20px;";
+		img.src                                        = "/volume.svg";
+		img.onclick                                    = function( event )
 		{
 			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
 			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
@@ -680,7 +700,8 @@ wtsplayer.elementsController = function()
 						_session.video_src = _magnet.value;
 						_videoSrcChange    = true;
 					}
-				} else if ( _session.type_src == "localURL" )
+				}
+				else if ( _session.type_src == "localURL" )
 				{
 					if ( _localURL.files[ 0 ] )
 					{
@@ -691,11 +712,21 @@ wtsplayer.elementsController = function()
 							_videoSrcChange     = true;
 						}
 					}
-				} else
+				}
+				else if ( _session.type_src == "globalURL" )
 				{
 					if ( _session.video_src !== _quality.value && _globalURL.value !== "" )
 					{
 						_session.video_src = _quality.value;
+						_videoSrcChange    = true;
+					}
+				}
+				else
+				{
+					var ID = parseYoutubeLinkIntoID(_youtubeID_embedded.value);
+					if ( _session.video_src !== ID && _youtubeID_embedded.value !== "" )
+					{
+						_session.video_src = ID;
 						_videoSrcChange    = true;
 					}
 				}
@@ -755,25 +786,16 @@ wtsplayer.elementsController = function()
 						_magnet.value = _session.video_src;
 					}
 				}
-				if ( _session.type_src != "magnet" )
+				if ( _session.type_src != "magnet" && _session.type_src !== 'youtubeID_embedded' )
 				{
-					_video.src = _session.video_src;
-				} else
+					constructVideoContent_directSource( _session.video_src );
+				} else if ( _session.type_src !== 'youtubeID_embedded' )
 				{
-					_video.src = null;
-					_video.removeAttribute( "src" );
-
-					var _client = new WebTorrent();
-					_client.add( _session.video_src, function( torrent )
-					{
-						// Torrents can contain many files. Let's use the first.
-						var file = torrent.files[ 0 ];
-
-						// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-						file.renderTo( '#video', function( err, elem )
-						{
-						} );
-					} );
+					constructVideoContent_webtorrentMagnet( _session.video_src );
+				}
+				else
+				{
+					constructVideoContent_youtubeIframe( _session.video_src );
 				}
 			}
 
@@ -792,8 +814,10 @@ wtsplayer.elementsController = function()
 				{
 					_audioStream.getAudioTracks()[ 0 ].stop();
 				}
-				for (var id in _peers)
+				for ( var id in _peers )
+				{
 					_self.onPeerLeavedVoiceChat( id );
+				}
 			}
 
 			//отображение плеера
@@ -805,6 +829,277 @@ wtsplayer.elementsController = function()
 			_title.innerHTML    = "";
 			_overlay.className  = "close";
 		}
+	}
+
+	/*
+	 Interface:
+
+	 Events to dispatch:
+	 timeupdate
+	 waiting
+	 canplay
+
+	 Properties:
+	 volume
+	 muted
+	 pausedAndCanPlay
+	 currentTime
+	 duration
+
+	 Methods:
+	 play
+	 pause
+	 */
+
+	var tag = document.createElement( 'script' );
+
+	tag.src            = "https://www.youtube.com/iframe_api";
+	var firstScriptTag = document.getElementsByTagName( 'script' )[ 0 ];
+	firstScriptTag.parentNode.insertBefore( tag, firstScriptTag );
+
+	// 3. This function creates an <iframe> (and YouTube player)
+	//    after the API code downloads.
+	var player;
+
+	function constructVideoContent_youtubeIframe( videoID )
+	{
+		_video.innerHTML = '';
+		var div          = document.createElement( 'div' );
+		div.id           = "youtube-iframe";
+		_video.appendChild( div );
+		// 2. This code loads the IFrame Player API code asynchronously.
+
+		player = new YT.Player( 'youtube-iframe', {
+			height     : '100%',
+			width      : '100%',
+			videoId    : videoID,
+			playerVars : {
+				controls       : 0,
+				disablekb      : 1,
+				modestbranding : 1,
+				showinfo       : 0,
+				rel            : 0,
+				origin         : window.location.hostname,
+				enablejsapi    : 1,
+				iv_load_policy : 3
+			},
+			events     : {
+				'onReady'       : onPlayerReady,
+				'onStateChange' : onPlayerStateChange
+			}
+		} );
+
+		var buffering = true;
+
+		function onPlayerReady()
+		{
+			setInterval( function()
+			{
+				_video.dispatchEvent( new Event( 'timeupdate' ) );
+			}, 100 );
+			player.setPlaybackQuality("highres");
+			player.playVideo();
+			//player.pauseVideo();
+		}
+
+		function onPlayerStateChange( event )
+		{
+			if ( event.data === YT.PlayerState.BUFFERING )
+			{
+				_video.dispatchEvent( new Event( 'waiting' ) );
+				buffering = true;
+			}
+			else if ( (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) && buffering === true )
+			{
+				_video.dispatchEvent( new Event( 'canplay' ) );
+				buffering = false;
+			}
+		}
+
+		Object.defineProperties( _video, {
+			"volume"           : {
+				configurable : true,
+				set          : function( n )
+				{
+					player.setVolume( n );
+				},
+				get          : function()
+				{
+					return (player.getVolume());
+				}
+			},
+			"muted"            : {
+				configurable : true,
+				set          : function( n )
+				{
+					if ( n === true )
+					{
+						player.mute();
+					}
+					else
+					{
+						player.unMute();
+					}
+				},
+				get          : function()
+				{
+					return (player.isMuted());
+				}
+			},
+			"pausedAndCanPlay" : {
+				configurable : true,
+				get          : function()
+				{
+					return (player.getPlayerState() === YT.PlayerState.PAUSED );
+				}
+			},
+			"currentTime"      : {
+				configurable : true,
+				set          : function( n )
+				{
+					player.seekTo( n, true );
+				},
+				get          : function()
+				{
+					return (player.getCurrentTime());
+				}
+			},
+			"duration"         : {
+				configurable : true,
+				get          : function()
+				{
+					return (player.getDuration());
+				}
+			}
+		} );
+
+		_video.play  = function()
+		{
+			player.playVideo()
+		};
+		_video.pause = function()
+		{
+			player.pauseVideo()
+		};
+	}
+
+	function onYouTubeIframeAPIReady()
+	{
+
+	}
+
+	function constructVideoContent_webtorrentMagnet( magnetLink )
+	{
+		//TODO: seeing hundreds of "webtorrent.min.js:10 Uncaught InvalidStateError: Failed to read the 'buffered' property from 'SourceBuffer': This SourceBuffer has been removed from the parent media source." is actually pretty cool, but.. client should be removed properly. Or whatever. Check webtorrent docs.
+		var videoElement = getCleanVideoContent_video();
+
+		var client = new WebTorrent();
+		client.add( magnetLink, function( torrent )
+		{
+			// Torrents can contain many files. Let's use the first.
+			var file = torrent.files[ 0 ];
+
+			// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+			file.renderTo( videoElement, function( err, elem )
+			{
+			} );
+		} );
+	}
+
+	function constructVideoContent_directSource( directSource )
+	{
+		var videoElement = getCleanVideoContent_video();
+
+		videoElement.src = directSource;
+	}
+
+	function getCleanVideoContent_video()
+	{
+		//TODO: make sure that everything deletes properly
+		_video.innerHTML                 = '';
+		var videoElement                 = document.createElement( 'video' );
+		videoElement.style.width         = "100%";
+		videoElement.style.height        = "100%";
+		videoElement.style.verticalAlign = "bottom";
+
+		_video.appendChild( videoElement );
+
+		videoElement.addEventListener( 'timeupdate', function()
+		{
+			_video.dispatchEvent( new Event( 'timeupdate' ) );
+		} );
+
+		videoElement.addEventListener( 'waiting', function()
+		{
+			_video.dispatchEvent( new Event( 'waiting' ) );
+		} );
+
+		videoElement.addEventListener( 'canplay', function()
+		{
+			_video.dispatchEvent( new Event( 'canplay' ) );
+		} );
+
+		Object.defineProperties( _video, {
+			"volume"           : {
+				configurable : true,
+				set          : function( n )
+				{
+					videoElement.volume = n;
+				},
+				get          : function()
+				{
+					return (videoElement.volume);
+				}
+			},
+			"muted"            : {
+				configurable : true,
+				set          : function( n )
+				{
+					videoElement.muted = n;
+				},
+				get          : function()
+				{
+					return (videoElement.muted);
+				}
+			},
+			"pausedAndCanPlay" : {
+				configurable : true,
+				get          : function()
+				{
+					return (videoElement.readyState === 4);
+				}
+			},
+			"currentTime"      : {
+				configurable : true,
+				set          : function( n )
+				{
+					videoElement.currentTime = n;
+				},
+				get          : function()
+				{
+					return (videoElement.currentTime);
+				}
+			},
+			"duration"         : {
+				configurable : true,
+				get          : function()
+				{
+					return (videoElement.duration);
+				}
+			}
+		} );
+
+		//TODO: can't invoke them directly. Find out how to fix.
+		_video.play  = function()
+		{
+			videoElement.play();
+		};
+		_video.pause = function()
+		{
+			videoElement.pause();
+		};
+
+		return videoElement;
 	}
 
 	function init( id )
@@ -820,7 +1115,7 @@ wtsplayer.elementsController = function()
 				_nick.value   = id;
 			}
 		}
-		_video.src = null;
+		_video.innerHTML = '';
 		if ( window.location.hash === '' )
 		{
 			__peerController.getRoomID( function( potentialRoomID )
