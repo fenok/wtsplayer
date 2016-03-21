@@ -723,10 +723,11 @@ wtsplayer.elementsController = function()
 				if ( !(__peerController.get( __peerController.getting.JOINED_VOICE_CHAT )) )
 				{
 					getAndSendAudioStream();
-				} else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
-				{
-					__peerController.leaveVoiceChat();
 				}
+			}
+			else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
+			{
+				__peerController.leaveVoiceChat();
 			}
 
 			//отображение плеера
