@@ -18,7 +18,8 @@ wtsplayer.peerController = function()
 			onPeerDeleted         : null,
 			onGotAudioStream      : null,
 			onPeerJoinedVoiceChat : null,
-			onPeerLeavedVoiceChat : null
+			onPeerLeavedVoiceChat : null,
+			onPeerConnected       : null
 		}
 	};
 
@@ -224,6 +225,7 @@ wtsplayer.peerController = function()
 			{
 				if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
 				{
+					__elementsController.onPeerConnected( conn.peer );
 					//Send initial info ASAP!!
 					conn.on( 'open', function()
 					{
@@ -516,8 +518,7 @@ wtsplayer.peerController = function()
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
-		//TODO: reject joining to empty room
-		if ( _connectedToServer && !_joinedRoom && currentRoomID === '' )
+		if ( _connectedToServer && !_joinedRoom && currentRoomID === '' && roomID !== '' )
 		{
 			currentRoomID   = roomID;
 			currentPassword = password;
@@ -645,7 +646,7 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			console.error( new Error( "Can't join room: not connected to server, already joined room or already joining room" ).toString() );
+			console.error( new Error( "Can't join room: not connected to server, already joined room or already joining room. Also, roomID must be non-empty" ).toString() );
 			//return;
 		}
 	};
@@ -967,6 +968,7 @@ wtsplayer.peerController = function()
 		}
 	};
 
+	//TODO: getters/setters(senders)? (same as session implementation)
 	//GENERIC
 	this.get = function( what )
 	{
