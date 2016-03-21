@@ -21,7 +21,7 @@ wtsplayer.elementsController = function()
 			getRoomID           : null,
 			leaveRoom           : null,
 			joinVoiceChat       : null,
-			leaveVoiceChat		: null,
+			leaveVoiceChat      : null,
 			responses           : null,
 			fakeReload          : null,
 			getYoutubeVideoInfo : null,
@@ -38,7 +38,7 @@ wtsplayer.elementsController = function()
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
 	var _volume            = document.getElementById( "volume" );
-	var _volumeButton     = document.getElementById( "volume_button" );
+	var _volumeButton      = document.getElementById( "volume_button" );
 	var _seekRange         = document.getElementById( "playerSeekRange" );
 	var _currentTimeOutput = document.getElementById( "playerCurrentTimeOutput" );
 	var _sendMessageButton = document.getElementById( "sendMessageButton" );
@@ -67,7 +67,7 @@ wtsplayer.elementsController = function()
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
 
-	var _muteVideo 		= false;
+	var _muteVideo      = false;
 	var _session;
 	var _peers          = {};
 	var _peerVars       = Object.freeze( {
@@ -76,9 +76,9 @@ wtsplayer.elementsController = function()
 		ROW       : 2,
 		AUDIO     : 3,
 		RANGE     : 4,
-		MUTED	  : 5
+		MUTED     : 5
 	} );
-	var _audioStream	= null;
+	var _audioStream    = null;
 	var _videoSrcChange = null;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
@@ -150,26 +150,26 @@ wtsplayer.elementsController = function()
 
 	} );
 
-	_volume.oninput = function( event )
+	_volume.oninput       = function( event )
 	{
 		_video.volume = event.target.value;
 	}
-	_volumeButton.onclick = function(event)
+	_volumeButton.onclick = function( event )
 	{
-		mute(_muteVideo,event.target,_video);
+		mute( _muteVideo, event.target, _video );
 		_muteVideo = !_muteVideo;
 	}
-	
-	function mute(muted,butt,obj)
+
+	function mute( muted, butt, obj )
 	{
-		if (muted) 
+		if ( muted )
 		{
 			obj.muted = false;
-			butt.src = "/volume.svg";
-		}else
+			butt.src  = "/volume.svg";
+		} else
 		{
 			obj.muted = true;
-			butt.src = "/mute.svg";
+			butt.src  = "/mute.svg";
 		}
 	}
 
@@ -294,7 +294,9 @@ wtsplayer.elementsController = function()
 	_backOvervayBut.addEventListener( 'click', function()
 	{
 		if ( document.mozFullScreen || document.webkitIsFullScreen )
+		{
 			_fullscreenButton.click();
+		}
 		_overlay.className = 'join';
 	} );
 
@@ -491,8 +493,10 @@ wtsplayer.elementsController = function()
 			{
 				_peers[ id ][ _peerVars.RANGE ].remove();
 			}
+			_peers[ id ][ _peerVars.ROW ][ 2 ].innerHTML = '';
+			_peers[ id ][ _peerVars.ROW ][ 1 ].className = '';
 		}
-	}
+	};
 
 	this.onPeerJoinedVoiceChat = function( peer )
 	{
@@ -505,33 +509,42 @@ wtsplayer.elementsController = function()
 		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
 		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
 
+		var label = document.createElement( 'label' );
+		label.for = "range_" + peer;
+
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].innerHTML = '';
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( label );
 		_peers[ peer ][ _peerVars.MUTED ] = false;
-		var img 	 = document.createElement( "img" );
-		img.src		 = "/volume.svg";
-		img.onclick  = function( event )
+
+		var img     = document.createElement( "img" );
+		img.style   = "width : 20px;";
+		img.src     = "/volume.svg";
+		img.onclick = function( event )
 		{
-			mute(_peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ]);
+			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
 			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
-		}
-		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( img );
-		
-		_peers[ peer ][ _peerVars.RANGE ]          = document.createElement( "input" );
-		_peers[ peer ][ _peerVars.RANGE ].type     = "range";
-		_peers[ peer ][ _peerVars.RANGE ].value    = "1";
-		_peers[ peer ][ _peerVars.RANGE ].min      = "0";
-		_peers[ peer ][ _peerVars.RANGE ].max      = "1";
-		_peers[ peer ][ _peerVars.RANGE ].step     = "0.01";
-		_peers[ peer ][ _peerVars.RANGE ].oninput  = function( event )
+		};
+
+		label.appendChild( img );
+
+		_peers[ peer ][ _peerVars.RANGE ]         = document.createElement( "input" );
+		_peers[ peer ][ _peerVars.RANGE ].type    = "range";
+		_peers[ peer ][ _peerVars.RANGE ].id      = "range_" + peer;
+		_peers[ peer ][ _peerVars.RANGE ].value   = "1";
+		_peers[ peer ][ _peerVars.RANGE ].min     = "0";
+		_peers[ peer ][ _peerVars.RANGE ].max     = "1";
+		_peers[ peer ][ _peerVars.RANGE ].step    = "0.01";
+		_peers[ peer ][ _peerVars.RANGE ].oninput = function( event )
 		{
 			_peers[ peer ][ _peerVars.AUDIO ].volume = event.target.value;
-		}
+		};
 		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( _peers[ peer ][ _peerVars.RANGE ] );
-	}
+	};
 
 	// Get audioStream
 	function getAndSendAudioStream()
 	{
-		console.log("getAndSendAudioStream");
+		console.log( "getAndSendAudioStream" );
 		navigator.getUserMedia = (
 		navigator.getUserMedia ||
 		navigator.webkitGetUserMedia ||
@@ -540,18 +553,18 @@ wtsplayer.elementsController = function()
 
 		var send = function( audio )
 		{
-			console.log("Отправка аудио-потока");
+			console.log( "Отправка аудио-потока" );
 			__peerController.joinVoiceChat( audio );
-			_audioStream = audio.getAudioTracks()[0];
+			_audioStream = audio.getAudioTracks()[ 0 ];
 		};
-		
+
 		var constraints = { video : false, audio : true };
-		var success = function( audioStream )
+		var success     = function( audioStream )
 		{
 			console.log( 'Successfully got the audioStream' );
 			send( audioStream );
 		};
-		var error = function( err )
+		var error       = function( err )
 		{
 			console.error( err.toString() );
 			console.log( 'Couldn\'t get the audioStream' );
@@ -737,12 +750,16 @@ wtsplayer.elementsController = function()
 		{
 			if ( _videoSrcChange !== false )
 			{
-				if ( _videoSrcChange !== null)
-					_videoSrcChange = false;
-				else
+				if ( _videoSrcChange !== null )
 				{
-					document.querySelector("input[value ='"+_session.type_src+"'").checked = true;
-					if ( _session.type_src == "magnet" ) _magnet.value = _session.video_src;
+					_videoSrcChange = false;
+				} else
+				{
+					document.querySelector( "input[value ='" + _session.type_src + "'" ).checked = true;
+					if ( _session.type_src == "magnet" )
+					{
+						_magnet.value = _session.video_src;
+					}
 				}
 				if ( _session.type_src != "magnet" )
 				{
@@ -777,7 +794,10 @@ wtsplayer.elementsController = function()
 			else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
 			{
 				__peerController.leaveVoiceChat();
-				_audioStream.stop();
+				if ( _audioStream !== null )
+				{
+					_audioStream.stop();
+				}
 			}
 
 			//отображение плеера
@@ -795,9 +815,10 @@ wtsplayer.elementsController = function()
 	{
 		if ( id )
 		{
-			if (_session.nick !== '')
+			if ( _session.nick !== '' )
+			{
 				_nick.value = _session.nick;
-			else
+			} else
 			{
 				_session.nick = id;
 				_nick.value   = id;
