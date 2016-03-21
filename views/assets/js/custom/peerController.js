@@ -225,7 +225,6 @@ wtsplayer.peerController = function()
 			{
 				if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
 				{
-					__elementsController.onPeerConnected( conn.peer );
 					//Send initial info ASAP!!
 					conn.on( 'open', function()
 					{
@@ -380,6 +379,7 @@ wtsplayer.peerController = function()
 		_dataConnections[ conn.peer ] = conn;
 		conn.on( 'open', function()
 		{
+			__elementsController.onPeerConnected( conn.peer );
 			console.log( "connectionHandler -- open" );
 			__elementsController.outputSystemMessage( "Connected to " + conn.peer );
 			conn.on( 'data', function( data )

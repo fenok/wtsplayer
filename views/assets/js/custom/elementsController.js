@@ -23,7 +23,9 @@ wtsplayer.elementsController = function()
 			joinVoiceChat       : null,
 			responses           : null,
 			fakeReload          : null,
-			getYoutubeVideoInfo : null
+			getYoutubeVideoInfo : null,
+			get                 : null,
+			getting             : null
 		}
 	};
 
@@ -34,7 +36,7 @@ wtsplayer.elementsController = function()
 
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
-	var _volume			   = document.getElementById( "volume" );
+	var _volume            = document.getElementById( "volume" );
 	var _seekRange         = document.getElementById( "playerSeekRange" );
 	var _currentTimeOutput = document.getElementById( "playerCurrentTimeOutput" );
 	var _sendMessageButton = document.getElementById( "sendMessageButton" );
@@ -57,21 +59,21 @@ wtsplayer.elementsController = function()
 	var _globalURL = document.getElementById( "globalURL" );
 	var _quality   = document.getElementById( "quality" );
 	var _localURL  = document.getElementById( "localURL" );
-	
+
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
-	var _peerList 		 = document.getElementById( "peerList" );
-	var _peerTable		 = document.getElementById( "peerTable" );
-	var _peerListButton	 = document.getElementById( "peerListButton" );
+	var _peerList        = document.getElementById( "peerList" );
+	var _peerTable       = document.getElementById( "peerTable" );
+	var _peerListButton  = document.getElementById( "peerListButton" );
 
 	var _session;
-	var _peers;
-	var _peerVars = Object.freeze({
-		NICK 		: 0,
-		VIDEO_SRC 	: 1,
-		ROW 		: 2,
-		AUDIO		: 3,
-		RANGE		: 4
-	});
+	var _peers          = {};
+	var _peerVars       = Object.freeze( {
+		NICK      : 0,
+		VIDEO_SRC : 1,
+		ROW       : 2,
+		AUDIO     : 3,
+		RANGE     : 4
+	} );
 	var _videoSrcChange = false;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
@@ -143,64 +145,74 @@ wtsplayer.elementsController = function()
 
 	} );
 
-	_volume.onchange = function(event)
+	_volume.onchange = function( event )
 	{
 		_video.volume = event.target.value;
 	}
-	
+
 	_globalURL.onchange = function()
 	{
-		function parse(d)
+		function parse( d )
 		{
-		  var res, i$, ref$, len$, a, ref1$;
-		  if (d.startsWith("http")) {
-			return d;
-		  } else if (d.indexOf(",") != -1) {
-			return d.split(",").map(parse);
-		  } else if (d.indexOf("&") != -1) {
-			res = {};
-			for (i$ = 0, len$ = (ref$ = d.split("&")).length; i$ < len$; ++i$) {
-			  a = ref$[i$];
-			  a = a.split("=");
-			  if (res[a[0]]) {
-				if (!$.isArray(res[a[0]])) {
-				  res[a[0]] = [res[a[0]]];
-				}
-				(ref1$ = res[a[0]])[ref1$.length] = parse(unescape(a[1]));
-			  } else {
-				res[a[0]] = parse(unescape(a[1]));
-			  }
-			}
-			return res;
-		  } else if (!isNaN(d)) {
-			return +d;
-		  } else if (d === 'True' || d === 'False') {
-			return d === 'True';
-		  } else {
-			return d;
-		  }
-		};
-		
-		var rx = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
-		var res = this.value.match(rx);
-		if (res!==null)
-			__peerController.getYoutubeVideoInfo(res[1],function(text)
+			var res, i$, ref$, len$, a, ref1$;
+			if ( d.startsWith( "http" ) )
 			{
-				var obj = parse(text);
-				_quality.innerHTML = "";
-				for (var i=0; i<obj.url_encoded_fmt_stream_map.length; i++)
+				return d;
+			} else if ( d.indexOf( "," ) != -1 )
+			{
+				return d.split( "," ).map( parse );
+			} else if ( d.indexOf( "&" ) != -1 )
+			{
+				res = {};
+				for ( i$ = 0, len$ = (ref$ = d.split( "&" )).length; i$ < len$; ++i$ )
 				{
-					var opt = document.createElement("option");
-					opt.innerHTML = obj.url_encoded_fmt_stream_map[i].quality;
-					opt.value = obj.url_encoded_fmt_stream_map[i].url;
-					_quality.appendChild(opt);
+					a = ref$[ i$ ];
+					a = a.split( "=" );
+					if ( res[ a[ 0 ] ] )
+					{
+						if ( !$.isArray( res[ a[ 0 ] ] ) )
+						{
+							res[ a[ 0 ] ] = [ res[ a[ 0 ] ] ];
+						}
+						(ref1$ = res[ a[ 0 ] ])[ ref1$.length ] = parse( unescape( a[ 1 ] ) );
+					} else
+					{
+						res[ a[ 0 ] ] = parse( unescape( a[ 1 ] ) );
+					}
 				}
-				
-			})
+				return res;
+			} else if ( !isNaN( d ) )
+			{
+				return +d;
+			} else if ( d === 'True' || d === 'False' )
+			{
+				return d === 'True';
+			} else
+			{
+				return d;
+			}
+		};
+
+		var rx  = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+		var res = this.value.match( rx );
+		if ( res !== null )
+		{
+			__peerController.getYoutubeVideoInfo( res[ 1 ], function( text )
+			{
+				var obj            = parse( text );
+				_quality.innerHTML = "";
+				for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
+				{
+					var opt       = document.createElement( "option" );
+					opt.innerHTML = obj.url_encoded_fmt_stream_map[ i ].quality;
+					opt.value     = obj.url_encoded_fmt_stream_map[ i ].url;
+					_quality.appendChild( opt );
+				}
+
+			} )
+		}
 	}
-	
-	
-	
+
 	_sendMessageButton.addEventListener( 'click', sendMsg );
 
 	_messageInput.onkeydown = function( e )
@@ -355,13 +367,13 @@ wtsplayer.elementsController = function()
 
 		} );
 	}
-	
+
 	_generateId.onclick = function()
 	{
-		__peerController.getRoomID(function(id)
+		__peerController.getRoomID( function( id )
 		{
 			_roomIdInput.value = id;
-		})
+		} )
 	}
 
 	//what -- peerController.sending enum
@@ -378,82 +390,109 @@ wtsplayer.elementsController = function()
 				//_peers[from][1] = data
 				break;
 			case __peerController.sending.NICK:
-				_peers[from][_peerVars.NICK] = data;
-				_peers[from][_peerVars.ROW][1].innerHTML = data;
+				_peers[ from ][ _peerVars.NICK ]               = data;
+				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data;
 				break;
 			case __peerController.sending.INITIAL_INFO:
-				_peers[from][_peerVars.NICK] = data[0];
-				_peers[peerId][_peerVars.ROW][1].innerHTML = data[0];
-				_peers[from][_peerVars.VIDEO_SRC] = data[1];
+				_peers[ from ][ _peerVars.NICK ]               = data[ 0 ];
+				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data[ 0 ];
+				_peers[ from ][ _peerVars.VIDEO_SRC ]          = data[ 1 ];
 				break;
 			default:
 				alert( "elementsController.onRecieved: unrecognized 'what'" );
 				break
 		}
 	};
-	
+
 	_peerListButton.onclick = function()
 	{
-		if (_peerList.style.display == "block")
+		if ( _peerList.style.display == "block" )
+		{
 			_peerList.style.display = "none";
-		else
+		} else
+		{
 			_peerList.style.display = "block";
+		}
 	}
-	
-	this.onPeerConnected = function(peerId)
+
+	this.onPeerConnected = function( peerId )
 	{
-		_peers[peerId][_peerVars.ROW] = [];
-		_peers[peerId][_peerVars.ROW][0] = document.createElement("tr");
-		_peerTable.appendChild(_peers[peerId][_peerVars.ROW][0]);
-		_peers[peerId][_peerVars.ROW][1] = document.createElement("td");
-		_peers[peerId][_peerVars.ROW][0].appendChild(_peers[peerId][_peerVars.ROW][1]);
-		_peers[peerId][_peerVars.ROW][2] = document.createElement("td");
-		_peers[peerId][_peerVars.ROW][0].appendChild(_peers[peerId][_peerVars.ROW][2]);
+		_peers [ peerId ]                      = [];
+		_peers[ peerId ][ _peerVars.ROW ]      = [];
+		_peers[ peerId ][ _peerVars.ROW ][ 0 ] = document.createElement( "tr" );
+		_peerTable.appendChild( _peers[ peerId ][ _peerVars.ROW ][ 0 ] );
+		_peers[ peerId ][ _peerVars.ROW ][ 1 ] = document.createElement( "td" );
+		_peers[ peerId ][ _peerVars.ROW ][ 0 ].appendChild( _peers[ peerId ][ _peerVars.ROW ][ 1 ] );
+		_peers[ peerId ][ _peerVars.ROW ][ 2 ] = document.createElement( "td" );
+		_peers[ peerId ][ _peerVars.ROW ][ 0 ].appendChild( _peers[ peerId ][ _peerVars.ROW ][ 2 ] );
 	}
 
 	//SINGLE GET
 	this.getInitialData = function()
 	{
-		return ([_session.nick, [_session.type_src, _session.video_src]]);
+		return ([ _session.nick, [ _session.type_src, _session.video_src ] ]);
 	};
 
 	//SPECIAL
 	this.onPeerDeleted = function( id )
 	{
-		if (_peers[id])
+		if ( _peers[ id ] )
 		{
-			if (_peers[id][_peerVars.AUDIO]) _peers[id][_peerVars.AUDIO].remove();
-			if (_peers[id][_peerVars.RANGE]) _peers[id][_peerVars.RANGE].remove();
-			if (_peers[id][_peerVars.ROW][0]) _peers[id][_peerVars.ROW][0].remove();
-			delete _peers[id];			
+			if ( _peers[ id ][ _peerVars.AUDIO ] )
+			{
+				_peers[ id ][ _peerVars.AUDIO ].remove();
+			}
+			if ( _peers[ id ][ _peerVars.RANGE ] )
+			{
+				_peers[ id ][ _peerVars.RANGE ].remove();
+			}
+			if ( _peers[ id ][ _peerVars.ROW ][ 0 ] )
+			{
+				_peers[ id ][ _peerVars.ROW ][ 0 ].remove();
+			}
+			delete _peers[ id ];
 		}
 	};
-	
+
 	this.onPeerLeavedVoiceChat = function( id )
 	{
-		if (_peers[id])
+		if ( _peers[ id ] )
 		{
-			if (_peers[id][_peerVars.AUDIO]) _peers[id][_peerVars.AUDIO].remove();
-			if (_peers[id][_peerVars.RANGE]) _peers[id][_peerVars.RANGE].remove();
+			if ( _peers[ id ][ _peerVars.AUDIO ] )
+			{
+				_peers[ id ][ _peerVars.AUDIO ].remove();
+			}
+			if ( _peers[ id ][ _peerVars.RANGE ] )
+			{
+				_peers[ id ][ _peerVars.RANGE ].remove();
+			}
 		}
 	}
 
-	this.onGotAudioStream = function(peer,audioStream)
+	this.onPeerJoinedVoiceChat = function( peer )
 	{
-		_peers[peer][_peerVars.AUDIO] = document.createElement("audio");
-		_peers[peer][_peerVars.AUDIO].src = audioStream;
-		_peers[peer][_peerVars.AUDIO].autoplay = "autoplay";
-		
-		_peers[peer][_peerVars.RANGE] = document.createElement("input");
-		_peers[peer][_peerVars.RANGE].type = "range";
-		_peers[peer][_peerVars.RANGE].value = "1";
-		_peers[peer][_peerVars.RANGE].min = "0";
-		_peers[peer][_peerVars.RANGE].max = "1";
-		_peers[peer][_peerVars.RANGE].step = "0.01";
-		_peers[peer][_peerVars.RANGE].onchange = function(event){_peers[peer][_peerVars.AUDIO].volume = event.target.value;}
-		_peers[peer][_peerVars.ROW][2].appendChild(_peers[peer][_peerVars.RANGE]);
+
+	};
+
+	this.onGotAudioStream = function( peer, audioStream )
+	{
+		_peers[ peer ][ _peerVars.AUDIO ]          = document.createElement( "audio" );
+		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
+		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
+
+		_peers[ peer ][ _peerVars.RANGE ]          = document.createElement( "input" );
+		_peers[ peer ][ _peerVars.RANGE ].type     = "range";
+		_peers[ peer ][ _peerVars.RANGE ].value    = "1";
+		_peers[ peer ][ _peerVars.RANGE ].min      = "0";
+		_peers[ peer ][ _peerVars.RANGE ].max      = "1";
+		_peers[ peer ][ _peerVars.RANGE ].step     = "0.01";
+		_peers[ peer ][ _peerVars.RANGE ].onchange = function( event )
+		{
+			_peers[ peer ][ _peerVars.AUDIO ].volume = event.target.value;
+		}
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( _peers[ peer ][ _peerVars.RANGE ] );
 	}
-	
+
 	// Get audioStream
 	function getAndSendAudioStream()
 	{
@@ -467,13 +506,13 @@ wtsplayer.elementsController = function()
 		var success     = function( audioStream )
 		{
 			console.log( 'Successfully got the audioStream' );
-			__peerController.joinVoiceChat(audioStream);
+			__peerController.joinVoiceChat( audioStream );
 		};
 		var error       = function( err )
 		{
 			console.error( err.toString() );
 			console.log( 'Couldn\'t get the audioStream' );
-			__peerController.joinVoiceChat(null);
+			__peerController.joinVoiceChat( null );
 		};
 
 		if ( navigator.mediaDevices.getUserMedia )
@@ -491,7 +530,6 @@ wtsplayer.elementsController = function()
 			error( new Error( '*.getUserMedia is unsupported' ) );
 		}
 	}
-	
 
 	function error404()
 	{
@@ -507,7 +545,7 @@ wtsplayer.elementsController = function()
 			_joinButton.onclick  = createRoom;
 			_overlay.className   = "create";
 		}
-		_overlay.className   = "error";
+		_overlay.className  = "error";
 	}
 
 	function error406()
@@ -569,8 +607,10 @@ wtsplayer.elementsController = function()
 		if ( _nick.value !== _session.nick )
 		{
 			_session.nick = _nick.value;
-			if (ret === false)
-				__peerController.send(__peerController.sending.NICK, _session.nick);
+			if ( ret === false )
+			{
+				__peerController.send( __peerController.sending.NICK, _session.nick );
+			}
 		}
 		if ( _session.password !== _passwordInput.value && _passwordInput.value !== '' )
 		{
@@ -580,40 +620,47 @@ wtsplayer.elementsController = function()
 		{
 			if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
 			{
-				if(_session.type_src !== _typeSrc[i].value) _session.type_src = _typeSrc[ i ].value;
-				if ( _session.type_src == "magnet")
+				if ( _session.type_src !== _typeSrc[ i ].value )
 				{
-					if ( _session.video_src !== _magnet.value ) 
+					_session.type_src = _typeSrc[ i ].value;
+				}
+				if ( _session.type_src == "magnet" )
+				{
+					if ( _session.video_src !== _magnet.value )
 					{
 						_session.video_src = _magnet.value;
-						_videoSrcChange = true;
+						_videoSrcChange    = true;
 					}
-				} else if ( _session.type_src == "local")
+				} else if ( _session.type_src == "local" )
 				{
-					if (_localURL.files[0])
+					if ( _localURL.files[ 0 ] )
 					{
-						if (_localURL.files[0].lastModified != _session.local_info[0] || _localURL.files[0].size != _session.local_info[1])
+						if ( _localURL.files[ 0 ].lastModified != _session.local_info[ 0 ] || _localURL.files[ 0 ].size != _session.local_info[ 1 ] )
 						{
-							_session.video_src = URL.createObjectURL( _localURL.files[0] );
-							_session.local_info = [_localURL.files[0].lastModified, _localURL.files[0].size];
-							_videoSrcChange = true;
+							_session.video_src  = URL.createObjectURL( _localURL.files[ 0 ] );
+							_session.local_info = [ _localURL.files[ 0 ].lastModified, _localURL.files[ 0 ].size ];
+							_videoSrcChange     = true;
 						}
 					}
 				} else
 				{
-					if (_session.video_src !== _quality.value) 
+					if ( _session.video_src !== _quality.value )
 					{
 						_session.video_src = _quality.value;
-						_videoSrcChange = true;
+						_videoSrcChange    = true;
 					}
 				}
 				break;
 			}
 		}
 		if ( ret === false && _videoSrcChange && _session.type_src != "local" )
-			__peerController.send(__peerController.sending.DATA_SOURCE, [_session.type_src, _session.video_src]);
-		if(_session.audiochat_status != _audioChatStatus.checked) 
+		{
+			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
+		}
+		if ( _session.audiochat_status != _audioChatStatus.checked )
+		{
 			_session.audiochat_status = _audioChatStatus.checked;
+		}
 
 		if ( !ret )
 		{
@@ -625,13 +672,13 @@ wtsplayer.elementsController = function()
 	{
 		if ( roomId )
 		{
-			_session.room_id  = roomId;
+			_session.room_id = roomId;
 			if ( window.location.hash === '' )
 			{
 				window.location.hash = '#' + roomId;
 			}
 			_wrongPassword.className = "close";
-			_wrongId.className = "close";
+			_wrongId.className       = "close";
 		}
 
 		if ( _session.video_src === '' )
@@ -646,7 +693,7 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			if (_videoSrcChange)
+			if ( _videoSrcChange )
 			{
 				if ( _session.type_src != "magnet" )
 				{
@@ -671,15 +718,21 @@ wtsplayer.elementsController = function()
 			}
 
 			//аудио-чат
-			if (_session.audiochat_status)
-				if (!(__peerController.get(__peerController.getting.JOINED_VOICE_CHAT))) getAndSendAudioStream();
-			else
-				if (__peerController.get(__peerController.getting.JOINED_VOICE_CHAT)) __peerController.leaveVoiceChat();
+			if ( _session.audiochat_status )
+			{
+				if ( !(__peerController.get( __peerController.getting.JOINED_VOICE_CHAT )) )
+				{
+					getAndSendAudioStream();
+				} else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
+				{
+					__peerController.leaveVoiceChat();
+				}
+			}
 
 			//отображение плеера
 			_joinButton.onclick = function()
 			{
-				selectInput(false)
+				selectInput( false )
 			};
 			_joinButton.value   = "Вернуться";
 			_title.innerHTML    = "";
@@ -692,7 +745,7 @@ wtsplayer.elementsController = function()
 		if ( id )
 		{
 			_session.nick = id;
-			_nick.value = id;
+			_nick.value   = id;
 		}
 		_video.src = "";
 		if ( window.location.hash === '' )
@@ -800,7 +853,7 @@ wtsplayer.elementsController = function()
 	};
 
 	Object.defineProperties( _session, {
-		"password"  : {
+		"password"         : {
 			set    : function( n )
 			{
 				this[ 0 ] = n;
@@ -810,7 +863,7 @@ wtsplayer.elementsController = function()
 				return (this[ 0 ]);
 			}
 		},
-		"room_id"   : {
+		"room_id"          : {
 			set    : function( n )
 			{
 				this[ 1 ] = n;
@@ -820,7 +873,7 @@ wtsplayer.elementsController = function()
 				return (this[ 1 ]);
 			}
 		},
-		"nick"      : {
+		"nick"             : {
 			set    : function( n )
 			{
 				this[ 2 ] = n;
@@ -830,7 +883,7 @@ wtsplayer.elementsController = function()
 				return (this[ 2 ]);
 			}
 		},
-		"type_src" : {
+		"type_src"         : {
 			set    : function( n )
 			{
 				this[ 3 ] = n;
@@ -840,7 +893,7 @@ wtsplayer.elementsController = function()
 				return (this[ 3 ]);
 			}
 		},
-		"video_src" : {
+		"video_src"        : {
 			set    : function( n )
 			{
 				this[ 4 ] = n;
@@ -850,7 +903,7 @@ wtsplayer.elementsController = function()
 				return (this[ 4 ]);
 			}
 		},
-		"local_info" : {
+		"local_info"       : {
 			set    : function( n )
 			{
 				this[ 5 ] = n;
