@@ -1,5 +1,9 @@
+.green{
+  color: green;
+}
+
 #chat{
-  height : 200px;
+  height: 200px;
   overflow: hidden;
 }
 #send{
@@ -46,12 +50,12 @@
   bottom: 0px;
   width: 100%;
 }
-#player:-moz-full-screen #videoControls:hover div{
+#player:-moz-full-screen #videoControls:hover > div{
   position: absolute;
   bottom: 0px;
   width: 100%;
 }
-#player:-moz-full-screen #videoControls div{
+#player:-moz-full-screen #videoControls > div{
   transition: bottom 0.5s ease-out 0s;
   position: relative;
   bottom: -30px;
@@ -238,12 +242,12 @@ input.playerSliders:focus::-webkit-slider-runnable-track
   bottom: 0px;
   width: 100%;
 }
-#player:-webkit-full-screen #videoControls:hover div{
+#player:-webkit-full-screen #videoControls:hover > div{
   position: absolute;
   bottom: 0px;
   width: 100%;
 }
-#player:-webkit-full-screen #videoControls div{
+#player:-webkit-full-screen #videoControls > div{
   /*transition: bottom 1s ease-out 0s;*/
   position: relative;
   bottom: -30px;

@@ -16,12 +16,12 @@
 				<label for="but_1">Введите magnet-ссылку:</label>
 				<input type="text" id="magnet" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
 				<br>
-				<input type ="radio" id="but_2" name = "typeSrc">
+				<input type ="radio" id="but_2" name = "typeSrc" value="globalURL">
 				<label for="but_2">Введите адрес:</label>
 				<input type="text" id="globalURL">
 				<select id="quality"></select>
 				<br>
-				<input type ="radio" id="but_3" name = "typeSrc" value="local">
+				<input type ="radio" id="but_3" name = "typeSrc" value="localURL">
 				<label for="but_3">Выберите файл:</label>
 				<input type="file" id="localURL">
 				<br>
@@ -59,7 +59,7 @@
 							<div id = "volume_area">
 								<input id = "volume" class = "vrange" type = "range" value = "1" min="0" max="1" step="0.01">
 							</div>
-							<img id = "volume_button" src="../assets/svg/custom/volume.svg" height="25px">
+							<img id = "volume_button" src="/volume.svg" height="25px">
 						</div>
 						<div id = "peers" style="display:inline; position:relative;">
 							<div id = "peerList"><table id = "peerTable"></table></div>

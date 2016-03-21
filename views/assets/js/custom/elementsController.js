@@ -21,6 +21,7 @@ wtsplayer.elementsController = function()
 			getRoomID           : null,
 			leaveRoom           : null,
 			joinVoiceChat       : null,
+			leaveVoiceChat		: null,
 			responses           : null,
 			fakeReload          : null,
 			getYoutubeVideoInfo : null,
@@ -37,6 +38,7 @@ wtsplayer.elementsController = function()
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
 	var _volume            = document.getElementById( "volume" );
+	var _volumeButton     = document.getElementById( "volume_button" );
 	var _seekRange         = document.getElementById( "playerSeekRange" );
 	var _currentTimeOutput = document.getElementById( "playerCurrentTimeOutput" );
 	var _sendMessageButton = document.getElementById( "sendMessageButton" );
@@ -65,6 +67,7 @@ wtsplayer.elementsController = function()
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
 
+	var _muteVideo 		= false;
 	var _session;
 	var _peers          = {};
 	var _peerVars       = Object.freeze( {
@@ -72,9 +75,11 @@ wtsplayer.elementsController = function()
 		VIDEO_SRC : 1,
 		ROW       : 2,
 		AUDIO     : 3,
-		RANGE     : 4
+		RANGE     : 4,
+		MUTED	  : 5
 	} );
-	var _videoSrcChange = false;
+	var _audioStream	= null;
+	var _videoSrcChange = null;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
 	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
@@ -145,9 +150,27 @@ wtsplayer.elementsController = function()
 
 	} );
 
-	_volume.onchange = function( event )
+	_volume.oninput = function( event )
 	{
 		_video.volume = event.target.value;
+	}
+	_volumeButton.onclick = function(event)
+	{
+		mute(_muteVideo,event.target,_video);
+		_muteVideo = !_muteVideo;
+	}
+	
+	function mute(muted,butt,obj)
+	{
+		if (muted) 
+		{
+			obj.muted = false;
+			butt.src = "/volume.svg";
+		}else
+		{
+			obj.muted = true;
+			butt.src = "/mute.svg";
+		}
 	}
 
 	_globalURL.onchange = function()
@@ -270,6 +293,8 @@ wtsplayer.elementsController = function()
 
 	_backOvervayBut.addEventListener( 'click', function()
 	{
+		if ( document.mozFullScreen || document.webkitIsFullScreen )
+			_fullscreenButton.click();
 		_overlay.className = 'join';
 	} );
 
@@ -471,7 +496,7 @@ wtsplayer.elementsController = function()
 
 	this.onPeerJoinedVoiceChat = function( peer )
 	{
-
+		_peers[ peer ][ _peerVars.ROW ][ 1 ].className = "green";
 	};
 
 	this.onGotAudioStream = function( peer, audioStream )
@@ -480,13 +505,23 @@ wtsplayer.elementsController = function()
 		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
 		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
 
+		_peers[ peer ][ _peerVars.MUTED ] = false;
+		var img 	 = document.createElement( "img" );
+		img.src		 = "/volume.svg";
+		img.onclick  = function( event )
+		{
+			mute(_peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ]);
+			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
+		}
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( img );
+		
 		_peers[ peer ][ _peerVars.RANGE ]          = document.createElement( "input" );
 		_peers[ peer ][ _peerVars.RANGE ].type     = "range";
 		_peers[ peer ][ _peerVars.RANGE ].value    = "1";
 		_peers[ peer ][ _peerVars.RANGE ].min      = "0";
 		_peers[ peer ][ _peerVars.RANGE ].max      = "1";
 		_peers[ peer ][ _peerVars.RANGE ].step     = "0.01";
-		_peers[ peer ][ _peerVars.RANGE ].onchange = function( event )
+		_peers[ peer ][ _peerVars.RANGE ].oninput  = function( event )
 		{
 			_peers[ peer ][ _peerVars.AUDIO ].volume = event.target.value;
 		}
@@ -496,25 +531,32 @@ wtsplayer.elementsController = function()
 	// Get audioStream
 	function getAndSendAudioStream()
 	{
+		console.log("getAndSendAudioStream");
 		navigator.getUserMedia = (
 		navigator.getUserMedia ||
 		navigator.webkitGetUserMedia ||
 		navigator.mozGetUserMedia ||
 		navigator.msGetUserMedia);
 
+		var send = function( audio )
+		{
+			console.log("Отправка аудио-потока");
+			__peerController.joinVoiceChat( audio );
+			_audioStream = audio.getAudioTracks()[0];
+		};
+		
 		var constraints = { video : false, audio : true };
-		var success     = function( audioStream )
+		var success = function( audioStream )
 		{
 			console.log( 'Successfully got the audioStream' );
-			__peerController.joinVoiceChat( audioStream );
+			send( audioStream );
 		};
-		var error       = function( err )
+		var error = function( err )
 		{
 			console.error( err.toString() );
 			console.log( 'Couldn\'t get the audioStream' );
-			__peerController.joinVoiceChat( null );
+			send( null );
 		};
-
 		if ( navigator.mediaDevices.getUserMedia )
 		{
 			var media = navigator.mediaDevices.getUserMedia( constraints );
@@ -626,25 +668,25 @@ wtsplayer.elementsController = function()
 				}
 				if ( _session.type_src == "magnet" )
 				{
-					if ( _session.video_src !== _magnet.value )
+					if ( _session.video_src !== _magnet.value && _magnet.value !== "" )
 					{
 						_session.video_src = _magnet.value;
 						_videoSrcChange    = true;
 					}
-				} else if ( _session.type_src == "local" )
+				} else if ( _session.type_src == "localURL" )
 				{
 					if ( _localURL.files[ 0 ] )
 					{
 						if ( _localURL.files[ 0 ].lastModified != _session.local_info[ 0 ] || _localURL.files[ 0 ].size != _session.local_info[ 1 ] )
 						{
-							_session.video_src  = URL.createObjectURL( _localURL.files[ 0 ] );
+							_session.video_src  = (URL || webkitURL || mozURL).createObjectURL( _localURL.files[ 0 ] );
 							_session.local_info = [ _localURL.files[ 0 ].lastModified, _localURL.files[ 0 ].size ];
 							_videoSrcChange     = true;
 						}
 					}
 				} else
 				{
-					if ( _session.video_src !== _quality.value )
+					if ( _session.video_src !== _quality.value && _globalURL.value !== "" )
 					{
 						_session.video_src = _quality.value;
 						_videoSrcChange    = true;
@@ -693,13 +735,21 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			if ( _videoSrcChange )
+			if ( _videoSrcChange !== false )
 			{
+				if ( _videoSrcChange !== null)
+					_videoSrcChange = false;
+				else
+				{
+					document.querySelector("input[value ='"+_session.type_src+"'").checked = true;
+					if ( _session.type_src == "magnet" ) _magnet.value = _session.video_src;
+				}
 				if ( _session.type_src != "magnet" )
 				{
 					_video.src = _session.video_src;
 				} else
 				{
+					_video.src = null;
 					_video.removeAttribute( "src" );
 
 					var _client = new WebTorrent();
@@ -714,7 +764,6 @@ wtsplayer.elementsController = function()
 						} );
 					} );
 				}
-				_videoSrcChange = false;
 			}
 
 			//аудио-чат
@@ -728,6 +777,7 @@ wtsplayer.elementsController = function()
 			else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
 			{
 				__peerController.leaveVoiceChat();
+				_audioStream.stop();
 			}
 
 			//отображение плеера
@@ -745,10 +795,15 @@ wtsplayer.elementsController = function()
 	{
 		if ( id )
 		{
-			_session.nick = id;
-			_nick.value   = id;
+			if (_session.nick !== '')
+				_nick.value = _session.nick;
+			else
+			{
+				_session.nick = id;
+				_nick.value   = id;
+			}
 		}
-		_video.src = "";
+		_video.src = null;
 		if ( window.location.hash === '' )
 		{
 			__peerController.getRoomID( function( potentialRoomID )

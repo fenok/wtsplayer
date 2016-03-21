@@ -17,6 +17,7 @@ function initServer()
 	app.use( express.static( './views/assets/js/custom' ) );
 	app.use( express.static( './views/assets/css/original' ) );
 	app.use( express.static( './views/assets/css/custom' ) );
+	app.use( express.static( './views/assets/svg/custom' ) );
 
 	app.engine( '.html', require( 'ejs' ).renderFile );
 	app.enable( 'trust proxy' );
