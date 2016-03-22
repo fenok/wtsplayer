@@ -66,6 +66,7 @@ wtsplayer.elementsController = function()
 	 TO-DISCUSS:
 	 setQuality method
 	 construct quality lists in 'constructors', display them on the player GUI
+	 define behavior on video end
 	 */
 
 	var _video             = document.getElementById( "video" );
