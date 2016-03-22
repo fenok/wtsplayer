@@ -141,6 +141,7 @@ wtsplayer.stateController = function()
 			if ( _waitingStates[ prop ] === true )
 			{
 				__elementsController.outputSystemMessage( "Tried to switch from waiting, denied (not all peers ready)" );
+				console.log(_waitingStates);
 				return;
 			}
 		}

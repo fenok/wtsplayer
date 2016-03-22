@@ -35,6 +35,39 @@ wtsplayer.elementsController = function()
 
 	var _self = this;
 
+	/*
+	 ***_video***
+
+	 INTERFACE:
+
+	 Events to dispatch:
+	 timeupdate
+	 waiting
+	 canplay
+
+	 Properties:
+	 volume
+	 muted
+	 currentTime -- ms
+	 duration -- ms
+
+	 Methods:
+	 play
+	 pause
+	 wait -- force buffering, 'canplay' must be emitted (asynchronously)
+
+	 BEHAVIOR:
+
+	 The first event to be emitted is 'canplay', and the video must be paused
+
+	 SPECIAL METHODS:
+	 destroy -- clean content accurately
+
+	 TO-DISCUSS:
+	 setQuality method
+	 construct quality lists in 'constructors', display them on the player GUI
+	 */
+
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
 	var _volume            = document.getElementById( "volume" );
@@ -107,30 +140,29 @@ wtsplayer.elementsController = function()
 		_playPauseButton.disabled = true;
 	};
 
-	//[video].currentTime is in seconds, normalizing to ms
 	_playPauseButton.addEventListener( 'click', function()
 	{
 		if ( _playPauseButton.state === 'play' )
 		{
-			__stateController.onPlayerPlay( _video.currentTime * 1000 );
+			__stateController.onPlayerPlay( _video.currentTime );
 		}
 		else if ( _playPauseButton.state === 'pause' )
 		{
-			__stateController.onPlayerPause( _video.currentTime * 1000 );
+			__stateController.onPlayerPause( _video.currentTime );
 		}
 	} );
 
 	_seekRange.addEventListener( 'change', function()
 	{
 		//converting to ms
-		var playerTime = _seekRange.value * ( _video.duration * 10 );
+		var playerTime = _seekRange.value * ( _video.duration / 100 );
 		__stateController.onPlayerSeek( playerTime );
 	} );
 
 	_video.addEventListener( 'timeupdate', function()
 	{
 		_seekRange.value         = ( 100 / _video.duration ) * _video.currentTime;
-		_currentTimeOutput.value = _video.currentTime;
+		_currentTimeOutput.value = _video.currentTime / 1000;
 	} );
 
 	_video.addEventListener( 'waiting', function()
@@ -143,14 +175,6 @@ wtsplayer.elementsController = function()
 		console.log( "canplay accepted" );
 		__stateController.onPlayerCanPlay();
 	} );
-
-	/*
-	 _video.addEventListener( 'play', function() //DEBUG
-	 {
-	 console.log( "Actual play timestamp:" + new Date().getTime() ); //DEBUG
-	 console.log( "And the playerTime is:" + _video.currentTime ); //DEBUG
-
-	 } );*/
 
 	_volume.oninput       = function( event )
 	{
@@ -319,21 +343,8 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.wait = function()
 	{
-		if ( _video.play === undefined )
-		{
-			return;
-		}
-		_video.play();
-		_video.pause();
 		switchToWaiting();
-		if ( _video.pausedAndCanPlay === true )
-		{
-			setTimeout( function()
-			{
-				console.log( "Custom canplay dispatched" );
-				_video.dispatchEvent( new Event( 'canplay' ) );
-			}, 1 );
-		}
+		_video.wait();
 	};
 
 	//SPECIAL
@@ -354,14 +365,13 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.seek = function( playerTime )
 	{
-		_video.currentTime = playerTime / 1000;
-		_video.dispatchEvent( new Event( 'timeupdate' ) );
+		_video.currentTime = playerTime;
 	};
 
 	//SPECIAL
 	this.getPlayerCurrentTime = function()
 	{
-		return _video.currentTime * 1000;
+		return _video.currentTime;
 	};
 
 	//TODO: remove, it has been replaced with onRecieved
@@ -831,38 +841,9 @@ wtsplayer.elementsController = function()
 		}
 	}
 
-	/*
-	 Interface:
-
-	 Events to dispatch:
-	 timeupdate
-	 waiting
-	 canplay
-
-	 Properties:
-	 volume
-	 muted
-	 pausedAndCanPlay
-	 currentTime
-	 duration
-
-	 Methods:
-	 play
-	 pause
-	 */
-
-	var tag = document.createElement( 'script' );
-
-	tag.src            = "https://www.youtube.com/iframe_api";
-	var firstScriptTag = document.getElementsByTagName( 'script' )[ 0 ];
-	firstScriptTag.parentNode.insertBefore( tag, firstScriptTag );
-
-	// 3. This function creates an <iframe> (and YouTube player)
-	//    after the API code downloads.
-	var player;
-
 	function constructVideoContent_youtubeIframe( videoID )
 	{
+		var player;
 		_video.innerHTML = '';
 		var div          = document.createElement( 'div' );
 		div.id           = "youtube-iframe";
@@ -890,97 +871,124 @@ wtsplayer.elementsController = function()
 		} );
 
 		var buffering = true;
-
-		function onPlayerReady()
-		{
-			setInterval( function()
-			{
-				_video.dispatchEvent( new Event( 'timeupdate' ) );
-			}, 100 );
-			player.setPlaybackQuality("highres");
-			player.playVideo();
-			//player.pauseVideo();
-		}
+		var emittedCanplay = false;
 
 		function onPlayerStateChange( event )
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
 			{
-				_video.dispatchEvent( new Event( 'waiting' ) );
-				buffering = true;
+				if (emittedCanplay)
+				{
+					_video.dispatchEvent( new Event( 'waiting' ) );
+					buffering = true;
+				}
 			}
 			else if ( (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) && buffering === true )
 			{
+				if (!emittedCanplay)
+				{
+					player.pauseVideo();
+				}
 				_video.dispatchEvent( new Event( 'canplay' ) );
 				buffering = false;
+				emittedCanplay = true;
 			}
 		}
 
-		Object.defineProperties( _video, {
-			"volume"           : {
-				configurable : true,
-				set          : function( n )
+		function onPlayerReady()
+		{
+			var lastCurrentTime = null;
+			setInterval( function()
+			{
+				if (player.getCurrentTime()!== lastCurrentTime)
 				{
-					player.setVolume( n );
-				},
-				get          : function()
-				{
-					return (player.getVolume());
+					lastCurrentTime = player.getCurrentTime();
+					_video.dispatchEvent( new Event( 'timeupdate' ) );
 				}
-			},
-			"muted"            : {
-				configurable : true,
-				set          : function( n )
-				{
-					if ( n === true )
-					{
-						player.mute();
-					}
-					else
-					{
-						player.unMute();
-					}
-				},
-				get          : function()
-				{
-					return (player.isMuted());
-				}
-			},
-			"pausedAndCanPlay" : {
-				configurable : true,
-				get          : function()
-				{
-					return (player.getPlayerState() === YT.PlayerState.PAUSED );
-				}
-			},
-			"currentTime"      : {
-				configurable : true,
-				set          : function( n )
-				{
-					player.seekTo( n, true );
-				},
-				get          : function()
-				{
-					return (player.getCurrentTime());
-				}
-			},
-			"duration"         : {
-				configurable : true,
-				get          : function()
-				{
-					return (player.getDuration());
-				}
-			}
-		} );
+			}, 100 );
+			player.setPlaybackQuality("highres");
+			player.playVideo();
+			//player.pauseVideo();
+			//_video.dispatchEvent( new Event( 'canplay' ) );
 
-		_video.play  = function()
-		{
-			player.playVideo()
-		};
-		_video.pause = function()
-		{
-			player.pauseVideo()
-		};
+			Object.defineProperties( _video, {
+				"volume"           : {
+					configurable : true,
+					set          : function( n )
+					{
+						player.setVolume( n * 100);
+					},
+					get          : function()
+					{
+						return (player.getVolume() / 100);
+					}
+				},
+				"muted"            : {
+					configurable : true,
+					set          : function( n )
+					{
+						if ( n === true )
+						{
+							player.mute();
+						}
+						else
+						{
+							player.unMute();
+						}
+					},
+					get          : function()
+					{
+						return (player.isMuted());
+					}
+				},
+				"currentTime"      : {
+					configurable : true,
+					set          : function( n )
+					{
+						player.seekTo( n / 1000, true );
+					},
+					get          : function()
+					{
+						return (player.getCurrentTime() * 1000);
+					}
+				},
+				"duration"         : {
+					configurable : true,
+					get          : function()
+					{
+						return (player.getDuration() * 1000);
+					}
+				}
+			} );
+
+			_video.play  = function()
+			{
+				player.playVideo();
+			};
+			_video.pause = function()
+			{
+				player.pauseVideo();
+			};
+			_video.wait = function()
+			{
+				switch (player.getPlayerState())
+				{
+					case YT.PlayerState.PLAYING:
+						player.pauseVideo();
+					case YT.PlayerState.PAUSED:
+						setTimeout( function()
+						{
+							console.log( "Custom canplay dispatched" );
+							_video.dispatchEvent( new Event( 'canplay' ) );
+						}, 1 );
+						break;
+					case YT.PlayerState.BUFFERING:
+					case YT.PlayerState.ENDED:
+					default:
+						break;
+				}
+			};
+		}
 	}
 
 	function onYouTubeIframeAPIReady()
@@ -1024,6 +1032,7 @@ wtsplayer.elementsController = function()
 
 		_video.appendChild( videoElement );
 
+		var emittedCanPlay = false;
 		videoElement.addEventListener( 'timeupdate', function()
 		{
 			_video.dispatchEvent( new Event( 'timeupdate' ) );
@@ -1031,12 +1040,16 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'waiting', function()
 		{
-			_video.dispatchEvent( new Event( 'waiting' ) );
+			if (emittedCanPlay)
+			{
+				_video.dispatchEvent( new Event( 'waiting' ) );
+			}
 		} );
 
 		videoElement.addEventListener( 'canplay', function()
 		{
 			_video.dispatchEvent( new Event( 'canplay' ) );
+			emittedCanPlay = true;
 		} );
 
 		Object.defineProperties( _video, {
@@ -1062,29 +1075,23 @@ wtsplayer.elementsController = function()
 					return (videoElement.muted);
 				}
 			},
-			"pausedAndCanPlay" : {
-				configurable : true,
-				get          : function()
-				{
-					return (videoElement.readyState === 4);
-				}
-			},
 			"currentTime"      : {
 				configurable : true,
 				set          : function( n )
 				{
-					videoElement.currentTime = n;
+					videoElement.currentTime = n / 1000;
+					_video.dispatchEvent( new Event( 'timeupdate' ) );
 				},
 				get          : function()
 				{
-					return (videoElement.currentTime);
+					return (videoElement.currentTime * 1000);
 				}
 			},
 			"duration"         : {
 				configurable : true,
 				get          : function()
 				{
-					return (videoElement.duration);
+					return (videoElement.duration * 1000);
 				}
 			}
 		} );
@@ -1097,6 +1104,20 @@ wtsplayer.elementsController = function()
 		_video.pause = function()
 		{
 			videoElement.pause();
+		};
+
+		_video.wait = function()
+		{
+			_video.play();
+			_video.pause();
+			if ( videoElement.readyState === 4 )
+			{
+				setTimeout( function()
+				{
+					console.log( "Custom canplay dispatched" );
+					_video.dispatchEvent( new Event( 'canplay' ) );
+				}, 1 );
+			}
 		};
 
 		return videoElement;
@@ -1116,6 +1137,8 @@ wtsplayer.elementsController = function()
 			}
 		}
 		_video.innerHTML = '';
+		//Can be invoked before player construction
+		_video.wait = function(){console.log("wait_dummy")};
 		if ( window.location.hash === '' )
 		{
 			__peerController.getRoomID( function( potentialRoomID )
