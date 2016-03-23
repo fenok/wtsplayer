@@ -64,7 +64,7 @@ wtsplayer.elementsController = function()
 	 destroy -- clean content accurately
 
 	 TO-DISCUSS:
-	 setQuality method
+	 changeQuality
 	 construct quality lists in 'constructors', display them on the player GUI
 	 define behavior on video end
 	 */
@@ -96,6 +96,7 @@ wtsplayer.elementsController = function()
 	var _quality            = document.getElementById( "quality" );
 	var _localURL           = document.getElementById( "localURL" );
 	var _youtubeID_embedded = document.getElementById( "youtubeID_embedded" );
+	var _youtubeID_direct   = document.getElementById( "youtubeID_direct" );
 
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
 	var _peerList        = document.getElementById( "peerList" );
@@ -202,65 +203,7 @@ wtsplayer.elementsController = function()
 
 	_globalURL.onchange = function()
 	{
-		function parse( d )
-		{
-			var res, i$, ref$, len$, a, ref1$;
-			if ( d.startsWith( "http" ) )
-			{
-				return d;
-			} else if ( d.indexOf( "," ) != -1 )
-			{
-				return d.split( "," ).map( parse );
-			} else if ( d.indexOf( "&" ) != -1 )
-			{
-				res = {};
-				for ( i$ = 0, len$ = (ref$ = d.split( "&" )).length; i$ < len$; ++i$ )
-				{
-					a = ref$[ i$ ];
-					a = a.split( "=" );
-					if ( res[ a[ 0 ] ] )
-					{
-						if ( !$.isArray( res[ a[ 0 ] ] ) )
-						{
-							res[ a[ 0 ] ] = [ res[ a[ 0 ] ] ];
-						}
-						(ref1$ = res[ a[ 0 ] ])[ ref1$.length ] = parse( unescape( a[ 1 ] ) );
-					} else
-					{
-						res[ a[ 0 ] ] = parse( unescape( a[ 1 ] ) );
-					}
-				}
-				return res;
-			} else if ( !isNaN( d ) )
-			{
-				return +d;
-			} else if ( d === 'True' || d === 'False' )
-			{
-				return d === 'True';
-			} else
-			{
-				return d;
-			}
-		};
 
-		var res = parseYoutubeLinkIntoID( this.value );
-
-		if ( res !== null )
-		{
-			__peerController.getYoutubeVideoInfo( res, function( text )
-			{
-				var obj            = parse( text );
-				_quality.innerHTML = "";
-				for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
-				{
-					var opt       = document.createElement( "option" );
-					opt.innerHTML = obj.url_encoded_fmt_stream_map[ i ].quality;
-					opt.value     = obj.url_encoded_fmt_stream_map[ i ].url;
-					_quality.appendChild( opt );
-				}
-
-			} )
-		}
 	}
 
 	_sendMessageButton.addEventListener( 'click', sendMsg );
@@ -726,20 +669,34 @@ wtsplayer.elementsController = function()
 				}
 				else if ( _session.type_src == "globalURL" )
 				{
-					if ( _session.video_src !== _quality.value && _globalURL.value !== "" )
+					if ( _session.video_src !== _globalURL.value && _globalURL.value !== "" )
 					{
-						_session.video_src = _quality.value;
+						_session.video_src = _globalURL.value;
 						_videoSrcChange    = true;
 					}
 				}
-				else
+				else if ( _session.type_src == "youtubeID_embedded" )
 				{
-					var ID = parseYoutubeLinkIntoID(_youtubeID_embedded.value);
+					var ID = parseYoutubeLinkIntoID( _youtubeID_embedded.value );
 					if ( _session.video_src !== ID && _youtubeID_embedded.value !== "" )
 					{
 						_session.video_src = ID;
 						_videoSrcChange    = true;
 					}
+				}
+				else if ( _session.type_src == "youtubeID_direct" )
+				{
+					var ID = parseYoutubeLinkIntoID( _youtubeID_direct.value );
+					if ( _session.video_src !== ID && _youtubeID_direct.value !== "" )
+					{
+						_session.video_src = ID;
+						_videoSrcChange    = true;
+					}
+				}
+				else
+				{
+					alert( "Input: unrecognized type_src" );
+					//switch what?
 				}
 				break;
 			}
@@ -797,16 +754,25 @@ wtsplayer.elementsController = function()
 						_magnet.value = _session.video_src;
 					}
 				}
-				if ( _session.type_src != "magnet" && _session.type_src !== 'youtubeID_embedded' )
+				if ( _session.type_src === "globalURL" || _session.type_src === 'localURL' )
 				{
 					constructVideoContent_directSource( _session.video_src );
-				} else if ( _session.type_src !== 'youtubeID_embedded' )
+				}
+				else if ( _session.type_src === 'magnet' )
 				{
 					constructVideoContent_webtorrentMagnet( _session.video_src );
 				}
-				else
+				else if ( _session.type_src === 'youtubeID_embedded' )
 				{
 					constructVideoContent_youtubeIframe( _session.video_src );
+				}
+				else if ( _session.type_src === 'youtubeID_direct' )
+				{
+					constructVideoContent_youtubeDirect( _session.video_src );
+				}
+				else
+				{
+					alert( "Unrecognized type_src" );
 				}
 			}
 
@@ -842,8 +808,75 @@ wtsplayer.elementsController = function()
 		}
 	}
 
+	function constructVideoContent_youtubeDirect( videoID )
+	{
+		_quality.onchange = function()
+		{
+			_video.changeQuality(this.value);
+		};
+
+		var videoElement = getCleanVideoContent_video();
+
+		function parse( d )
+		{
+			var res, i$, ref$, len$, a, ref1$;
+			if ( d.startsWith( "http" ) )
+			{
+				return d;
+			} else if ( d.indexOf( "," ) != -1 )
+			{
+				return d.split( "," ).map( parse );
+			} else if ( d.indexOf( "&" ) != -1 )
+			{
+				res = {};
+				for ( i$ = 0, len$ = (ref$ = d.split( "&" )).length; i$ < len$; ++i$ )
+				{
+					a = ref$[ i$ ];
+					a = a.split( "=" );
+					if ( res[ a[ 0 ] ] )
+					{
+						if ( !$.isArray( res[ a[ 0 ] ] ) )
+						{
+							res[ a[ 0 ] ] = [ res[ a[ 0 ] ] ];
+						}
+						(ref1$ = res[ a[ 0 ] ])[ ref1$.length ] = parse( unescape( a[ 1 ] ) );
+					} else
+					{
+						res[ a[ 0 ] ] = parse( unescape( a[ 1 ] ) );
+					}
+				}
+				return res;
+			} else if ( !isNaN( d ) )
+			{
+				return +d;
+			} else if ( d === 'True' || d === 'False' )
+			{
+				return d === 'True';
+			} else
+			{
+				return d;
+			}
+		};
+
+		__peerController.getYoutubeVideoInfo( videoID, function( text )
+		{
+			var obj            = parse( text );
+			_quality.innerHTML = "";
+			for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
+			{
+				var opt       = document.createElement( "option" );
+				opt.innerHTML = obj.url_encoded_fmt_stream_map[ i ].quality;
+				opt.value     = obj.url_encoded_fmt_stream_map[ i ].url;
+				_quality.appendChild( opt );
+			}
+
+			videoElement.src = _quality.value;
+		} );
+	}
+
 	function constructVideoContent_youtubeIframe( videoID )
 	{
+		_quality.onchange = null;
 		var player;
 		_video.innerHTML = '';
 		var div          = document.createElement( 'div' );
@@ -871,14 +904,14 @@ wtsplayer.elementsController = function()
 			}
 		} );
 
-		var buffering = true;
+		var buffering      = true;
 		var emittedCanplay = false;
 
 		function onPlayerStateChange( event )
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
 			{
-				if (emittedCanplay)
+				if ( emittedCanplay )
 				{
 					_video.dispatchEvent( new Event( 'waiting' ) );
 					buffering = true;
@@ -886,12 +919,12 @@ wtsplayer.elementsController = function()
 			}
 			else if ( (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) && buffering === true )
 			{
-				if (!emittedCanplay)
+				if ( !emittedCanplay )
 				{
 					player.pauseVideo();
 				}
 				_video.dispatchEvent( new Event( 'canplay' ) );
-				buffering = false;
+				buffering      = false;
 				emittedCanplay = true;
 			}
 		}
@@ -901,30 +934,30 @@ wtsplayer.elementsController = function()
 			var lastCurrentTime = null;
 			setInterval( function()
 			{
-				if (player.getCurrentTime()!== lastCurrentTime)
+				if ( player.getCurrentTime() !== lastCurrentTime )
 				{
 					lastCurrentTime = player.getCurrentTime();
 					_video.dispatchEvent( new Event( 'timeupdate' ) );
 				}
 			}, 100 );
-			player.setPlaybackQuality("highres");
+			player.setPlaybackQuality( "highres" );
 			player.playVideo();
 			//player.pauseVideo();
 			//_video.dispatchEvent( new Event( 'canplay' ) );
 
 			Object.defineProperties( _video, {
-				"volume"           : {
+				"volume"      : {
 					configurable : true,
 					set          : function( n )
 					{
-						player.setVolume( n * 100);
+						player.setVolume( n * 100 );
 					},
 					get          : function()
 					{
 						return (player.getVolume() / 100);
 					}
 				},
-				"muted"            : {
+				"muted"       : {
 					configurable : true,
 					set          : function( n )
 					{
@@ -942,7 +975,7 @@ wtsplayer.elementsController = function()
 						return (player.isMuted());
 					}
 				},
-				"currentTime"      : {
+				"currentTime" : {
 					configurable : true,
 					set          : function( n )
 					{
@@ -953,7 +986,7 @@ wtsplayer.elementsController = function()
 						return (player.getCurrentTime() * 1000);
 					}
 				},
-				"duration"         : {
+				"duration"    : {
 					configurable : true,
 					get          : function()
 					{
@@ -970,9 +1003,9 @@ wtsplayer.elementsController = function()
 			{
 				player.pauseVideo();
 			};
-			_video.wait = function()
+			_video.wait  = function()
 			{
-				switch (player.getPlayerState())
+				switch ( player.getPlayerState() )
 				{
 					case YT.PlayerState.PLAYING:
 						player.pauseVideo();
@@ -992,13 +1025,10 @@ wtsplayer.elementsController = function()
 		}
 	}
 
-	function onYouTubeIframeAPIReady()
-	{
-
-	}
-
 	function constructVideoContent_webtorrentMagnet( magnetLink )
 	{
+		_quality.onchange = null;
+
 		//TODO: seeing hundreds of "webtorrent.min.js:10 Uncaught InvalidStateError: Failed to read the 'buffered' property from 'SourceBuffer': This SourceBuffer has been removed from the parent media source." is actually pretty cool, but.. client should be removed properly. Or whatever. Check webtorrent docs.
 		var videoElement = getCleanVideoContent_video();
 
@@ -1017,6 +1047,7 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_directSource( directSource )
 	{
+		_quality.onchange = null;
 		var videoElement = getCleanVideoContent_video();
 
 		videoElement.src = directSource;
@@ -1041,7 +1072,7 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'waiting', function()
 		{
-			if (emittedCanPlay)
+			if ( emittedCanPlay )
 			{
 				_video.dispatchEvent( new Event( 'waiting' ) );
 			}
@@ -1054,7 +1085,7 @@ wtsplayer.elementsController = function()
 		} );
 
 		Object.defineProperties( _video, {
-			"volume"           : {
+			"volume"      : {
 				configurable : true,
 				set          : function( n )
 				{
@@ -1065,7 +1096,7 @@ wtsplayer.elementsController = function()
 					return (videoElement.volume);
 				}
 			},
-			"muted"            : {
+			"muted"       : {
 				configurable : true,
 				set          : function( n )
 				{
@@ -1076,7 +1107,7 @@ wtsplayer.elementsController = function()
 					return (videoElement.muted);
 				}
 			},
-			"currentTime"      : {
+			"currentTime" : {
 				configurable : true,
 				set          : function( n )
 				{
@@ -1088,7 +1119,7 @@ wtsplayer.elementsController = function()
 					return (videoElement.currentTime * 1000);
 				}
 			},
-			"duration"         : {
+			"duration"    : {
 				configurable : true,
 				get          : function()
 				{
@@ -1121,6 +1152,11 @@ wtsplayer.elementsController = function()
 			}
 		};
 
+		_video.changeQuality = function(src)
+		{
+			videoElement.src = src;
+		};
+
 		return videoElement;
 	}
 
@@ -1139,7 +1175,10 @@ wtsplayer.elementsController = function()
 		}
 		_video.innerHTML = '';
 		//Can be invoked before player construction
-		_video.wait = function(){console.log("wait_dummy")};
+		_video.wait = function()
+		{
+			console.log( "wait_dummy" )
+		};
 		if ( window.location.hash === '' )
 		{
 			__peerController.getRoomID( function( potentialRoomID )
