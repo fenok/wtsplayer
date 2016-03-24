@@ -67,6 +67,8 @@ wtsplayer.elementsController = function()
 	 changeQuality
 	 construct quality lists in 'constructors', display them on the player GUI
 	 define behavior on video end
+	 //TODO: store video duration with dataSource, pass it to _video, emulate it
+	 //TODO: pass offset from the beginning, emulate
 	 */
 
 	var _video             = document.getElementById( "video" );

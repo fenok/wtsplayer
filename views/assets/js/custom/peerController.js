@@ -223,6 +223,7 @@ wtsplayer.peerController = function()
 
 			_peer.on( 'connection', function( conn )
 			{
+				//TODO: make sure that reconnection of the same peer is processed correctly
 				if ( conn.metadata.roomID !== '' && conn.metadata.roomID === currentRoomID && conn.metadata.password === currentPassword )
 				{
 					//Send initial info ASAP!!
