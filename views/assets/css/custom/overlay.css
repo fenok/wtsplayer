@@ -22,6 +22,40 @@
   background: white;
   opacity: 1;
 }
+h1{
+	margin-bottom: 0;
+}
+@media screen and (max-height: 400px)
+{
+	.create #overlayContent{
+		width: 90%;
+	}
+	.create #overlayContent > div{
+		display: inline-block;
+		width: 33%;
+	}
+	
+	.join #overlayContent{
+		width: 60%;
+	}
+	.join #overlayContent > div:not(#typeRoom){
+		display: inline-block;
+		width: 49%;
+	}
+}
+@media screen and (min-height: 401px) and (max-height: 600px)
+{
+	.create #overlayContent{
+		width: 60%;
+	}
+	.create #overlayContent > div{
+		display: inline-block;
+		width: 49%;
+	}
+	.create #overlayContent > div:last-of-type{
+		width: 100%;
+	}
+}
 /*.craete .join .password .error*/
 .password #overlayContent > *:not(#typeRoom), .error #overlayContent *, 
 .password #typeRoom *:not(#wrongPassword), 
@@ -58,9 +92,6 @@
 	margin-bottom: 7px;
 	width: 256px;
 }
-#quality {
-	width: 14%;
-}
 
 input[name="typeSrc"] + label + input, input[name="typeSrc"] + label + input + select{
 	opacity: 0.35;
@@ -71,6 +102,7 @@ input[name="typeSrc"]:checked + label + input, input[name="typeSrc"]:checked + l
 #joinButton {
 	position: relative;
 	top: 25px;
+	margin-top: -25px;
 	width: 300px;
 	height: 50px;
 	border: none;

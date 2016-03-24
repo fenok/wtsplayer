@@ -42,6 +42,7 @@ wtsplayer.elementsController = function()
 
 	 Events to dispatch:
 	 timeupdate
+	 ended
 	 waiting
 	 canplay
 
@@ -627,12 +628,12 @@ wtsplayer.elementsController = function()
 			} )
 	}
 
-	function selectInput( ret )
+	function selectInput( isCreating ) //здесь происходит изменение сессии (не инициализация)
 	{
 		if ( _nick.value !== _session.nick )
 		{
 			_session.nick = _nick.value;
-			if ( ret === false )
+			if ( isCreating === false ) //срабатывает только при возврате к плееру
 			{
 				__peerController.send( __peerController.sending.NICK, _session.nick );
 			}
@@ -703,7 +704,7 @@ wtsplayer.elementsController = function()
 				break;
 			}
 		}
-		if ( ret === false && _videoSrcChange && _session.type_src != "local" )
+		if ( isCreating === false && _videoSrcChange && _session.type_src != "local" ) //срабатывает только при возврате к плееру
 		{
 			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
 		}
@@ -712,7 +713,7 @@ wtsplayer.elementsController = function()
 			_session.audiochat_status = _audioChatStatus.checked;
 		}
 
-		if ( !ret )
+		if ( !isCreating ) //возврат или присоединение
 		{
 			enterRoom();
 		}
@@ -748,9 +749,10 @@ wtsplayer.elementsController = function()
 				if ( _videoSrcChange !== null )
 				{
 					_videoSrcChange = false;
-				} else
+				} 
+				else 
 				{
-					document.querySelector( "input[value ='" + _session.type_src + "'" ).checked = true;
+					document.querySelector( "input[value ='" + _session.type_src + "']" ).checked = true;
 					if ( _session.type_src == "magnet" )
 					{
 						_magnet.value = _session.video_src;
@@ -1070,6 +1072,11 @@ wtsplayer.elementsController = function()
 		videoElement.addEventListener( 'timeupdate', function()
 		{
 			_video.dispatchEvent( new Event( 'timeupdate' ) );
+		} );
+		
+		videoElement.addEventListener( 'ended', function()
+		{
+			_video.dispatchEvent( new Event( 'ended' ) );
 		} );
 
 		videoElement.addEventListener( 'waiting', function()

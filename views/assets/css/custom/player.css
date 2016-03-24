@@ -68,8 +68,11 @@
   bottom: -30px;
 }
 #player #playerSeekRange{
-  width: calc( 100% - 350px );
+  width: calc( 100% - 420px );
   margin: 0 5px;
+}
+#quality {
+	width: 70px;
 }
 /* Стилизация слайдеров */
 #playerSeekRange::-moz-range-track {

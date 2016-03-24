@@ -9,29 +9,31 @@
 	</head>
 	<body>
 		<div id="overlay" class="closeContent">
-			<div id="overlayContent" class="">
+			<div id="overlayContent">
 				<h1 id="title">Создание комнаты</h1>
-				<h3>Источник видео:</h3>
-				<input type ="radio" id="but_1" name = "typeSrc" value = "magnet" checked>
-				<label for="but_1">Введите magnet-ссылку:</label>
-				<input type="text" id="magnet" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
-				<br>
-				<input type ="radio" id="but_2" name = "typeSrc" value="globalURL">
-				<label for="but_2">Введите адрес:</label>
-				<input type="text" id="globalURL">
-				<br>
-				<input type ="radio" id="but_3" name = "typeSrc" value="localURL">
-				<label for="but_3">Выберите файл:</label>
-				<input type="file" id="localURL">
-				<br>
-				<input type ="radio" id="but_4" name = "typeSrc" value="youtubeID_embedded">
-				<label for="but_4">Youtube (встроенный плеер):</label>
-				<input type="text" id="youtubeID_embedded">
-				<br>
-				<input type ="radio" id="but_4_" name = "typeSrc" value="youtubeID_direct">
-				<label for="but_4">Youtube (прямой ссылкой):</label>
-				<input type="text" id="youtubeID_direct">
-				<br>
+				<div>
+					<h3>Источник видео:</h3>
+					<input type ="radio" id="but_1" name = "typeSrc" value = "magnet" checked>
+					<label for="but_1">Введите magnet-ссылку:</label>
+					<input type="text" id="magnet" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
+					<br>
+					<input type ="radio" id="but_2" name = "typeSrc" value="globalURL">
+					<label for="but_2">Введите адрес:</label>
+					<input type="text" id="globalURL">
+					<br>
+					<input type ="radio" id="but_3" name = "typeSrc" value="localURL">
+					<label for="but_3">Выберите файл:</label>
+					<input type="file" id="localURL">
+					<br>
+					<input type ="radio" id="but_4" name = "typeSrc" value="youtubeID_embedded">
+					<label for="but_4">Youtube (встроенный плеер):</label>
+					<input type="text" id="youtubeID_embedded">
+					<br>
+					<input type ="radio" id="but_5" name = "typeSrc" value="youtubeID_direct">
+					<label for="but_5">Youtube (прямой ссылкой):</label>
+					<input type="text" id="youtubeID_direct">
+					<br>
+				</div>
 				<div id="typeRoom">
 					<h3>Идентефикатор комнаты:</h3>
 					<input id="roomId"><input type="button" id="generateId" value="Сменить ID">
@@ -43,14 +45,15 @@
 					<label for="but_6">Частная комната</label>
 					<input id="passwordInput" type="password" placeholder=" Введите пароль">
 					<span id="wrongPassword" class="close">Неверный пароль!</span>
-					
 				</div>
-				<input type = "checkbox" id="audioChatStatus">
-				<label for="audioChatStatus">Использование аудио-чата</label>
-				<br><br>
-				<label for="nick">Введите ник для чата:</label>
-				<input id="nick" maxlength="20">
-				<br>
+				<div>
+					<input type = "checkbox" id="audioChatStatus">
+					<label for="audioChatStatus">Использование аудио-чата</label>
+					<br><br>
+					<label for="nick">Введите ник для чата:</label>
+					<input id="nick" maxlength="20">
+					<br>
+				</div>
 				<input id="joinButton" type="button" value="Join room">			
 			</div>
 		</div>
@@ -63,15 +66,15 @@
 						<div id = "peerList"><table id = "peerTable"></table></div>
 						<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
 						<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
+						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
 						<div id = "vol" style="display:inline; position:relative;">
 							<div id = "volume_area">
 								<input id = "volume" class = "vrange" type = "range" value = "1" min="0" max="1" step="0.01">
 							</div>
 							<img id = "volume_button" src="/volume.svg" height="25px">
 						</div>
+						<select id="quality"><option>Качество</option></select>
 						<input type="button" id="peerListButton">
-						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
-						<select id="quality"></select>
 						<input id = "fullscreen" type = "button" value = "Fullscreen">
 						<input id = "backOverlayBut" type = "button" value = "Back">
 					</div>
@@ -86,7 +89,7 @@
 			</div>
 		</div>
 		<!-- TODO: make perfect package.json and include assets from node_modules  -->
-		<script src="https://www.youtube.com/iframe_api"></script>>
+		<script src="https://www.youtube.com/iframe_api"></script>
 		<script src="/jquery.min.js"></script>
 		<script src="/webtorrent.min.js"></script>
 		<script src="/peer.peerjs_fork_firefox40.min.js"></script>
