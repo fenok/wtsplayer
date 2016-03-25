@@ -1,7 +1,9 @@
 .green{
   color: green;
 }
-
+html, body{
+	height: 100%;
+}
 #chat{
   height: 200px;
   overflow: hidden;
@@ -21,9 +23,10 @@
   background:black;
 }
 #playerExternal{
+  height: 100%;	
   display: flex;
   justify-content: center;
-  align-items: center;
+  /*align-items: center;*/
 }
 #player:-webkit-full-screen #video{
   width: 100%;
@@ -68,7 +71,7 @@
   bottom: -30px;
 }
 #player #playerSeekRange{
-  width: calc( 100% - 420px );
+  width: calc( 100% - 430px );
   margin: 0 5px;
 }
 #quality {
@@ -142,6 +145,11 @@
   width: 30px;
   top: -130px;
   left: 0;
+}
+#vol{
+  display:inline; 
+  position:relative;
+  top: 7px;
 }
 #vol:hover #volume_area{
   display:block!important;

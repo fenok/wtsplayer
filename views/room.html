@@ -13,26 +13,19 @@
 				<h1 id="title">Создание комнаты</h1>
 				<div>
 					<h3>Источник видео:</h3>
-					<input type ="radio" id="but_1" name = "typeSrc" value = "magnet" checked>
-					<label for="but_1">Введите magnet-ссылку:</label>
-					<input type="text" id="magnet" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
-					<br>
-					<input type ="radio" id="but_2" name = "typeSrc" value="globalURL">
-					<label for="but_2">Введите адрес:</label>
-					<input type="text" id="globalURL">
-					<br>
-					<input type ="radio" id="but_3" name = "typeSrc" value="localURL">
-					<label for="but_3">Выберите файл:</label>
-					<input type="file" id="localURL">
-					<br>
-					<input type ="radio" id="but_4" name = "typeSrc" value="youtubeID_embedded">
-					<label for="but_4">Youtube (встроенный плеер):</label>
-					<input type="text" id="youtubeID_embedded">
-					<br>
-					<input type ="radio" id="but_5" name = "typeSrc" value="youtubeID_direct">
-					<label for="but_5">Youtube (прямой ссылкой):</label>
-					<input type="text" id="youtubeID_direct">
-					<br>
+					
+					<div class="korpus1"> 
+						<span data-type="inputLink">Ссылка</span><span data-type="localURL">Локальный файл</span><span data-type="peers">Источники пиров</span>
+						<div>
+							<input type="text" id="inputLink" style="width:95%" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
+							Введите ссылку на видео. На данный момент поддерживаются: magnet-ссылки WebTorrent, ссылки на youtube и прямые ссылки.
+						</div> 
+						<div><input type="file" id="localURL"></div> 
+						<div>
+							<select id="peersSrc" size="4" style="width:95%"></select>
+							<input type="checkbox" id="follow"><label for="follow">Динамическое изменение видео вслед за пиром</label>
+						</div> 
+					</div>
 				</div>
 				<div id="typeRoom">
 					<h3>Идентефикатор комнаты:</h3>
@@ -67,7 +60,7 @@
 						<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
 						<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
 						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
-						<div id = "vol" style="display:inline; position:relative;">
+						<div id = "vol">
 							<div id = "volume_area">
 								<input id = "volume" class = "vrange" type = "range" value = "1" min="0" max="1" step="0.01">
 							</div>

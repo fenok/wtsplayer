@@ -82,6 +82,7 @@ wtsplayer.elementsController = function()
 	var _messageInput      = document.getElementById( "messageInput" );
 	var _fullscreenButton  = document.getElementById( "fullscreen" );
 	var _backOvervayBut    = document.getElementById( "backOverlayBut" );
+	var _quality            = document.getElementById( "quality" );
 
 	var _generateId    = document.getElementById( "generateId" );
 	var _roomIdInput   = document.getElementById( "roomId" );
@@ -93,21 +94,21 @@ wtsplayer.elementsController = function()
 	var _overlay       = document.getElementById( "overlay" );
 	var _joinButton    = document.getElementById( "joinButton" );
 
-	var _typeSrc            = document.getElementsByName( "typeSrc" );
-	var _magnet             = document.getElementById( "magnet" );
-	var _globalURL          = document.getElementById( "globalURL" );
-	var _quality            = document.getElementById( "quality" );
-	var _localURL           = document.getElementById( "localURL" );
-	var _youtubeID_embedded = document.getElementById( "youtubeID_embedded" );
-	var _youtubeID_direct   = document.getElementById( "youtubeID_direct" );
-
+	var _inputLink = document.getElementById( "inputLink" );
+	var _localURL  = document.getElementById( "localURL" );
+	var _peersSrc  = document.getElementById( "peersSrc" );
+	var _follow    = document.getElementById("follow");
+	
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
 	var _peerList        = document.getElementById( "peerList" );
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
 
-	var _muteVideo      = false;
 	var _session;
+	var _muteVideo;
+	var _audioStream;
+	var _videoSrcChange;
+	var _videoSrcTabs	= 'inputLink';
 	var _peers          = {};
 	var _peerVars       = Object.freeze( {
 		NICK      : 0,
@@ -117,8 +118,6 @@ wtsplayer.elementsController = function()
 		RANGE     : 4,
 		MUTED     : 5
 	} );
-	var _audioStream    = null;
-	var _videoSrcChange = false;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
 	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
@@ -180,626 +179,11 @@ wtsplayer.elementsController = function()
 		console.log( "canplay accepted" );
 		__stateController.onPlayerCanPlay();
 	} );
-
-	_volume.oninput       = function( event )
+	
+	
+	function constructVideoContent_youtubeDirect( videoLink )
 	{
-		_video.volume = event.target.value;
-	}
-	_volumeButton.onclick = function( event )
-	{
-		mute( _muteVideo, event.target, _video );
-		_muteVideo = !_muteVideo;
-	}
-
-	function mute( muted, butt, obj )
-	{
-		if ( muted )
-		{
-			obj.muted = false;
-			butt.src  = "/volume.svg";
-		} else
-		{
-			obj.muted = true;
-			butt.src  = "/mute.svg";
-		}
-	}
-
-	_globalURL.onchange = function()
-	{
-
-	}
-
-	_sendMessageButton.addEventListener( 'click', sendMsg );
-
-	_messageInput.onkeydown = function( e )
-	{
-		if ( e.keyCode == "13" )
-		{
-			sendMsg();
-		}
-	};
-
-	function parseYoutubeLinkIntoID( link )
-	{
-		var rx  = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
-		var res = link.match( rx );
-		if ( res === null )
-		{
-			return null;
-		}
-		else
-		{
-			return res[ 1 ];
-		}
-	}
-
-	function sendMsg()
-	{
-		var messageData =
-			{
-				nick    : _session.nick || 'Someone',
-				message : _messageInput.value
-			};
-		__peerController.send( __peerController.sending.MESSAGE, messageData );
-		_self.onMessageRecieved( messageData );
-		_messageInput.value = '';
-	}
-
-	_fullscreenButton.addEventListener( 'click', function()
-	{
-		// Note: FF nightly needs about:config full-screen-api.enabled set to true.
-
-		if ( document.mozFullScreen || document.webkitIsFullScreen )
-		{
-			if ( document.cancelFullScreen )
-			{
-				document.cancelFullScreen();
-			} else if ( document.webkitCancelFullScreen )
-			{
-				document.webkitCancelFullScreen();
-			} else if ( document.mozCancelFullScreen )
-			{
-				document.mozCancelFullScreen();
-			}
-		}
-		else
-		{
-			var el = document.getElementById( "player" );
-			if ( el.requestFullScreen )
-			{
-				el.requestFullScreen();
-			} else if ( el.webkitRequestFullScreen )
-			{
-				el.webkitRequestFullScreen();
-			} else if ( el.mozRequestFullScreen )
-			{
-				el.mozRequestFullScreen();
-			}
-		}
-	} );
-
-	_backOvervayBut.addEventListener( 'click', function()
-	{
-		if ( document.mozFullScreen || document.webkitIsFullScreen )
-		{
-			_fullscreenButton.click();
-		}
-		_overlay.className = 'join';
-	} );
-
-	//SPECIAL
-	this.wait = function()
-	{
-		switchToWaiting();
-		_video.wait();
-	};
-
-	//SPECIAL
-	this.play = function()
-	{
-		_video.play();
-		//console.log("Hit play:" + new Date().getTime()); //DEBUG
-		switchToPause();
-	};
-
-	//SPECIAL
-	this.pause = function()
-	{
-		_video.pause();
-		switchToPlay();
-	};
-
-	//SPECIAL
-	this.seek = function( playerTime )
-	{
-		_video.currentTime = playerTime;
-	};
-
-	//SPECIAL
-	this.getPlayerCurrentTime = function()
-	{
-		return _video.currentTime;
-	};
-
-	//TODO: remove, it has been replaced with onRecieved
-	this.onMessageRecieved = function( messageData )
-	{
-		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
-	};
-
-	//SPECIAL
-	this.outputSystemMessage = function( message )
-	{
-		var div         = document.createElement( 'div' );
-		var chat        = document.getElementById( "chat" );
-		div.textContent = message;
-		chat.insertBefore( div, chat.firstChild );
-		setTimeout( function()
-		{
-			animate( function( timePassed )
-			{
-				div.style.opacity = 1 - timePassed / 3000;
-			}, 3000 );
-		}, 7000 );
-	};
-
-	// Рисует функция draw
-	// Продолжительность анимации duration
-	function animate( draw, duration )
-	{
-		var start = performance.now();
-
-		requestAnimationFrame( function animate( time )
-		{
-			// определить, сколько прошло времени с начала анимации
-			var timePassed = time - start;
-
-			// возможно небольшое превышение времени, в этом случае зафиксировать конец
-			if ( timePassed > duration )
-			{
-				timePassed = duration;
-			}
-
-			// нарисовать состояние анимации в момент timePassed
-			draw( timePassed );
-
-			// если время анимации не закончилось - запланировать ещё кадр
-			if ( timePassed < duration )
-			{
-				requestAnimationFrame( animate );
-			}
-
-		} );
-	}
-
-	_generateId.onclick = function()
-	{
-		__peerController.getRoomID( function( id )
-		{
-			_roomIdInput.value = id;
-		} )
-	}
-
-	//what -- peerController.sending enum
-	//from -- peerID
-	//GENERIC
-	this.onRecieved = function( what, from, data )
-	{
-		switch ( what )
-		{
-			case __peerController.sending.MESSAGE:
-				_self.onMessageRecieved( data );
-				break;
-			case __peerController.sending.DATA_SOURCE:
-				//_peers[from][1] = data
-				break;
-			case __peerController.sending.NICK:
-				_peers[ from ][ _peerVars.NICK ]               = data;
-				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data;
-				break;
-			case __peerController.sending.INITIAL_INFO:
-				_peers[ from ][ _peerVars.NICK ]               = data[ 0 ];
-				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data[ 0 ];
-				_peers[ from ][ _peerVars.VIDEO_SRC ]          = data[ 1 ];
-				break;
-			default:
-				alert( "elementsController.onRecieved: unrecognized 'what'" );
-				break
-		}
-	};
-
-	_peerListButton.onclick = function()
-	{
-		if ( _peerList.style.display == "block" )
-		{
-			_peerList.style.display = "none";
-		} else
-		{
-			_peerList.style.display = "block";
-		}
-	}
-
-	this.onPeerConnected = function( peerId )
-	{
-		_peers [ peerId ]                      = [];
-		_peers[ peerId ][ _peerVars.ROW ]      = [];
-		_peers[ peerId ][ _peerVars.ROW ][ 0 ] = document.createElement( "tr" );
-		_peerTable.appendChild( _peers[ peerId ][ _peerVars.ROW ][ 0 ] );
-		_peers[ peerId ][ _peerVars.ROW ][ 1 ] = document.createElement( "td" );
-		_peers[ peerId ][ _peerVars.ROW ][ 0 ].appendChild( _peers[ peerId ][ _peerVars.ROW ][ 1 ] );
-		_peers[ peerId ][ _peerVars.ROW ][ 2 ] = document.createElement( "td" );
-		_peers[ peerId ][ _peerVars.ROW ][ 0 ].appendChild( _peers[ peerId ][ _peerVars.ROW ][ 2 ] );
-	}
-
-	//SINGLE GET
-	this.getInitialData = function()
-	{
-		return ([ _session.nick, [ _session.type_src, _session.video_src ] ]);
-	};
-
-	//SPECIAL
-	this.onPeerDeleted = function( id )
-	{
-		if ( _peers[ id ] )
-		{
-			if ( _peers[ id ][ _peerVars.AUDIO ] )
-			{
-				_peers[ id ][ _peerVars.AUDIO ].remove();
-			}
-			if ( _peers[ id ][ _peerVars.RANGE ] )
-			{
-				_peers[ id ][ _peerVars.RANGE ].remove();
-			}
-			if ( _peers[ id ][ _peerVars.ROW ][ 0 ] )
-			{
-				_peers[ id ][ _peerVars.ROW ][ 0 ].remove();
-			}
-			delete _peers[ id ];
-		}
-	};
-
-	this.onPeerLeavedVoiceChat = function( id )
-	{
-		if ( _peers[ id ] )
-		{
-			if ( _peers[ id ][ _peerVars.AUDIO ] )
-			{
-				_peers[ id ][ _peerVars.AUDIO ].remove();
-			}
-			if ( _peers[ id ][ _peerVars.RANGE ] )
-			{
-				_peers[ id ][ _peerVars.RANGE ].remove();
-			}
-			_peers[ id ][ _peerVars.ROW ][ 2 ].innerHTML = '';
-			_peers[ id ][ _peerVars.ROW ][ 1 ].className = '';
-		}
-	};
-
-	this.onPeerJoinedVoiceChat = function( peer )
-	{
-		_peers[ peer ][ _peerVars.ROW ][ 1 ].className = "green";
-	};
-
-	this.onGotAudioStream = function( peer, audioStream )
-	{
-		_peers[ peer ][ _peerVars.AUDIO ]          = document.createElement( "audio" );
-		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
-		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
-		_peers[ peer ][ _peerVars.MUTED ]          = false;
-
-		var img                                        = document.createElement( "img" );
-		img.style                                      = "width : 20px;";
-		img.src                                        = "/volume.svg";
-		img.onclick                                    = function( event )
-		{
-			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
-			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
-		};
-		_peers[ peer ][ _peerVars.ROW ][ 2 ].innerHTML = '';
-		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( img );
-
-		_peers[ peer ][ _peerVars.RANGE ]         = document.createElement( "input" );
-		_peers[ peer ][ _peerVars.RANGE ].type    = "range";
-		_peers[ peer ][ _peerVars.RANGE ].id      = "range_" + peer;
-		_peers[ peer ][ _peerVars.RANGE ].value   = "1";
-		_peers[ peer ][ _peerVars.RANGE ].min     = "0";
-		_peers[ peer ][ _peerVars.RANGE ].max     = "1";
-		_peers[ peer ][ _peerVars.RANGE ].step    = "0.01";
-		_peers[ peer ][ _peerVars.RANGE ].oninput = function( event )
-		{
-			_peers[ peer ][ _peerVars.AUDIO ].volume = event.target.value;
-		};
-		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( _peers[ peer ][ _peerVars.RANGE ] );
-	};
-
-	// Get audioStream
-	function getAndSendAudioStream()
-	{
-		console.log( "getAndSendAudioStream" );
-		navigator.getUserMedia = (
-		navigator.getUserMedia ||
-		navigator.webkitGetUserMedia ||
-		navigator.mozGetUserMedia ||
-		navigator.msGetUserMedia);
-
-		var send = function( audio )
-		{
-			console.log( "Отправка аудио-потока" );
-			__peerController.joinVoiceChat( audio );
-			_audioStream = audio;
-		};
-
-		var constraints = { video : false, audio : true };
-		var success     = function( audioStream )
-		{
-			console.log( 'Successfully got the audioStream' );
-			send( audioStream );
-		};
-		var error       = function( err )
-		{
-			console.error( err.toString() );
-			console.log( 'Couldn\'t get the audioStream' );
-			send( null );
-		};
-		if ( navigator.mediaDevices.getUserMedia )
-		{
-			var media = navigator.mediaDevices.getUserMedia( constraints );
-			media.then( success );
-			media.catch( error );
-		}
-		else if ( navigator.getUserMedia )
-		{
-			navigator.getUserMedia( constraints, success, error );
-		}
-		else
-		{
-			error( new Error( '*.getUserMedia is unsupported' ) );
-		}
-	}
-
-	function error404()
-	{
-		_session.clear();
-		_joinButton.value   = "Создать эту комнату";
-		_title.innerHTML    = "Ошибка 404";
-		_roomIdInput.value  = window.location.hash.substr( 1 );
-		_joinButton.onclick = function()
-		{
-			_passwordInput.value = "";
-			window.location.hash = "";
-			_title.innerHTML     = "Создание комнаты";
-			_joinButton.onclick  = createRoom;
-			_overlay.className   = "create";
-		}
-		_overlay.className  = "error";
-	}
-
-	function error406()
-	{
-		_session.clear();
-		_joinButton.value   = "Создать комнату";
-		_title.innerHTML    = "Это не та комната";
-		_joinButton.onclick = function()
-		{
-			window.location.hash = "";
-			init();
-		}
-		_overlay.className  = "error";
-	}
-
-	function joinRoomWithPassword()
-	{
-		_wrongPassword.className = "close"; //закрыть надпись о неверном пароле
-		__peerController.joinRoom( window.location.hash.substr( 1 ), _passwordInput.value, [ __peerController.responses.JOINED ], enterRoom,
-			function()
-			{
-				//connectionProblems
-			},
-			function( response )//unexpected response
-			{
-				if ( response === __peerController.responses.WRONG_PASSWORD )
-				{
-					_wrongPassword.className = ""; //вывод надписи о неверном пароле
-
-				}
-				else if ( response === __peerController.responses.CREATED )
-				{
-					error404();
-				} else
-				{
-					__peerController.dropAllConnections( start );
-				}
-			} )
-	}
-
-	function createRoom()
-	{
-		processInputs();
-		_wrongId.className = "close"; //закрыть надпись о неверном idRoom
-		_title.innerHTML = "Создать комнату";
-		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom,
-			function()
-			{
-				//connectionProblems
-			},
-			function()//unexpected response
-			{
-				_wrongId.className = ""; //вывод надписи о неверном idRoom
-			} )
-	}
-
-	function processInputs() //здесь происходит изменение сессии (не инициализация)
-	{
-		if ( _nick.value !== _session.nick )
-		{
-			_session.nick = _nick.value;
-
-			//sending on creation/joining/return. sending on creation does nothing.
-			__peerController.send( __peerController.sending.NICK, _session.nick );
-		}
-		if ( _session.password !== _passwordInput.value && _passwordInput.value !== '' )
-		{
-			_session.password = _passwordInput.value;
-		}
-		for ( var i = 0; i < _typeSrc.length; i++ )
-		{
-			if ( _typeSrc[ i ].type === 'radio' && _typeSrc[ i ].checked )
-			{
-				if ( _session.type_src !== _typeSrc[ i ].value )
-				{
-					_session.type_src = _typeSrc[ i ].value;
-				}
-				if ( _session.type_src == "magnet" )
-				{
-					if ( _session.video_src !== _magnet.value && _magnet.value !== "" )
-					{
-						_session.video_src = _magnet.value;
-						_videoSrcChange    = true;
-					}
-				}
-				else if ( _session.type_src == "localURL" )
-				{
-					if ( _localURL.files[ 0 ] )
-					{
-						if ( _localURL.files[ 0 ].lastModified != _session.local_info[ 0 ] || _localURL.files[ 0 ].size != _session.local_info[ 1 ] )
-						{
-							_session.video_src  = (URL || webkitURL || mozURL).createObjectURL( _localURL.files[ 0 ] );
-							_session.local_info = [ _localURL.files[ 0 ].lastModified, _localURL.files[ 0 ].size ];
-							_videoSrcChange     = true;
-						}
-					}
-				}
-				else if ( _session.type_src == "globalURL" )
-				{
-					if ( _session.video_src !== _globalURL.value && _globalURL.value !== "" )
-					{
-						_session.video_src = _globalURL.value;
-						_videoSrcChange    = true;
-					}
-				}
-				else if ( _session.type_src == "youtubeID_embedded" )
-				{
-					var ID = parseYoutubeLinkIntoID( _youtubeID_embedded.value );
-					if ( _session.video_src !== ID && _youtubeID_embedded.value !== "" )
-					{
-						_session.video_src = ID;
-						_videoSrcChange    = true;
-					}
-				}
-				else if ( _session.type_src == "youtubeID_direct" )
-				{
-					var ID = parseYoutubeLinkIntoID( _youtubeID_direct.value );
-					if ( _session.video_src !== ID && _youtubeID_direct.value !== "" )
-					{
-						_session.video_src = ID;
-						_videoSrcChange    = true;
-					}
-				}
-				else
-				{
-					alert( "Input: unrecognized type_src" );
-					//switch what?
-				}
-				break;
-			}
-		}
-		if ( _videoSrcChange ) //creation/joining/return. even local sources (to tell that to other peers)
-		{
-			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
-		}
-		if ( _session.audiochat_status != _audioChatStatus.checked )
-		{
-			_session.audiochat_status = _audioChatStatus.checked;
-		}
-	}
-
-	function enterRoom( roomId )
-	{
-		if ( roomId )
-		{
-			_session.room_id = roomId;
-			if ( window.location.hash === '' )
-			{
-				window.location.hash = '#' + roomId;
-			}
-			_wrongPassword.className = "close";
-			_wrongId.className       = "close";
-		}
-
-		if ( _session.video_src === '' )
-		{
-			_title.innerHTML    = "";
-			_joinButton.value   = "Войти в комнату";
-			_joinButton.onclick = function()
-			{
-				processInputs();
-				enterRoom();
-			};
-			_overlay.className  = "join";
-		}
-		else
-		{
-			if ( _videoSrcChange )
-			{
-				_videoSrcChange = false;
-
-				if ( _session.type_src === "globalURL" || _session.type_src === 'localURL' )
-				{
-					constructVideoContent_directSource( _session.video_src );
-				}
-				else if ( _session.type_src === 'magnet' )
-				{
-					constructVideoContent_webtorrentMagnet( _session.video_src );
-				}
-				else if ( _session.type_src === 'youtubeID_embedded' )
-				{
-					constructVideoContent_youtubeIframe( _session.video_src );
-				}
-				else if ( _session.type_src === 'youtubeID_direct' )
-				{
-					constructVideoContent_youtubeDirect( _session.video_src );
-				}
-				else
-				{
-					alert( "Unrecognized type_src" );
-				}
-			}
-
-			//аудио-чат
-			if ( _session.audiochat_status )
-			{
-				if ( !(__peerController.get( __peerController.getting.JOINED_VOICE_CHAT )) )
-				{
-					getAndSendAudioStream();
-				}
-			}
-			else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
-			{
-				__peerController.leaveVoiceChat();
-				if ( _audioStream !== null )
-				{
-					_audioStream.getAudioTracks()[ 0 ].stop();
-				}
-				for ( var id in _peers )
-				{
-					_self.onPeerLeavedVoiceChat( id );
-				}
-			}
-
-			//отображение плеера
-			_joinButton.onclick = function()
-			{
-				processInputs();
-				enterRoom();
-			};
-			_joinButton.value   = "Вернуться";
-			_title.innerHTML    = "";
-			_overlay.className  = "close";
-		}
-	}
-
-	function constructVideoContent_youtubeDirect( videoID )
-	{
+		var videoID = parseYoutubeLinkIntoID( videoLink);
 		_quality.onchange = function()
 		{
 			_video.changeQuality( this.value );
@@ -864,8 +248,9 @@ wtsplayer.elementsController = function()
 		} );
 	}
 
-	function constructVideoContent_youtubeIframe( videoID )
+	function constructVideoContent_youtubeIframe( videoLink )
 	{
+		var videoID = parseYoutubeLinkIntoID( videoLink);
 		_quality.onchange = null;
 		var player;
 		_video.innerHTML  = '';
@@ -1155,8 +540,645 @@ wtsplayer.elementsController = function()
 		return videoElement;
 	}
 
+	_volume.oninput       = function( event )
+	{
+		_video.volume = event.target.value;
+	}
+	_volumeButton.onclick = function( event )
+	{
+		mute( _muteVideo, event.target, _video );
+		_muteVideo = !_muteVideo;
+	}
+
+	function mute( muted, butt, obj )
+	{
+		if ( muted )
+		{
+			obj.muted = false;
+			butt.src  = "/volume.svg";
+		} else
+		{
+			obj.muted = true;
+			butt.src  = "/mute.svg";
+		}
+	}
+
+	_sendMessageButton.addEventListener( 'click', sendMsg );
+
+	_messageInput.onkeydown = function( e )
+	{
+		if ( e.keyCode == "13" )
+		{
+			sendMsg();
+		}
+	};
+
+	function parseYoutubeLinkIntoID( link )
+	{
+		var rx  = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+		var res = link.match( rx );
+		return res === null?null:res[1];
+	}
+
+	function sendMsg()
+	{
+		var messageData =
+			{
+				nick    : _session.nick || 'Someone',
+				message : _messageInput.value
+			};
+		__peerController.send( __peerController.sending.MESSAGE, messageData );
+		_self.onMessageRecieved( messageData );
+		_messageInput.value = '';
+	}
+
+	_fullscreenButton.addEventListener( 'click', function()
+	{
+		// Note: FF nightly needs about:config full-screen-api.enabled set to true.
+
+		if ( document.mozFullScreen || document.webkitIsFullScreen )
+		{
+			if ( document.cancelFullScreen )
+			{
+				document.cancelFullScreen();
+			} else if ( document.webkitCancelFullScreen )
+			{
+				document.webkitCancelFullScreen();
+			} else if ( document.mozCancelFullScreen )
+			{
+				document.mozCancelFullScreen();
+			}
+		}
+		else
+		{
+			var el = document.getElementById( "player" );
+			if ( el.requestFullScreen )
+			{
+				el.requestFullScreen();
+			} else if ( el.webkitRequestFullScreen )
+			{
+				el.webkitRequestFullScreen();
+			} else if ( el.mozRequestFullScreen )
+			{
+				el.mozRequestFullScreen();
+			}
+		}
+	} );
+
+	_backOvervayBut.addEventListener( 'click', function()
+	{
+		if ( document.mozFullScreen || document.webkitIsFullScreen )
+		{
+			_fullscreenButton.click();
+		}
+		_overlay.className = 'join';
+	} );
+
+	//SPECIAL
+	this.wait = function()
+	{
+		switchToWaiting();
+		_video.wait();
+	};
+
+	//SPECIAL
+	this.play = function()
+	{
+		_video.play();
+		//console.log("Hit play:" + new Date().getTime()); //DEBUG
+		switchToPause();
+	};
+
+	//SPECIAL
+	this.pause = function()
+	{
+		_video.pause();
+		switchToPlay();
+	};
+
+	//SPECIAL
+	this.seek = function( playerTime )
+	{
+		_video.currentTime = playerTime;
+	};
+
+	//SPECIAL
+	this.getPlayerCurrentTime = function()
+	{
+		return _video.currentTime;
+	};
+
+	//TODO: remove, it has been replaced with onRecieved
+	this.onMessageRecieved = function( messageData )
+	{
+		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
+	};
+
+	//SPECIAL
+	this.outputSystemMessage = function( message )
+	{
+		var div         = document.createElement( 'div' );
+		var chat        = document.getElementById( "chat" );
+		div.textContent = message;
+		chat.insertBefore( div, chat.firstChild );
+		setTimeout( function()
+		{
+			animate( function( timePassed )
+			{
+				div.style.opacity = 1 - timePassed / 3000;
+			}, 3000 );
+		}, 7000 );
+	};
+
+	// Рисует функция draw
+	// Продолжительность анимации duration
+	function animate( draw, duration )
+	{
+		var start = performance.now();
+
+		requestAnimationFrame( function animate( time )
+		{
+			// определить, сколько прошло времени с начала анимации
+			var timePassed = time - start;
+
+			// возможно небольшое превышение времени, в этом случае зафиксировать конец
+			if ( timePassed > duration )
+			{
+				timePassed = duration;
+			}
+
+			// нарисовать состояние анимации в момент timePassed
+			draw( timePassed );
+
+			// если время анимации не закончилось - запланировать ещё кадр
+			if ( timePassed < duration )
+			{
+				requestAnimationFrame( animate );
+			}
+
+		} );
+	}
+
+	_generateId.onclick = function()
+	{
+		__peerController.getRoomID( function( id )
+		{
+			_roomIdInput.value = id;
+		} )
+	}
+
+	//what -- peerController.sending enum
+	//from -- peerID
+	//GENERIC
+	
+	function newPeerSrc( peerId, data )
+	{
+		_peers[ peerId ][ _peerVars.VIDEO_SRC ] = data;
+		var opt = document.querySelector("#peersSrc option[data-peer='"+peerId+"']");
+		if (opt)
+		{
+			opt.dataset.type = data[0];
+			if (data[0] !== "localURL")
+			{
+				opt.value 		 = data[1];
+				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - "+data[1];
+				if (_follow.checked && _session.video_info == peerId)
+				{
+					_session.type_src  = data[0];
+					_session.video_src = data[1];
+					_videoSrcChange    = true;
+					enterRoom();
+				}
+			}
+			else
+			{
+				opt.value 		 = "";
+				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - локальный файл";
+			}
+		}
+		else
+		{
+			opt = document.createElement( "option" );
+			opt.dataset.peer = peerId;
+			opt.dataset.type = data[0];
+			if (data[0] !== "localURL")
+			{
+				opt.value 		 = data[1];
+				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - "+data[1];
+			}
+			else
+			{
+				opt.value 		 = "";
+				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - локальный файл";
+			}
+			_peersSrc.appendChild( opt );
+		}
+		
+	}
+	
+	this.onRecieved = function( what, from, data )
+	{
+		switch ( what )
+		{
+			case __peerController.sending.MESSAGE:
+				_self.onMessageRecieved( data );
+				break;
+			case __peerController.sending.DATA_SOURCE:
+				newPeerSrc (from, data);
+				break;
+			case __peerController.sending.NICK:
+				_peers[ from ][ _peerVars.NICK ]               = data;
+				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data;
+				break;
+			case __peerController.sending.INITIAL_INFO:
+				_peers[ from ][ _peerVars.NICK ]               = data[ 0 ];
+				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data[ 0 ];
+				newPeerSrc (from, data[1]);
+				break;
+			default:
+				alert( "elementsController.onRecieved: unrecognized 'what'" );
+		}
+	};
+
+	_peerListButton.onclick = function()
+	{
+		if ( _peerList.style.display == "block" )
+		{
+			_peerList.style.display = "none";
+		} else
+		{
+			_peerList.style.display = "block";
+		}
+	}
+
+	this.onPeerConnected = function( peerId )
+	{
+		_peers [ peerId ]                      = [];
+		_peers[ peerId ][ _peerVars.ROW ]      = [];
+		_peers[ peerId ][ _peerVars.ROW ][ 0 ] = document.createElement( "tr" );
+		_peerTable.appendChild( _peers[ peerId ][ _peerVars.ROW ][ 0 ] );
+		_peers[ peerId ][ _peerVars.ROW ][ 1 ] = document.createElement( "td" );
+		_peers[ peerId ][ _peerVars.ROW ][ 0 ].appendChild( _peers[ peerId ][ _peerVars.ROW ][ 1 ] );
+		_peers[ peerId ][ _peerVars.ROW ][ 2 ] = document.createElement( "td" );
+		_peers[ peerId ][ _peerVars.ROW ][ 0 ].appendChild( _peers[ peerId ][ _peerVars.ROW ][ 2 ] );
+	}
+
+	//SINGLE GET
+	this.getInitialData = function()
+	{
+		return ([ _session.nick, [ _session.type_src, _session.video_src ] ]);
+	};
+
+	//SPECIAL
+	this.onPeerDeleted = function( id )
+	{
+		if ( _peers[ id ] )
+		{
+			if ( _peers[ id ][ _peerVars.AUDIO ] )
+			{
+				_peers[ id ][ _peerVars.AUDIO ].remove();
+			}
+			if ( _peers[ id ][ _peerVars.RANGE ] )
+			{
+				_peers[ id ][ _peerVars.RANGE ].remove();
+			}
+			if ( _peers[ id ][ _peerVars.ROW ][ 0 ] )
+			{
+				_peers[ id ][ _peerVars.ROW ][ 0 ].remove();
+			}
+			document.querySelector("#peersSrc option[data-peer='"+id+"']").remove();
+			delete _peers[ id ];
+		}
+	};
+
+	this.onPeerLeavedVoiceChat = function( id )
+	{
+		if ( _peers[ id ] )
+		{
+			if ( _peers[ id ][ _peerVars.AUDIO ] )
+			{
+				_peers[ id ][ _peerVars.AUDIO ].remove();
+			}
+			if ( _peers[ id ][ _peerVars.RANGE ] )
+			{
+				_peers[ id ][ _peerVars.RANGE ].remove();
+			}
+			_peers[ id ][ _peerVars.ROW ][ 2 ].innerHTML = '';
+			_peers[ id ][ _peerVars.ROW ][ 1 ].className = '';
+		}
+	};
+
+	this.onPeerJoinedVoiceChat = function( peer )
+	{
+		_peers[ peer ][ _peerVars.ROW ][ 1 ].className = "green";
+	};
+
+	this.onGotAudioStream = function( peer, audioStream )
+	{
+		_peers[ peer ][ _peerVars.AUDIO ]          = document.createElement( "audio" );
+		_peers[ peer ][ _peerVars.AUDIO ].src      = (URL || webkitURL || mozURL).createObjectURL( audioStream );
+		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
+		_peers[ peer ][ _peerVars.MUTED ]          = false;
+
+		var img                                        = document.createElement( "img" );
+		img.style                                      = "width : 20px;";
+		img.src                                        = "/volume.svg";
+		img.onclick                                    = function( event )
+		{
+			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
+			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
+		};
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].innerHTML = '';
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( img );
+
+		_peers[ peer ][ _peerVars.RANGE ]         = document.createElement( "input" );
+		_peers[ peer ][ _peerVars.RANGE ].type    = "range";
+		_peers[ peer ][ _peerVars.RANGE ].id      = "range_" + peer;
+		_peers[ peer ][ _peerVars.RANGE ].value   = "1";
+		_peers[ peer ][ _peerVars.RANGE ].min     = "0";
+		_peers[ peer ][ _peerVars.RANGE ].max     = "1";
+		_peers[ peer ][ _peerVars.RANGE ].step    = "0.01";
+		_peers[ peer ][ _peerVars.RANGE ].oninput = function( event )
+		{
+			_peers[ peer ][ _peerVars.AUDIO ].volume = event.target.value;
+		};
+		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( _peers[ peer ][ _peerVars.RANGE ] );
+	};
+
+	// Get audioStream
+	function getAndSendAudioStream()
+	{
+		console.log( "getAndSendAudioStream" );
+		navigator.getUserMedia = (
+		navigator.getUserMedia ||
+		navigator.webkitGetUserMedia ||
+		navigator.mozGetUserMedia ||
+		navigator.msGetUserMedia);
+
+		var send = function( audio )
+		{
+			console.log( "Отправка аудио-потока" );
+			__peerController.joinVoiceChat( audio );
+			_audioStream = audio;
+		};
+
+		var constraints = { video : false, audio : true };
+		var success     = function( audioStream )
+		{
+			console.log( 'Successfully got the audioStream' );
+			send( audioStream );
+		};
+		var error       = function( err )
+		{
+			console.error( err.toString() );
+			console.log( 'Couldn\'t get the audioStream' );
+			send( null );
+		};
+		if ( navigator.mediaDevices.getUserMedia )
+		{
+			var media = navigator.mediaDevices.getUserMedia( constraints );
+			media.then( success );
+			media.catch( error );
+		}
+		else if ( navigator.getUserMedia )
+		{
+			navigator.getUserMedia( constraints, success, error );
+		}
+		else
+		{
+			error( new Error( '*.getUserMedia is unsupported' ) );
+		}
+	}
+
+	function error404()
+	{
+		_session.clear();
+		_joinButton.value   = "Создать эту комнату";
+		_title.innerHTML    = "Ошибка 404";
+		_roomIdInput.value  = window.location.hash.substr( 1 );
+		_joinButton.onclick = function()
+		{
+			_passwordInput.value = "";
+			window.location.hash = "";
+			_title.innerHTML     = "Создание комнаты";
+			_joinButton.onclick  = createRoom;
+			_overlay.className   = "create";
+		}
+		_overlay.className  = "error";
+	}
+
+	function error406()
+	{
+		_session.clear();
+		_joinButton.value   = "Создать комнату";
+		_title.innerHTML    = "Это не та комната";
+		_joinButton.onclick = function()
+		{
+			window.location.hash = "";
+			init();
+		}
+		_overlay.className  = "error";
+	}
+
+	function joinRoomWithPassword()
+	{
+		_wrongPassword.className = "close"; //закрыть надпись о неверном пароле
+		__peerController.joinRoom( window.location.hash.substr( 1 ), _passwordInput.value, [ __peerController.responses.JOINED ], enterRoom,
+			function()
+			{
+				//connectionProblems
+			},
+			function( response )//unexpected response
+			{
+				if ( response === __peerController.responses.WRONG_PASSWORD )
+				{
+					_wrongPassword.className = ""; //вывод надписи о неверном пароле
+
+				}
+				else if ( response === __peerController.responses.CREATED )
+				{
+					error404();
+				} else
+				{
+					__peerController.dropAllConnections( start );
+				}
+			} )
+	}
+
+	function createRoom()
+	{
+		processInputs();
+		_wrongId.className = "close"; //закрыть надпись о неверном idRoom
+		_title.innerHTML = "Создать комнату";
+		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom,
+			function()
+			{
+				//connectionProblems
+			},
+			function()//unexpected response
+			{
+				_wrongId.className = ""; //вывод надписи о неверном idRoom
+			} )
+	}
+
+	function processInputs() //здесь происходит изменение сессии (не инициализация)
+	{
+		if ( _nick.value !== _session.nick )
+		{
+			_session.nick = _nick.value;
+			__peerController.send( __peerController.sending.NICK, _session.nick );//sending on creation/joining/return. sending on creation does nothing.
+		}
+		if ( _session.password !== _passwordInput.value && _passwordInput.value !== '' )
+		{
+			_session.password = _passwordInput.value;
+		}
+		
+		if ( _videoSrcTabs == "inputLink" )
+		{
+			if ( _inputLink.value !== "" && _session.video_src !== _inputLink.value )
+			{
+				_videoSrcChange     = true;
+				_inputLink.value    = _inputLink.value.trim();
+				_session.video_src  = _inputLink.value;
+				_session.video_info = "";
+				if ( parseYoutubeLinkIntoID(_inputLink.value))
+				{
+					_session.type_src = "youtubeID_embedded"; // или "youtubeID_direct"
+				}
+				else if (_inputLink.value.indexOf("magnet:?") === 0)
+				{
+					_session.type_src = "magnet";
+				}
+				else
+				{
+					_session.type_src = "globalURL";
+				}
+			}
+		}
+		else if ( _videoSrcTabs == "localURL" )
+		{
+			if ( _localURL.files[ 0 ] )
+			{
+				if ( _localURL.files[ 0 ].lastModified != _session.video_info[ 0 ] || _localURL.files[ 0 ].size != _session.video_info[ 1 ] )
+				{
+					_session.video_src  = (URL || webkitURL || mozURL).createObjectURL( _localURL.files[ 0 ] );
+					_session.video_info = [ _localURL.files[ 0 ].lastModified, _localURL.files[ 0 ].size ];
+					_session.type_src   = "localURL";
+					_videoSrcChange     = true;
+				}
+			}
+		}
+		else 
+		{
+			if ( _peersSrc.value && _session.video_src !== _peersSrc.value)
+			{
+				var data = document.querySelector("#peersSrc option:checked");
+				_session.video_src  = _peersSrc.value;
+				_session.type_src   = data.dataset.type;
+				_session.video_info = data.dataset.peer;
+			}
+		}
+		
+		if ( _videoSrcChange ) //creation/joining/return. even local sources (to tell that to other peers)
+		{
+			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
+		}
+		if ( _session.audiochat_status != _audioChatStatus.checked )
+		{
+			_session.audiochat_status = _audioChatStatus.checked;
+		}
+	}
+
+	function enterRoom( roomId )
+	{
+		if ( roomId )
+		{
+			_session.room_id = roomId;
+			if ( window.location.hash === '' )
+			{
+				window.location.hash = '#' + roomId;
+			}
+			_wrongPassword.className = "close";
+			_wrongId.className       = "close";
+		}
+
+		if ( _session.video_src === '' )
+		{
+			_title.innerHTML    = "";
+			_joinButton.value   = "Войти в комнату";
+			_joinButton.onclick = function()
+			{
+				processInputs();
+				enterRoom();
+			};
+			_overlay.className  = "join";
+		}
+		else
+		{
+			if ( _videoSrcChange )
+			{
+				_videoSrcChange = false;
+
+				if ( _session.type_src === "globalURL" || _session.type_src === 'localURL' )
+				{
+					constructVideoContent_directSource( _session.video_src );
+				}
+				else if ( _session.type_src === 'magnet' )
+				{
+					constructVideoContent_webtorrentMagnet( _session.video_src );
+				}
+				else if ( _session.type_src === 'youtubeID_embedded' )
+				{
+					constructVideoContent_youtubeIframe( _session.video_src );
+				}
+				else if ( _session.type_src === 'youtubeID_direct' )
+				{
+					constructVideoContent_youtubeDirect( _session.video_src );
+				}
+				else
+				{
+					alert( "Unrecognized type_src" );
+				}
+			}
+
+			//аудио-чат
+			if ( _session.audiochat_status )
+			{
+				if ( !(__peerController.get( __peerController.getting.JOINED_VOICE_CHAT )) )
+				{
+					getAndSendAudioStream();
+				}
+			}
+			else if ( __peerController.get( __peerController.getting.JOINED_VOICE_CHAT ) )
+			{
+				__peerController.leaveVoiceChat();
+				if ( _audioStream !== null )
+				{
+					_audioStream.getAudioTracks()[ 0 ].stop();
+				}
+				for ( var id in _peers )
+				{
+					_self.onPeerLeavedVoiceChat( id );
+				}
+			}
+
+			//отображение плеера
+			_joinButton.onclick = function()
+			{
+				processInputs();
+				enterRoom();
+			};
+			_joinButton.value   = "Вернуться";
+			_title.innerHTML    = "";
+			_overlay.className  = "close";
+		}
+	}
+
 	function init( id )
 	{
+		_muteVideo      = false;
+		_audioStream    = null;
+		_videoSrcChange = true;
 		if ( id )
 		{
 			if ( _session.nick !== '' )
@@ -1168,14 +1190,10 @@ wtsplayer.elementsController = function()
 				_nick.value   = id;
 			}
 		}
-		if ( _session.type_src !== '' )
+		if ( _session.type_src !== '' && _session.type_src !== 'localURL' )
 		{
-			document.querySelector( "input[value ='" + _session.type_src + "']" ).checked = true;
-			if ( _session.type_src == "magnet" )
-			{
-				_magnet.value = _session.video_src;
-			}
-			//TODO: complete initialization
+			//document.querySelector( "span[data-type ='" + _session.type_src + "']" ).click(); - придумать как реалтизовать
+			_inputLink.value = _session.video_src;
 		}
 		_video.innerHTML = '';
 		//Can be invoked before player construction
@@ -1200,6 +1218,7 @@ wtsplayer.elementsController = function()
 		{
 			if ( _session.room_id === window.location.hash.substr( 1 ) )
 			{
+				_session.video_info = "";
 				__peerController.joinRoom( _session.room_id, _session.password, [
 						__peerController.responses.JOINED,
 						__peerController.responses.CREATED
@@ -1338,7 +1357,7 @@ wtsplayer.elementsController = function()
 				return (this[ 4 ]);
 			}
 		},
-		"local_info"       : {
+		"video_info"       : {
 			set    : function( n )
 			{
 				this[ 5 ] = n;
@@ -1359,6 +1378,9 @@ wtsplayer.elementsController = function()
 			}
 		}
 	} );
+	
+	var a = document.querySelectorAll(".korpus1 > span");
+	for(var i=0;i<a.length;i++) a[i].onclick=function(){_videoSrcTabs = this.dataset.type};
 
 	function start()
 	{
@@ -1376,7 +1398,7 @@ wtsplayer.elementsController = function()
 			__peerController.fakeReload( init, location.reload );
 		}
 	};
-
+	
 	//Initializing _playPauseButton object
 	switchToWaiting();
 };

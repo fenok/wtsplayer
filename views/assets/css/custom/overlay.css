@@ -15,38 +15,44 @@
   z-index: 1000;
 }
 #overlayContent{
-  width: 30%;
+  width: 400px;
   text-align: center;
   border-radius: 10px;
   border: 3px solid orange;
   background: white;
-  opacity: 1;
+  /*overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 95%;*/
 }
 h1{
 	margin-bottom: 0;
 }
+
+	
 @media screen and (max-height: 400px)
 {
-	.create #overlayContent{
-		width: 90%;
-	}
-	.create #overlayContent > div{
-		display: inline-block;
-		width: 33%;
-	}
-	
 	.join #overlayContent{
-		width: 60%;
+		width: 800px;
 	}
 	.join #overlayContent > div:not(#typeRoom){
 		display: inline-block;
 		width: 49%;
 	}
+	@media screen and (min-width: 1205px)
+{
+	.create #overlayContent{
+		width: 1200px;
+	}
+	.create #overlayContent > div{
+		display: inline-block;
+		width: 33%;
+	}
+}
 }
 @media screen and (min-height: 401px) and (max-height: 600px)
 {
 	.create #overlayContent{
-		width: 60%;
+		width: 800px;
 	}
 	.create #overlayContent > div{
 		display: inline-block;
@@ -55,6 +61,9 @@ h1{
 	.create #overlayContent > div:last-of-type{
 		width: 100%;
 	}
+}
+#overlayContent > div{
+	vertical-align: top;
 }
 /*.craete .join .password .error*/
 .password #overlayContent > *:not(#typeRoom), .error #overlayContent *, 
@@ -73,32 +82,6 @@ h1{
 	display: inline;
 }
 
-#magnet{
-	width: 50%;
-	background: skyblue;
-	border: 0;
-	margin-bottom: 10px;
-	border-radius: 5px;
-}
-	
-#globalURL{
-	width: 50%;
-	background: skyblue;
-	border: 0;
-	margin-bottom: 8px;
-	border-radius: 5px;
-}
-#localURL {
-	margin-bottom: 7px;
-	width: 256px;
-}
-
-input[name="typeSrc"] + label + input, input[name="typeSrc"] + label + input + select{
-	opacity: 0.35;
-}
-input[name="typeSrc"]:checked + label + input, input[name="typeSrc"]:checked + label + input + select{
-	opacity: 1!important;
-}
 #joinButton {
 	position: relative;
 	top: 25px;
@@ -126,4 +109,70 @@ input[name="typeSrc"]:checked + label + input, input[name="typeSrc"]:checked + l
 	border-radius: 5px;
 	background: skyblue;
 	opacity: 0;
+}
+
+
+
+
+
+.korpus1 {
+	position: relative; 
+	height: 128px; 
+	width: 388px;
+	margin: auto;
+} 
+.korpus1 > span {
+	display: inline-block; 
+	width: 128px;
+	line-height: 28px;
+	height: 28px;
+	border-left: 1px solid #aaa;
+	border-top: 1px solid #aaa;
+	text-align: center;
+	cursor: pointer; 
+} 
+.korpus1 > span:last-of-type{
+	border-right: 1px solid #aaa;
+}
+.korpus1 > div {
+	position: absolute; 
+	box-sizing: border-box;
+	height: 100px; 
+	width: 100%; 
+	padding: 5px; 
+	border: 1px solid #aaa; 
+	background: #fff; 
+} 
+.korpus1 > div:nth-of-type(n+2) { 
+	visibility: collapse;
+	transition: 999999s;  
+	-webkit-transition: 999999s; 
+}
+.korpus1 > span + span:active + span  ~ div:nth-of-type(2),
+.korpus1 > span + span + span:active  ~ div:nth-of-type(3){
+	visibility: visible; 
+	transition: .01s; 
+	-webkit-transition: .01s; 
+}
+.korpus1 > span:active + span + span  ~ div:nth-of-type(2), 
+.korpus1 > span:active + span + span  ~ div:nth-of-type(3), 
+.korpus1 > span + span:active + span  ~ div:nth-of-type(3), 
+.korpus1 > span + span + span:active  ~ div:nth-of-type(2) {
+	visibility: hidden; 
+	-webkit-transition: .01s; 
+	transition: .01s; 
+} 
+.korpus1 > div:before {
+	border-top: 2px solid #fff;
+	content: ""; 
+	position: absolute; 
+	left: 0; 
+	top: -1px; 
+	width: 128px; 
+} 
+.korpus1 > div:nth-of-type(2):before {
+	left: 129px; 
+} 
+.korpus1 > div:nth-of-type(3):before {
+	left: 258px; 
 }
