@@ -3,6 +3,8 @@
 }
 html, body{
 	height: 100%;
+	margin: 0;
+	padding: 0;
 }
 #chat{
   height: 200px;
@@ -14,7 +16,7 @@ html, body{
 }
 #video{
   /*just in case*/
-  /*vertical-align: bottom; */
+  vertical-align: bottom;
   /*object-fit: contain;*/
   display: inline-flex;
   pointer-events: none;
@@ -28,48 +30,36 @@ html, body{
   justify-content: center;
   /*align-items: center;*/
 }
-#player:-webkit-full-screen #video{
-  width: 100%;
-  height: 100%;
-}
-
 #player #video{
   width: 100%;
   height: 100%;
 }
 #player{
-  width: 90%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   position: relative;
-}
-
-#player:-webkit-full-screen{
-  width: 100%;
-  height: 100%;
-}
-#player:-moz-full-screen #video{
-  width: 100%;
-  height: 100%;
 }
 /* Элементы управления */
 #videoControls{
   text-align: center;
-}
-#player:-moz-full-screen #videoControls{
   position: absolute;
-  bottom: 0px;
+  bottom: 1px;
   width: 100%;
+  height: 50px;
 }
-#player:-moz-full-screen #videoControls:hover > div{
+#player #videoControls > div{
+  transition: height 0.5s ease-out 0s;
+  transition: overflow 0.5s step-end 0s;
   position: absolute;
-  bottom: 0px;
   width: 100%;
+  bottom: 5px;
+  height: 0;
+  overflow: hidden;
 }
-#player:-moz-full-screen #videoControls > div{
-  transition: bottom 0.5s ease-out 0s;
-  position: relative;
-  bottom: -30px;
-}
+#player  #videoControls:hover > div{
+  height: 30px;
+  overflow: visible;
+ }
 #player #playerSeekRange{
   width: calc( 100% - 430px );
   margin: 0 5px;
@@ -91,6 +81,22 @@ html, body{
     height: 20px;
     border-radius: 10px;
     cursor: pointer;
+}
+#playerSeekRange {
+    -webkit-appearance: none;
+    border-radius: 8px;
+    height: 7px;
+    border: 1px solid #bdc3c7;
+    background-color: #fff;
+} 
+#playerSeekRange::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	background-color: #ecf0f1;
+	border: 1px solid #bdc3c7;
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	cursor: pointer;
 }
 /* Кнопка громкости */
 .vrange{
@@ -154,8 +160,18 @@ html, body{
 #vol:hover #volume_area{
   display:block!important;
 }
+/* Элементы аудио-чата */
+#peerList{
+	position: absolute;
+	bottom: 30px;
+	right: 0;
+	min-height: 100px;
+	min-width:  50px;
+	background-color: #fff;
+	display: none;
+}
 /* Ввод сообщений */
-#player:-moz-full-screen #send{
+#player #send{
   position: absolute;
   top: 0;
   width: 100%;
@@ -164,17 +180,17 @@ html, body{
 #player #send{
   text-align: center;
 }
-#player:-moz-full-screen #send:hover #sendMessageButton{
+#player #send:hover #sendMessageButton{
    top: 0;
 }
-#player:-moz-full-screen #send #sendMessageButton{
+#player #send #sendMessageButton{
    position:relative;
    top: -30px;
 }
-#player:-moz-full-screen #send:hover #messageInput{
+#player #send:hover #messageInput{
   border: 2px outset white;
 }
-#player:-moz-full-screen #send #messageInput{
+#player #send #messageInput{
   width: 80%;
   background: none;
   border: none;
@@ -183,28 +199,11 @@ html, body{
   text-align: center;
   text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
 }
-/* Элементы аудио-чата */
-#peerList{
-	position: absolute;
-	bottom: 257px;
-	right: 0;
-	min-height: 100px;
-	min-width:  50px;
-	background-color: #fff;
-	display: none;
-}
-#player:-moz-full-screen #peerList{
-	bottom: 30px;
-}
-#player:-webkit-full-screen #peerList{
-	bottom: 30px;
-}
 /* Элементы чата */
-#player:-moz-full-screen #send:hover #chat{
-  overflow-y: scroll;
-  border: 2px outset white; 
+#player #send:hover #chat{
+  overflow-y: auto;
 }
-#player:-moz-full-screen #chat{
+#player #chat{
   overflow-y: hidden;
   position: absolute;
   top: 28px;
@@ -214,132 +213,10 @@ html, body{
   text-align: center;
   text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
 }
-#player:not(:-moz-full-screen) #chat div{
-  opacity: 1!important;
-}
-#player:-moz-full-screen #send:hover #chat div{
+#player #send:hover #chat div{
   opacity: 1!important;
 }
 #chat{
   overflow-y: scroll;
   text-align: center;
 }
-
-/*input.playerSliders
-{
-	-webkit-appearance: none;
-	display: block;
-	width: 100%;
-}
-
-input.playerSliders::-webkit-slider-runnable-track
-{
-	width: 100%;
-	height: 5px;
-	background: #ddd;
-	border: none;
-	border-radius: 3px;
-}
-
-input.playerSliders::-webkit-slider-thumb
-{
-	-webkit-appearance: none;
-	border: none;
-	height: 16px;
-	width: 16px;
-	border-radius: 50%;
-	background: goldenrod;
-	margin-top: -5.5px;
-}
-
-input.playerSliders:focus
-{
-	outline: none;
-}
-
-input.playerSliders:focus::-webkit-slider-runnable-track
-{
-	background: #ccc;
-}*/
-#player:-webkit-full-screen #videoControls{
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-}
-#player:-webkit-full-screen #videoControls:hover > div{
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-}
-#player:-webkit-full-screen #videoControls > div{
-  /*transition: bottom 1s ease-out 0s;*/
-  position: relative;
-  bottom: -30px;
-}
-/* Стилизация слайдеров */
-#playerSeekRange {
-    -webkit-appearance: none;
-    border-radius: 8px;
-    height: 7px;
-    border: 1px solid #bdc3c7;
-    background-color: #fff;
-} 
-#playerSeekRange::-webkit-slider-thumb {
--webkit-appearance: none;
-background-color: #ecf0f1;
-border: 1px solid #bdc3c7;
-width: 20px;
-height: 20px;
-border-radius: 10px;
-cursor: pointer;
-}
-
-/* Ввод сообщений */
-#player:-webkit-full-screen #send{
-  position: absolute;
-  top: 0;
-  width: 100%;
-  text-align: center;
-}
-#player:-webkit-full-screen #send:hover #sendMessageButton{
-   top: 0;
-}
-#player:-webkit-full-screen #send #sendMessageButton{
-   position:relative;
-   top: -30px;
-}
-#player:-webkit-full-screen #send:hover #messageInput{
-  border: 2px outset white;
-}
-#player:-webkit-full-screen #send #messageInput{
-  width: 80%;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 20px;
-  text-align: center;
-  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
-}
-/* Элементы чата */
-#player:-webkit-full-screen #chat{
-  overflow-y: hidden;
-  position: absolute;
-  top: 28px;
-  width: 100%;
-  color: #fff;
-  font-size: 20px;
-  text-align: center;
-  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
-}
-#player:-webkit-full-screen #send:hover #chat{
-  overflow-y: scroll;
-  border: 2px outset white; 
-}
-
-#player:not(:-webkit-full-screen) #chat div{
-  opacity: 1!important;
-}
-#player:-webkit-full-screen #send:hover #chat div{
-  opacity: 1!important;
-}
-
