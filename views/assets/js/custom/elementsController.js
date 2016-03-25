@@ -118,7 +118,7 @@ wtsplayer.elementsController = function()
 		MUTED     : 5
 	} );
 	var _audioStream    = null;
-	var _videoSrcChange = null;
+	var _videoSrcChange = false;
 
 	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
 	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
@@ -614,7 +614,7 @@ wtsplayer.elementsController = function()
 
 	function createRoom()
 	{
-		selectInput( true );
+		processInputs();
 		_wrongId.className = "close"; //закрыть надпись о неверном idRoom
 		_title.innerHTML = "Создать комнату";
 		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom,
@@ -628,15 +628,14 @@ wtsplayer.elementsController = function()
 			} )
 	}
 
-	function selectInput( isCreating ) //здесь происходит изменение сессии (не инициализация)
+	function processInputs() //здесь происходит изменение сессии (не инициализация)
 	{
 		if ( _nick.value !== _session.nick )
 		{
 			_session.nick = _nick.value;
-			if ( isCreating === false ) //срабатывает только при возврате к плееру
-			{
-				__peerController.send( __peerController.sending.NICK, _session.nick );
-			}
+
+			//sending on creation/joining/return. sending on creation does nothing.
+			__peerController.send( __peerController.sending.NICK, _session.nick );
 		}
 		if ( _session.password !== _passwordInput.value && _passwordInput.value !== '' )
 		{
@@ -704,18 +703,13 @@ wtsplayer.elementsController = function()
 				break;
 			}
 		}
-		if ( isCreating === false && _videoSrcChange && _session.type_src != "local" ) //срабатывает только при возврате к плееру
+		if ( _videoSrcChange ) //creation/joining/return. even local sources (to tell that to other peers)
 		{
 			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
 		}
 		if ( _session.audiochat_status != _audioChatStatus.checked )
 		{
 			_session.audiochat_status = _audioChatStatus.checked;
-		}
-
-		if ( !isCreating ) //возврат или присоединение
-		{
-			enterRoom();
 		}
 	}
 
@@ -738,26 +732,17 @@ wtsplayer.elementsController = function()
 			_joinButton.value   = "Войти в комнату";
 			_joinButton.onclick = function()
 			{
-				selectInput()
+				processInputs();
+				enterRoom();
 			};
 			_overlay.className  = "join";
 		}
 		else
 		{
-			if ( _videoSrcChange !== false )
+			if ( _videoSrcChange )
 			{
-				if ( _videoSrcChange !== null )
-				{
-					_videoSrcChange = false;
-				} 
-				else 
-				{
-					document.querySelector( "input[value ='" + _session.type_src + "']" ).checked = true;
-					if ( _session.type_src == "magnet" )
-					{
-						_magnet.value = _session.video_src;
-					}
-				}
+				_videoSrcChange = false;
+
 				if ( _session.type_src === "globalURL" || _session.type_src === 'localURL' )
 				{
 					constructVideoContent_directSource( _session.video_src );
@@ -804,7 +789,8 @@ wtsplayer.elementsController = function()
 			//отображение плеера
 			_joinButton.onclick = function()
 			{
-				selectInput( false )
+				processInputs();
+				enterRoom();
 			};
 			_joinButton.value   = "Вернуться";
 			_title.innerHTML    = "";
@@ -816,7 +802,7 @@ wtsplayer.elementsController = function()
 	{
 		_quality.onchange = function()
 		{
-			_video.changeQuality(this.value);
+			_video.changeQuality( this.value );
 		};
 
 		var videoElement = getCleanVideoContent_video();
@@ -882,9 +868,9 @@ wtsplayer.elementsController = function()
 	{
 		_quality.onchange = null;
 		var player;
-		_video.innerHTML = '';
-		var div          = document.createElement( 'div' );
-		div.id           = "youtube-iframe";
+		_video.innerHTML  = '';
+		var div           = document.createElement( 'div' );
+		div.id            = "youtube-iframe";
 		_video.appendChild( div );
 		// 2. This code loads the IFrame Player API code asynchronously.
 
@@ -1052,7 +1038,7 @@ wtsplayer.elementsController = function()
 	function constructVideoContent_directSource( directSource )
 	{
 		_quality.onchange = null;
-		var videoElement = getCleanVideoContent_video();
+		var videoElement  = getCleanVideoContent_video();
 
 		videoElement.src = directSource;
 	}
@@ -1073,7 +1059,7 @@ wtsplayer.elementsController = function()
 		{
 			_video.dispatchEvent( new Event( 'timeupdate' ) );
 		} );
-		
+
 		videoElement.addEventListener( 'ended', function()
 		{
 			_video.dispatchEvent( new Event( 'ended' ) );
@@ -1161,7 +1147,7 @@ wtsplayer.elementsController = function()
 			}
 		};
 
-		_video.changeQuality = function(src)
+		_video.changeQuality = function( src )
 		{
 			videoElement.src = src;
 		};
@@ -1181,6 +1167,15 @@ wtsplayer.elementsController = function()
 				_session.nick = id;
 				_nick.value   = id;
 			}
+		}
+		if ( _session.type_src !== '' )
+		{
+			document.querySelector( "input[value ='" + _session.type_src + "']" ).checked = true;
+			if ( _session.type_src == "magnet" )
+			{
+				_magnet.value = _session.video_src;
+			}
+			//TODO: complete initialization
 		}
 		_video.innerHTML = '';
 		//Can be invoked before player construction
