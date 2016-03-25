@@ -753,6 +753,7 @@ wtsplayer.elementsController = function()
 			else
 			{
 				opt.value 		 = "";
+				opt.setAttribute("disabled", "disabled");
 				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - локальный файл";
 			}
 		}
@@ -769,6 +770,7 @@ wtsplayer.elementsController = function()
 			else
 			{
 				opt.value 		 = "";
+				opt.setAttribute("disabled", "disabled");
 				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - локальный файл";
 			}
 			_peersSrc.appendChild( opt );
