@@ -401,6 +401,22 @@ wtsplayer.stateController = function()
 		}
 	};
 
+	this.onPlayerEnded = function()
+	{
+		if (_joinedRoom)
+		{
+			updateCurrentState(
+				{
+					name              : 'waiting',
+					timestamp         : __peerController.currentTimestamp(),
+					playerTime        : __elementsController.getPlayerCurrentTime(),
+					lastAction        : 'pause',
+					previousStateName : 'waiting'
+				} );
+			sendCurrentState();
+		}
+	}
+
 	//SPECIAL
 	this.onJoinedRoom = function()
 	{

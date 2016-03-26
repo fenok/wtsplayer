@@ -9,7 +9,8 @@ wtsplayer.elementsController = function()
 			onPlayerPause   : null,
 			onPlayerSeek    : null,
 			onPlayerWaiting : null,
-			onPlayerCanPlay : null
+			onPlayerCanPlay : null,
+			onPlayerEnded   : null
 		},
 		peerController  : {
 			send                : null,
@@ -47,15 +48,16 @@ wtsplayer.elementsController = function()
 	var _backOvervayBut    = document.getElementById( "backOverlayBut" );
 	var _quality           = document.getElementById( "quality" );
 
-	var _generateId    = document.getElementById( "generateId" );
-	var _roomIdInput   = document.getElementById( "roomId" );
-	var _wrongId       = document.getElementById( "wrongId" );
-	var _wrongPassword = document.getElementById( "wrongPassword" );
-	var _title         = document.getElementById( "title" );
-	var _nick          = document.getElementById( "nick" );
-	var _passwordInput = document.getElementById( "passwordInput" );
-	var _overlay       = document.getElementById( "overlay" );
-	var _joinButton    = document.getElementById( "joinButton" );
+	var _generateId      = document.getElementById( "generateId" );
+	var _roomIdInput     = document.getElementById( "roomId" );
+	var _wrongId         = document.getElementById( "wrongId" );
+	var _wrongPassword   = document.getElementById( "wrongPassword" );
+	var _title           = document.getElementById( "title" );
+	var _nick            = document.getElementById( "nick" );
+	var _passwordInput   = document.getElementById( "passwordInput" );
+	var _overlay         = document.getElementById( "overlay" );
+	var _joinButton      = document.getElementById( "joinButton" );
+	var _addOffsetButton = document.getElementById( "addOffsetButton" );
 
 	var _inputLink = document.getElementById( "inputLink" );
 	var _localURL  = document.getElementById( "localURL" );
@@ -143,6 +145,21 @@ wtsplayer.elementsController = function()
 		__stateController.onPlayerCanPlay();
 	} );
 
+	_video.addEventListener( 'ended', function()
+	{
+		__stateController.onPlayerEnded();
+	} );
+
+	_video.addEventListener( 'underflow', function()
+	{
+		__stateController.onPlayerSeek( _video.offset );
+	} );
+
+	_addOffsetButton.addEventListener( 'click', function()
+	{
+		_video.changeOffset( -5000 );
+	} );
+
 	/*
 	 ***_video***
 
@@ -179,12 +196,18 @@ wtsplayer.elementsController = function()
 	 //TODO: pass offset from the beginning, emulate
 	 */
 
-	function constructVideoContent_dummy( duration, muted, volume, currentTime )
+	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
 		_video.safeClear = function()
 		{
-			_video._offset    = 0;
+			_video.pause();
+			_video.dispatchEvent( new Event( 'waiting' ) );
+
+			var videoData = { muted : _video.muted, volume : _video.volume, currentTime : _video.currentTime };
+
 			_quality.onchange = null;
+			_video.offset     = 0;
+
 			if ( _video.clear )
 			{
 				_video.clear();
@@ -197,87 +220,78 @@ wtsplayer.elementsController = function()
 				};
 				_video.clear();
 			}
+
+			return videoData;
 		};
-		_video.safeClear();
-		_video._duration    = duration || 0;
-		_video._muted       = muted || false;
-		_video._volume      = volume || 1;
-		_video._currentTime = currentTime || 0;
 
 		Object.defineProperties( _video, {
 			"volume"      : {
 				configurable : true,
 				set          : function( n )
 				{
-					_video._volume = n;
 				},
 				get          : function()
 				{
-					return (_video._volume);
+					return (volume || 1);
 				}
 			},
 			"muted"       : {
 				configurable : true,
 				set          : function( n )
 				{
-					_video._muted = n;
 				},
 				get          : function()
 				{
-					return (_video._muted);
+					return (muted || false);
 				}
 			},
 			"currentTime" : {
 				configurable : true,
 				set          : function( n )
 				{
-					_video._currentTime = n;
 				},
 				get          : function()
 				{
-					return (_video._currentTime);
+					return (currentTime || 0);
 				}
 			},
 			"duration"    : {
 				configurable : true,
 				get          : function()
 				{
-					return (_video._duration);
+					return (0);
 				}
 			}
 		} );
 
-		_video.play           = function()
+		_video.play          = function()
 		{
 		};
-		_video.pause          = function()
+		_video.pause         = function()
 		{
 		};
-		_video.wait           = function()
+		_video.wait          = function()
 		{
 		};
-		_video.changeQuality  = function( data )
+		_video.changeQuality = function( data )
 		{
 		};
-		_video.changeDuration = function( n )
+		_video.changeOffset  = function( n )
 		{
-			_video._duration = n;
-		};
-		_video.changeOffset   = function( n )
-		{
-			_video._offset = n;
 		}
+
+		_video.safeClear();
 	}
 
 	function constructVideoContent_youtubeDirect( videoLink )
 	{
+		var videoElement = getCleanVideoContent_video();
+
 		var videoID       = parseYoutubeLinkIntoID( videoLink );
 		_quality.onchange = function()
 		{
 			_video.changeQuality( this.value );
 		};
-
-		var videoElement = getCleanVideoContent_video();
 
 		function parse( d )
 		{
@@ -333,17 +347,216 @@ wtsplayer.elementsController = function()
 			}
 
 			videoElement.src = _quality.value;
+
+			_video.restore();
+			_video.clear = function()
+			{
+				//TODO: accurate cleaner
+				_video.innerHTML = '';
+			};
 		} );
+	}
+
+	function constructVideoContent_webtorrentMagnet( magnetLink )
+	{
+		_quality.onchange = null;
+
+		//TODO: seeing hundreds of "webtorrent.min.js:10 Uncaught InvalidStateError: Failed to read the 'buffered' property from 'SourceBuffer': This SourceBuffer has been removed from the parent media source." is actually pretty cool, but.. client should be removed properly. Or whatever. Check webtorrent docs.
+		var videoElement = getCleanVideoContent_video();
+
+		var client = new WebTorrent();
+		client.add( magnetLink, function( torrent )
+		{
+			// Torrents can contain many files. Let's use the first.
+			var file = torrent.files[ 0 ];
+
+			// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+			file.renderTo( videoElement, function( err, elem )
+			{
+				_video.restore();
+				_video.clear = function()
+				{
+					//TODO: accurate cleaner
+					_video.innerHTML = '';
+				};
+			} );
+		} );
+	}
+
+	function constructVideoContent_directSource( directSource )
+	{
+		var videoElement = getCleanVideoContent_video();
+
+		videoElement.src = directSource;
+		_video.restore();
+		_video.clear = function()
+		{
+			//TODO: accurate cleaner
+			_video.innerHTML = '';
+		};
+	}
+
+	function getCleanVideoContent_video()
+	{
+		//TODO: make sure that everything deletes properly
+		var videoData                    = _video.safeClear();
+		var videoElement                 = document.createElement( 'video' );
+		videoElement.style.width         = "100%";
+		videoElement.style.height        = "100%";
+		videoElement.style.verticalAlign = "bottom";
+
+		_video.appendChild( videoElement );
+
+		var emittedCanPlay = false;
+		var ended          = false;
+		videoElement.addEventListener( 'timeupdate', function()
+		{
+			_video.dispatchEvent( new Event( 'timeupdate' ) );
+		} );
+
+		videoElement.addEventListener( 'ended', function()
+		{
+			//videoElement.pause();
+			if ( !ended )
+			{
+				ended = true;
+				_video.dispatchEvent( new Event( 'ended' ) );
+			}
+		} );
+
+		videoElement.addEventListener( 'waiting', function()
+		{
+			if ( emittedCanPlay )
+			{
+				_video.dispatchEvent( new Event( 'waiting' ) );
+			}
+		} );
+
+		videoElement.addEventListener( 'canplay', function()
+		{
+			//if (!ended)
+			{
+				_video.dispatchEvent( new Event( 'canplay' ) );
+				emittedCanPlay = true;
+			}
+		} );
+
+		Object.defineProperties( _video, {
+			"volume"      : {
+				configurable : true,
+				set          : function( n )
+				{
+					videoElement.volume = n;
+				},
+				get          : function()
+				{
+					return (videoElement.volume);
+				}
+			},
+			"muted"       : {
+				configurable : true,
+				set          : function( n )
+				{
+					videoElement.muted = n;
+				},
+				get          : function()
+				{
+					return (videoElement.muted);
+				}
+			},
+			"currentTime" : {
+				configurable : true,
+				set          : function( n )
+				{
+					if (n < videoElement.duration * 1000)
+					{
+						ended = false;
+					}
+					_video.dispatchEvent( new Event( 'timeupdate' ) );
+
+					if ( n - _video.offset < 0 )
+					{
+						_video.dispatchEvent( new Event( 'underflow' ) );
+					}
+					else if ( n - _video.offset > videoElement.duration * 1000 )
+					{
+						videoElement.currentTime = videoElement.duration;// == _video.dispatchEvent( new Event( 'ended' ) );
+					}
+					else
+					{
+						videoElement.currentTime = (n - _video.offset) / 1000;
+					}
+				},
+				get          : function()
+				{
+					return ( videoElement.currentTime * 1000 + _video.offset );
+				}
+			},
+			"duration"    : {
+				configurable : true,
+				get          : function()
+				{
+					return (_video.offset > 0 ? videoElement.duration * 1000 : videoElement.duration * 1000 + _video.offset );
+				}
+			}
+		} );
+
+		//TODO: can't invoke them directly. Find out how to fix.
+		_video.play  = function()
+		{
+			videoElement.play();
+		};
+		_video.pause = function()
+		{
+			videoElement.pause();
+		};
+
+		_video.wait = function()
+		{
+			if (!ended)
+			{
+				_video.play();
+				_video.pause();
+				if ( videoElement.readyState === 4 )
+				{
+					setTimeout( function()
+					{
+						console.log( "Custom canplay dispatched" );
+						_video.dispatchEvent( new Event( 'canplay' ) );
+					}, 1 );
+				}
+			}
+		};
+
+		_video.changeQuality = function( src )
+		{
+			videoElement.src = src;
+		};
+
+		_video.restore = function()
+		{
+			videoElement.volume      = videoData.volume;
+			videoElement.muted       = videoData.muted;
+			videoElement.currentTime = videoData.currentTime / 1000;
+		};
+
+		_video.changeOffset = function( n )
+		{
+			var tempOffset           = n - _video.offset;
+			_video.offset            = n;
+			videoElement.currentTime = videoElement.currentTime - tempOffset;
+		};
+
+		return videoElement;
 	}
 
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
-		var videoID       = parseYoutubeLinkIntoID( videoLink );
-		_quality.onchange = null;
+		var videoData = _video.safeClear();
+		var videoID   = parseYoutubeLinkIntoID( videoLink );
 		var player;
-		_video.innerHTML  = '';
-		var div           = document.createElement( 'div' );
-		div.id            = "youtube-iframe";
+		var div       = document.createElement( 'div' );
+		div.id        = "youtube-iframe";
 		_video.appendChild( div );
 		// 2. This code loads the IFrame Player API code asynchronously.
 
@@ -390,10 +603,33 @@ wtsplayer.elementsController = function()
 				buffering      = false;
 				emittedCanplay = true;
 			}
+			else if ( event.data === YT.PlayerState.ENDED )
+			{
+				_video.dispatchEvent( new Event( 'ended' ) );
+			}
 		}
 
 		function onPlayerReady()
 		{
+			_video.restore = function()
+			{
+				player.setVolume( videoData.volume * 100 );
+				if ( videoData.muted === true )
+				{
+					player.mute();
+				}
+				else
+				{
+					player.unMute();
+				}
+				player.seekTo( videoData.currentTime / 1000, true );
+			};
+			_video.restore();
+			_video.clear        = function()
+			{
+				//TODO: accurate cleaning
+				_video.innerHTML = '';
+			};
 			var lastCurrentTime = null;
 			setInterval( function()
 			{
@@ -442,18 +678,30 @@ wtsplayer.elementsController = function()
 					configurable : true,
 					set          : function( n )
 					{
-						player.seekTo( n / 1000, true );
+						_video.dispatchEvent( new Event( 'timeupdate' ) );
+						if ( n - _video.offset < 0 )
+						{
+							_video.dispatchEvent( new Event( 'underflow' ) );
+						}
+						else if ( n - _video.offset > player.getDuration() * 1000 )
+						{
+							player.seekTo( player.getDuration() );
+						}
+						else
+						{
+							player.seekTo( (n - _video.offset) / 1000, true );
+						}
 					},
 					get          : function()
 					{
-						return (player.getCurrentTime() * 1000);
+						return (player.getCurrentTime() * 1000 + _video.offset);
 					}
 				},
 				"duration"    : {
 					configurable : true,
 					get          : function()
 					{
-						return (player.getDuration() * 1000);
+						return ( _video.offset > 0 ? player.getDuration() * 1000 : player.getDuration() * 1000 + _video.offset);
 					}
 				}
 			} );
@@ -485,243 +733,19 @@ wtsplayer.elementsController = function()
 						break;
 				}
 			};
+
+			_video.changeQuality = function( quality )
+			{
+				player.setPlaybackQuality( quality );
+			};
+
+			_video.changeOffset = function( n )
+			{
+				var tempOffset = n - _video.offset;
+				_video.offset  = n;
+				player.seekTo( player.getCurrentTime() - tempOffset );
+			};
 		}
-	}
-
-	function constructVideoContent_webtorrentMagnet( magnetLink )
-	{
-		_quality.onchange = null;
-
-		//TODO: seeing hundreds of "webtorrent.min.js:10 Uncaught InvalidStateError: Failed to read the 'buffered' property from 'SourceBuffer': This SourceBuffer has been removed from the parent media source." is actually pretty cool, but.. client should be removed properly. Or whatever. Check webtorrent docs.
-		var videoElement = getCleanVideoContent_video();
-
-		var client = new WebTorrent();
-		client.add( magnetLink, function( torrent )
-		{
-			// Torrents can contain many files. Let's use the first.
-			var file = torrent.files[ 0 ];
-
-			// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
-			file.renderTo( videoElement, function( err, elem )
-			{
-			} );
-		} );
-	}
-
-	function constructVideoContent_directSource( directSource )
-	{
-		var videoElement  = getCleanVideoContent_video();
-
-		videoElement.src = directSource;
-		_video.restore();
-		videoElement.addEventListener('canplay', function()
-		{
-			_video.changeDuration(videoElement.duration * 1000);
-		});
-	}
-
-	function getCleanVideoContent_video()
-	{
-		//TODO: make sure that everything deletes properly
-		_video.safeClear();
-		var videoElement                 = document.createElement( 'video' );
-		videoElement.style.width         = "100%";
-		videoElement.style.height        = "100%";
-		videoElement.style.verticalAlign = "bottom";
-
-		_video.appendChild( videoElement );
-
-		var fakePlayTimeInterval = null;
-		var fakePlay_offset = function()
-		{
-			videoElement.pause();
-			clearInterval(fakePlayTimeInterval);
-			fakePlayTimeInterval = setInterval(function()
-			{
-				_video._currentTime += 100;
-				_video.dispatchEvent( new Event( 'timeupdate' ) );
-				if (_video._currentTime >= _video._offset)
-				{
-					videoElement.play();
-					clearInterval(fakePlayTimeInterval);
-				}
-			}, 100);
-		};
-		var fakePlay_after = function()
-		{
-			videoElement.pause();
-			clearInterval(fakePlayTimeInterval);
-			fakePlayTimeInterval = setInterval(function()
-			{
-				_video._currentTime += 100;
-				_video.dispatchEvent( new Event( 'timeupdate' ) );
-				if (_video._currentTime >= _video._duration)
-				{
-					_video.dispatchEvent( new Event( 'ended' ) );
-					clearInterval(fakePlayTimeInterval);
-				}
-			}, 100);
-		};
-		var emittedCanPlay = false;
-		videoElement.addEventListener( 'timeupdate', function()
-		{
-			_video._currentTime = videoElement.currentTime * 1000 + _video._offset;
-			_video.dispatchEvent( new Event( 'timeupdate' ) );
-		} );
-
-		videoElement.addEventListener( 'ended', function()
-		{
-			if (_video._duration > (videoElement.currentTime * 1000 + _video._offset))
-			{
-				fakePlay_after();
-			}
-			else
-			{
-				_video.dispatchEvent( new Event( 'ended' ) );
-			}
-		} );
-
-		videoElement.addEventListener( 'waiting', function()
-		{
-			if ( emittedCanPlay )
-			{
-				_video.dispatchEvent( new Event( 'waiting' ) );
-			}
-		} );
-
-		videoElement.addEventListener( 'canplay', function()
-		{
-			_video.dispatchEvent( new Event( 'canplay' ) );
-			emittedCanPlay = true;
-		} );
-
-		var overJump = false;
-		Object.defineProperties( _video, {
-			"volume"      : {
-				configurable : true,
-				set          : function( n )
-				{
-					_video._volume = n;
-					videoElement.volume = n;
-				},
-				get          : function()
-				{
-					return (_video._volume);
-				}
-			},
-			"muted"       : {
-				configurable : true,
-				set          : function( n )
-				{
-					_video._muted = n;
-					videoElement.muted = n;
-				},
-				get          : function()
-				{
-					return (_video._muted);
-				}
-			},
-			"currentTime" : {
-				configurable : true,
-				set          : function( n )
-				{
-					_video._currentTime = n;
-
-					_video.dispatchEvent( new Event( 'timeupdate' ) );
-
-					clearInterval(fakePlayTimeInterval);
-
-					if ( n > _video._duration )
-					{
-						overJump = true;
-						_video.dispatchEvent( new Event( 'waiting' ) );
-					}
-					else if (n <= videoElement.duration * 1000 + _video._offset && n >= _video._offset)
-					{
-						overJump = false;
-						videoElement.currentTime = n / 1000 + _video._offset;
-					}
-					else if (n < _video._offset)
-					{
-						fakePlay_offset();
-					}
-					else if (n > videoElement.duration * 1000 + _video._offset)
-					{
-						fakePlay_after();
-					}
-					else
-					{
-						alert("set current time: incorrect n");
-					}
-				},
-				get          : function()
-				{
-					return (_video._currentTime);
-				}
-			},
-			"duration"    : {
-				configurable : true,
-				get          : function()
-				{
-					return (_video._duration);
-					//return (videoElement.duration * 1000);
-				}
-			}
-		} );
-
-		//TODO: can't invoke them directly. Find out how to fix.
-		_video.play  = function()
-		{
-			videoElement.play();
-		};
-		_video.pause = function()
-		{
-			videoElement.pause();
-		};
-
-		_video.wait = function()
-		{
-			_video.play();
-			_video.pause();
-			if ( videoElement.readyState === 4 )
-			{
-				setTimeout( function()
-				{
-					console.log( "Custom canplay dispatched" );
-					_video.dispatchEvent( new Event( 'canplay' ) );
-				}, 1 );
-			}
-		};
-
-		_video.changeQuality = function( src )
-		{
-			videoElement.src = src;
-		};
-
-		_video.restore = function()
-		{
-			videoElement.volume      = _video._volume;
-			videoElement.muted       = _video._muted;
-			videoElement.currentTime = _video._currentTime / 1000;
-		};
-
-		_video.changeDuration = function( n )
-		{
-			_video._duration = n;
-			if ( overJump && _video._duration >= _video._currentTime )
-			{
-				overJump = false;
-				videoElement.currentTime = _video._currentTime / 1000;
-			}
-		};
-
-		_video.changeOffset = function(n)
-		{
-			_video._offset = n;
-			_video.currentTime = _video._currentTime;
-		};
-
-		return videoElement;
 	}
 
 	_volume.oninput       = function( event )
