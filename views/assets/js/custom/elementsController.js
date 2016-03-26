@@ -549,7 +549,10 @@ wtsplayer.elementsController = function()
 		mute( _muteVideo, event.target, _video );
 		_muteVideo = !_muteVideo;
 	}
-
+	_inputLink.onclick = function(event)
+	{
+		event.target.select();
+	}
 	function mute( muted, butt, obj )
 	{
 		if ( muted )
