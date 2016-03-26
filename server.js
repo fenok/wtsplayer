@@ -28,11 +28,11 @@ function initServer()
 	app.get('*',function(req,res,next)
 	{  
 		console.log('baseUrl: '+req.path);
-		/*if(!req.secure && req.hostname !== 'localhost')
+		if(!req.secure && req.hostname !== 'localhost')
 		{
 			res.redirect('https://' + req.headers.host + req.url);
 		}
-		else*/
+		else
 		{
 			next();
 		}
