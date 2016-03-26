@@ -35,43 +35,6 @@ wtsplayer.elementsController = function()
 
 	var _self = this;
 
-	/*
-	 ***_video***
-
-	 INTERFACE:
-
-	 Events to dispatch:
-	 timeupdate
-	 ended
-	 waiting
-	 canplay
-
-	 Properties:
-	 volume
-	 muted
-	 currentTime -- ms
-	 duration -- ms
-
-	 Methods:
-	 play
-	 pause
-	 wait -- force buffering, 'canplay' must be emitted (asynchronously)
-
-	 BEHAVIOR:
-
-	 The first event to be emitted is 'canplay', and the video must be paused
-
-	 SPECIAL METHODS:
-	 destroy -- clean content accurately
-
-	 TO-DISCUSS:
-	 changeQuality
-	 construct quality lists in 'constructors', display them on the player GUI
-	 define behavior on video end
-	 //TODO: store video duration with dataSource, pass it to _video, emulate it
-	 //TODO: pass offset from the beginning, emulate
-	 */
-
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
 	var _volume            = document.getElementById( "volume" );
@@ -82,7 +45,7 @@ wtsplayer.elementsController = function()
 	var _messageInput      = document.getElementById( "messageInput" );
 	var _fullscreenButton  = document.getElementById( "fullscreen" );
 	var _backOvervayBut    = document.getElementById( "backOverlayBut" );
-	var _quality            = document.getElementById( "quality" );
+	var _quality           = document.getElementById( "quality" );
 
 	var _generateId    = document.getElementById( "generateId" );
 	var _roomIdInput   = document.getElementById( "roomId" );
@@ -97,8 +60,8 @@ wtsplayer.elementsController = function()
 	var _inputLink = document.getElementById( "inputLink" );
 	var _localURL  = document.getElementById( "localURL" );
 	var _peersSrc  = document.getElementById( "peersSrc" );
-	var _follow    = document.getElementById("follow");
-	
+	var _follow    = document.getElementById( "follow" );
+
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
 	var _peerList        = document.getElementById( "peerList" );
 	var _peerTable       = document.getElementById( "peerTable" );
@@ -108,9 +71,9 @@ wtsplayer.elementsController = function()
 	var _muteVideo;
 	var _audioStream;
 	var _videoSrcChange;
-	var _videoSrcTabs	= 'inputLink';
-	var _peers          = {};
-	var _peerVars       = Object.freeze( {
+	var _videoSrcTabs = 'inputLink';
+	var _peers        = {};
+	var _peerVars     = Object.freeze( {
 		NICK      : 0,
 		VIDEO_SRC : 1,
 		ROW       : 2,
@@ -179,11 +142,136 @@ wtsplayer.elementsController = function()
 		console.log( "canplay accepted" );
 		__stateController.onPlayerCanPlay();
 	} );
-	
-	
+
+	/*
+	 ***_video***
+
+	 INTERFACE:
+
+	 Events to dispatch:
+	 timeupdate
+	 ended
+	 waiting
+	 canplay
+
+	 Properties:
+	 volume
+	 muted
+	 currentTime -- ms
+	 duration -- ms
+
+	 Methods:
+	 play
+	 pause
+	 wait -- force buffering, 'canplay' must be emitted (asynchronously)
+	 changeQuality
+	 changeDuration
+	 changeOffset
+	 clear
+	 restore
+
+	 BEHAVIOR:
+
+	 The first event to be emitted is 'canplay', and the video must be paused
+
+	 construct quality lists in 'constructors', display them on the player GUI
+	 //TODO: store video duration with dataSource, pass it to _video, emulate it
+	 //TODO: pass offset from the beginning, emulate
+	 */
+
+	function constructVideoContent_dummy( duration, muted, volume, currentTime )
+	{
+		_video.safeClear = function()
+		{
+			_video._offset    = 0;
+			_quality.onchange = null;
+			if ( _video.clear )
+			{
+				_video.clear();
+			}
+			else
+			{
+				_video.clear = function()
+				{
+					_video.innerHTML = '';
+				};
+				_video.clear();
+			}
+		};
+		_video.safeClear();
+		_video._duration    = duration || 0;
+		_video._muted       = muted || false;
+		_video._volume      = volume || 1;
+		_video._currentTime = currentTime || 0;
+
+		Object.defineProperties( _video, {
+			"volume"      : {
+				configurable : true,
+				set          : function( n )
+				{
+					_video._volume = n;
+				},
+				get          : function()
+				{
+					return (_video._volume);
+				}
+			},
+			"muted"       : {
+				configurable : true,
+				set          : function( n )
+				{
+					_video._muted = n;
+				},
+				get          : function()
+				{
+					return (_video._muted);
+				}
+			},
+			"currentTime" : {
+				configurable : true,
+				set          : function( n )
+				{
+					_video._currentTime = n;
+				},
+				get          : function()
+				{
+					return (_video._currentTime);
+				}
+			},
+			"duration"    : {
+				configurable : true,
+				get          : function()
+				{
+					return (_video._duration);
+				}
+			}
+		} );
+
+		_video.play           = function()
+		{
+		};
+		_video.pause          = function()
+		{
+		};
+		_video.wait           = function()
+		{
+		};
+		_video.changeQuality  = function( data )
+		{
+		};
+		_video.changeDuration = function( n )
+		{
+			_video._duration = n;
+		};
+		_video.changeOffset   = function( n )
+		{
+			_video._offset = n;
+		}
+	}
+
 	function constructVideoContent_youtubeDirect( videoLink )
 	{
-		var videoID = parseYoutubeLinkIntoID( videoLink);
+		var videoID       = parseYoutubeLinkIntoID( videoLink );
 		_quality.onchange = function()
 		{
 			_video.changeQuality( this.value );
@@ -250,7 +338,7 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
-		var videoID = parseYoutubeLinkIntoID( videoLink);
+		var videoID       = parseYoutubeLinkIntoID( videoLink );
 		_quality.onchange = null;
 		var player;
 		_video.innerHTML  = '';
@@ -422,16 +510,20 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_directSource( directSource )
 	{
-		_quality.onchange = null;
 		var videoElement  = getCleanVideoContent_video();
 
 		videoElement.src = directSource;
+		_video.restore();
+		videoElement.addEventListener('canplay', function()
+		{
+			_video.changeDuration(videoElement.duration * 1000);
+		});
 	}
 
 	function getCleanVideoContent_video()
 	{
 		//TODO: make sure that everything deletes properly
-		_video.innerHTML                 = '';
+		_video.safeClear();
 		var videoElement                 = document.createElement( 'video' );
 		videoElement.style.width         = "100%";
 		videoElement.style.height        = "100%";
@@ -439,15 +531,54 @@ wtsplayer.elementsController = function()
 
 		_video.appendChild( videoElement );
 
+		var fakePlayTimeInterval = null;
+		var fakePlay_offset = function()
+		{
+			videoElement.pause();
+			clearInterval(fakePlayTimeInterval);
+			fakePlayTimeInterval = setInterval(function()
+			{
+				_video._currentTime += 100;
+				_video.dispatchEvent( new Event( 'timeupdate' ) );
+				if (_video._currentTime >= _video._offset)
+				{
+					videoElement.play();
+					clearInterval(fakePlayTimeInterval);
+				}
+			}, 100);
+		};
+		var fakePlay_after = function()
+		{
+			videoElement.pause();
+			clearInterval(fakePlayTimeInterval);
+			fakePlayTimeInterval = setInterval(function()
+			{
+				_video._currentTime += 100;
+				_video.dispatchEvent( new Event( 'timeupdate' ) );
+				if (_video._currentTime >= _video._duration)
+				{
+					_video.dispatchEvent( new Event( 'ended' ) );
+					clearInterval(fakePlayTimeInterval);
+				}
+			}, 100);
+		};
 		var emittedCanPlay = false;
 		videoElement.addEventListener( 'timeupdate', function()
 		{
+			_video._currentTime = videoElement.currentTime * 1000 + _video._offset;
 			_video.dispatchEvent( new Event( 'timeupdate' ) );
 		} );
 
 		videoElement.addEventListener( 'ended', function()
 		{
-			_video.dispatchEvent( new Event( 'ended' ) );
+			if (_video._duration > (videoElement.currentTime * 1000 + _video._offset))
+			{
+				fakePlay_after();
+			}
+			else
+			{
+				_video.dispatchEvent( new Event( 'ended' ) );
+			}
 		} );
 
 		videoElement.addEventListener( 'waiting', function()
@@ -464,46 +595,76 @@ wtsplayer.elementsController = function()
 			emittedCanPlay = true;
 		} );
 
+		var overJump = false;
 		Object.defineProperties( _video, {
 			"volume"      : {
 				configurable : true,
 				set          : function( n )
 				{
+					_video._volume = n;
 					videoElement.volume = n;
 				},
 				get          : function()
 				{
-					return (videoElement.volume);
+					return (_video._volume);
 				}
 			},
 			"muted"       : {
 				configurable : true,
 				set          : function( n )
 				{
+					_video._muted = n;
 					videoElement.muted = n;
 				},
 				get          : function()
 				{
-					return (videoElement.muted);
+					return (_video._muted);
 				}
 			},
 			"currentTime" : {
 				configurable : true,
 				set          : function( n )
 				{
-					videoElement.currentTime = n / 1000;
+					_video._currentTime = n;
+
 					_video.dispatchEvent( new Event( 'timeupdate' ) );
+
+					clearInterval(fakePlayTimeInterval);
+
+					if ( n > _video._duration )
+					{
+						overJump = true;
+						_video.dispatchEvent( new Event( 'waiting' ) );
+					}
+					else if (n <= videoElement.duration * 1000 + _video._offset && n >= _video._offset)
+					{
+						overJump = false;
+						videoElement.currentTime = n / 1000 + _video._offset;
+					}
+					else if (n < _video._offset)
+					{
+						fakePlay_offset();
+					}
+					else if (n > videoElement.duration * 1000 + _video._offset)
+					{
+						fakePlay_after();
+					}
+					else
+					{
+						alert("set current time: incorrect n");
+					}
 				},
 				get          : function()
 				{
-					return (videoElement.currentTime * 1000);
+					return (_video._currentTime);
 				}
 			},
 			"duration"    : {
 				configurable : true,
 				get          : function()
 				{
-					return (videoElement.duration * 1000);
+					return (_video._duration);
+					//return (videoElement.duration * 1000);
 				}
 			}
 		} );
@@ -537,6 +698,29 @@ wtsplayer.elementsController = function()
 			videoElement.src = src;
 		};
 
+		_video.restore = function()
+		{
+			videoElement.volume      = _video._volume;
+			videoElement.muted       = _video._muted;
+			videoElement.currentTime = _video._currentTime / 1000;
+		};
+
+		_video.changeDuration = function( n )
+		{
+			_video._duration = n;
+			if ( overJump && _video._duration >= _video._currentTime )
+			{
+				overJump = false;
+				videoElement.currentTime = _video._currentTime / 1000;
+			}
+		};
+
+		_video.changeOffset = function(n)
+		{
+			_video._offset = n;
+			_video.currentTime = _video._currentTime;
+		};
+
 		return videoElement;
 	}
 
@@ -549,7 +733,7 @@ wtsplayer.elementsController = function()
 		mute( _muteVideo, event.target, _video );
 		_muteVideo = !_muteVideo;
 	}
-	_inputLink.onclick = function(event)
+	_inputLink.onclick    = function( event )
 	{
 		event.target.select();
 	}
@@ -580,7 +764,7 @@ wtsplayer.elementsController = function()
 	{
 		var rx  = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
 		var res = link.match( rx );
-		return res === null?null:res[1];
+		return res === null ? null : res[ 1 ];
 	}
 
 	function sendMsg()
@@ -733,54 +917,54 @@ wtsplayer.elementsController = function()
 	//what -- peerController.sending enum
 	//from -- peerID
 	//GENERIC
-	
+
 	function newPeerSrc( peerId, data )
 	{
 		_peers[ peerId ][ _peerVars.VIDEO_SRC ] = data;
-		var opt = document.querySelector("#peersSrc option[data-peer='"+peerId+"']");
-		if (opt)
+		var opt                                 = document.querySelector( "#peersSrc option[data-peer='" + peerId + "']" );
+		if ( opt )
 		{
-			opt.dataset.type = data[0];
-			if (data[0] !== "localURL")
+			opt.dataset.type = data[ 0 ];
+			if ( data[ 0 ] !== "localURL" )
 			{
-				opt.value 		 = data[1];
-				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - "+data[1];
-				if (_follow.checked && _session.video_info == peerId)
+				opt.value     = data[ 1 ];
+				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
+				if ( _follow.checked && _session.video_info == peerId )
 				{
-					_session.type_src  = data[0];
-					_session.video_src = data[1];
+					_session.type_src  = data[ 0 ];
+					_session.video_src = data[ 1 ];
 					_videoSrcChange    = true;
 					enterRoom();
 				}
 			}
 			else
 			{
-				opt.value 		 = "";
-				opt.setAttribute("disabled", "disabled");
-				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - локальный файл";
+				opt.value = "";
+				opt.setAttribute( "disabled", "disabled" );
+				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
 			}
 		}
 		else
 		{
-			opt = document.createElement( "option" );
+			opt              = document.createElement( "option" );
 			opt.dataset.peer = peerId;
-			opt.dataset.type = data[0];
-			if (data[0] !== "localURL")
+			opt.dataset.type = data[ 0 ];
+			if ( data[ 0 ] !== "localURL" )
 			{
-				opt.value 		 = data[1];
-				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - "+data[1];
+				opt.value     = data[ 1 ];
+				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
 			}
 			else
 			{
-				opt.value 		 = "";
-				opt.setAttribute("disabled", "disabled");
-				opt.innerHTML	 = _peers[ peerId ][ _peerVars.NICK ]+" - локальный файл";
+				opt.value = "";
+				opt.setAttribute( "disabled", "disabled" );
+				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
 			}
 			_peersSrc.appendChild( opt );
 		}
-		
+
 	}
-	
+
 	this.onRecieved = function( what, from, data )
 	{
 		switch ( what )
@@ -789,7 +973,7 @@ wtsplayer.elementsController = function()
 				_self.onMessageRecieved( data );
 				break;
 			case __peerController.sending.DATA_SOURCE:
-				newPeerSrc (from, data);
+				newPeerSrc( from, data );
 				break;
 			case __peerController.sending.NICK:
 				_peers[ from ][ _peerVars.NICK ]               = data;
@@ -798,7 +982,7 @@ wtsplayer.elementsController = function()
 			case __peerController.sending.INITIAL_INFO:
 				_peers[ from ][ _peerVars.NICK ]               = data[ 0 ];
 				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data[ 0 ];
-				newPeerSrc (from, data[1]);
+				newPeerSrc( from, data[ 1 ] );
 				break;
 			default:
 				alert( "elementsController.onRecieved: unrecognized 'what'" );
@@ -851,7 +1035,7 @@ wtsplayer.elementsController = function()
 			{
 				_peers[ id ][ _peerVars.ROW ][ 0 ].remove();
 			}
-			document.querySelector("#peersSrc option[data-peer='"+id+"']").remove();
+			document.querySelector( "#peersSrc option[data-peer='" + id + "']" ).remove();
 			delete _peers[ id ];
 		}
 	};
@@ -1037,7 +1221,7 @@ wtsplayer.elementsController = function()
 		{
 			_session.password = _passwordInput.value;
 		}
-		
+
 		if ( _videoSrcTabs == "inputLink" )
 		{
 			if ( _inputLink.value !== "" && _session.video_src !== _inputLink.value )
@@ -1046,11 +1230,11 @@ wtsplayer.elementsController = function()
 				_inputLink.value    = _inputLink.value.trim();
 				_session.video_src  = _inputLink.value;
 				_session.video_info = "";
-				if ( parseYoutubeLinkIntoID(_inputLink.value))
+				if ( parseYoutubeLinkIntoID( _inputLink.value ) )
 				{
 					_session.type_src = "youtubeID_embedded"; // или "youtubeID_direct"
 				}
-				else if (_inputLink.value.indexOf("magnet:?") === 0)
+				else if ( _inputLink.value.indexOf( "magnet:?" ) === 0 )
 				{
 					_session.type_src = "magnet";
 				}
@@ -1073,17 +1257,17 @@ wtsplayer.elementsController = function()
 				}
 			}
 		}
-		else 
+		else
 		{
-			if ( _peersSrc.value && _session.video_src !== _peersSrc.value)
+			if ( _peersSrc.value && _session.video_src !== _peersSrc.value )
 			{
-				var data = document.querySelector("#peersSrc option:checked");
+				var data            = document.querySelector( "#peersSrc option:checked" );
 				_session.video_src  = _peersSrc.value;
 				_session.type_src   = data.dataset.type;
 				_session.video_info = data.dataset.peer;
 			}
 		}
-		
+
 		if ( _videoSrcChange ) //creation/joining/return. even local sources (to tell that to other peers)
 		{
 			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
@@ -1200,12 +1384,7 @@ wtsplayer.elementsController = function()
 			//document.querySelector( "span[data-type ='" + _session.type_src + "']" ).click(); - придумать как реалтизовать
 			_inputLink.value = _session.video_src;
 		}
-		_video.innerHTML = '';
-		//Can be invoked before player construction
-		_video.wait = function()
-		{
-			console.log( "wait_dummy" )
-		};
+		constructVideoContent_dummy();
 		if ( window.location.hash === '' )
 		{
 			__peerController.getRoomID( function( potentialRoomID )
@@ -1383,9 +1562,15 @@ wtsplayer.elementsController = function()
 			}
 		}
 	} );
-	
-	var a = document.querySelectorAll(".korpus1 > span");
-	for(var i=0;i<a.length;i++) a[i].onclick=function(){_videoSrcTabs = this.dataset.type};
+
+	var a = document.querySelectorAll( ".korpus1 > span" );
+	for ( var i = 0; i < a.length; i++ )
+	{
+		a[ i ].onclick = function()
+		{
+			_videoSrcTabs = this.dataset.type
+		};
+	}
 
 	function start()
 	{
@@ -1403,7 +1588,7 @@ wtsplayer.elementsController = function()
 			__peerController.fakeReload( init, location.reload );
 		}
 	};
-	
+
 	//Initializing _playPauseButton object
 	switchToWaiting();
 };
