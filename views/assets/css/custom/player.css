@@ -58,7 +58,7 @@ html, body{
 }
 #playerCurrentTimeOutput{
   color: #fff;
-  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+  text-shadow: 1px 1px 0 #333, -1px -1px 0 #333,-1px 1px 0 #333,1px -1px 0 #333;
 }
 /* Стилизация слайдеров */
 #playerSeekRange::-moz-range-track {
@@ -165,54 +165,63 @@ html, body{
 }
 /* Ввод сообщений */
 #send{
-  position:relative;
-  top: 10px;
-}
-#player #send{
-  position: absolute;
-  top: 0;
-  width: 100%;
-  text-align: center;
-}
-#player #send{
+  margin-left: 10%;
+  position:absolute;
+  top: 4px;
+  width: 80%;
   text-align: center;
 }
 #player #send:hover #sendMessageButton, 
 #chat:hover + #send #sendMessageButton{
    top: 0;
 }
-#player #send #sendMessageButton{
-   position:relative;
-   top: -30px;
+#sendMessageButton{
+   height: 100%;
+   box-shadow: -2px 0 0px 0px #444, -3px 0 0px 0px #fff, -5px 0 0px 0px #555;
+   position:absolute;
+   right: 4px;
+   top: -35px;
 }
 #player #send:hover #messageInput, 
 #chat:hover + #send #messageInput{
-  border: 2px outset white;
+  box-shadow: 0 0 1px 1px #333, 0 0 0 2px #fff, 0 0 1px 3px #333;
+  border-radius: 5px;
 }
 #messageInput{
-  width: 80%;
+	
+  padding-right: 40px;
+  box-sizing: border-box;
+  width: 100%;
   background: none;
   border: none;
   color: #fff;
   font-size: 20px;
   text-align: center;
-  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+  text-shadow: 1px 1px 0 #333, -1px -1px 0 #333,-1px 1px 0 #333,1px -1px 0 #333;
 }
 /* Элементы чата */
 #chat:hover{
-  overflow-y: auto;
+  overflow-y: scroll;
+  border: 1px solid grey;
+  padding-right: 0;
 }
 #chat{
   height: 25%;
   min-height: 30px;
   overflow-y: hidden;
   position: absolute;
-  top: 28px;
-  width: 100%;
+  top: 35px;
+  width: 80%;
+  margin-left: 10%;
   color: #fff;
   font-size: 20px;
   text-align: center;
-  text-shadow: #000 1px 1px 1px,#000 -1px -1px 1px,#000 -1px 1px 1px,#000 1px -1px 1px;
+  text-shadow: 1px 1px 0 #333, -1px -1px 0 #333,-1px 1px 0 #333,1px -1px 0 #333;
+  transition: all 0s step-end 0.5s;
+  padding-right: 10px;
+}
+#chat div{
+  transition: all 0s step-end 0.5s;
 }
 #chat:hover div{
   opacity: 1!important;

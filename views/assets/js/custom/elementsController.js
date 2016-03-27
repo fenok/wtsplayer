@@ -137,7 +137,7 @@ wtsplayer.elementsController = function()
 		}
 		_seekRange.value         = ( 100 / _video.duration ) * _video.currentTime;
 		var time = _video.currentTime / 1000>>0;
-		_currentTimeOutput.innerHTML = (time/60>>0)+(time<3600?":":(":"+val(time%3600/60>>0)+":"))+val(time%60);
+		_currentTimeOutput.innerHTML = (time<3600?(time/60>>0):((time/3600>>0)+":"+val(time%3600/60>>0)))+":"+val(time%60);
 	} );
 
 	_video.addEventListener( 'waiting', function()
