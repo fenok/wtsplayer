@@ -73,6 +73,7 @@ wtsplayer.elementsController = function()
 	var _session;
 	var _muteVideo;
 	var _audioStream;
+	var _scrollbar;
 	var _videoSrcChange;
 	var _videoSrcTabs = 'inputLink';
 	var _peers        = {};
@@ -162,6 +163,12 @@ wtsplayer.elementsController = function()
 		__stateController.onPlayerSeek( _video.offset );
 	} );
 
+	_video.onclick = function()
+	{
+		if( _playPauseButton.state  != 'waiting')
+			_playPauseButton.click();
+	}
+	
 	_addOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset + 100 );
@@ -877,7 +884,10 @@ wtsplayer.elementsController = function()
 	{
 		if ( document.activeElement.type != "text" && _overlay.className == "close" )
 		{
-			_messageInput.focus();
+			if (e.which == "32")
+				_playPauseButton.click();
+			else
+				_messageInput.focus();
 		}
 	}
 
@@ -890,14 +900,18 @@ wtsplayer.elementsController = function()
 
 	function sendMsg()
 	{
-		var messageData =
-			{
-				nick    : _session.nick || 'Someone',
-				message : _messageInput.value
-			};
-		__peerController.send( __peerController.sending.MESSAGE, messageData );
-		_self.onMessageRecieved( messageData );
-		_messageInput.value = '';
+		if (_messageInput.value!=="")
+		{
+			var messageData =
+				{
+					nick    : _session.nick || 'Someone',
+					message : _messageInput.value
+				};
+			__peerController.send( __peerController.sending.MESSAGE, messageData );
+			_self.onMessageRecieved( messageData );
+			_messageInput.value = '';
+		}
+		setTimeout(function(){_messageInput.blur()},100);
 	}
 
 	_fullscreenButton.addEventListener( 'click', function()
@@ -976,8 +990,101 @@ wtsplayer.elementsController = function()
 	this.onMessageRecieved = function( messageData )
 	{
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
+		_scrollbar.init();
 	};
 
+	function scrollbarTop(scrollbox)
+	{
+		o = {};
+		o.scrollbox = document.getElementById(scrollbox);
+		o.scrollbar = o.scrollbox.children[0];
+		o.scrollbox = o.scrollbox.children[1];
+		o.thumbElem = o.scrollbar.children[0];
+		o.init = function()
+		{
+			o.scrollbar.style.height = o.scrollbox.clientHeight+"px";
+			if (o.scrollbox.scrollHeight <= o.scrollbox.clientHeight)
+			{
+				o.ratio = 1;
+				o.thumbElem.style.height = o.scrollbar.scrollHeight+"px";
+			}
+			else
+			{
+				o.ratio = o.scrollbox.scrollHeight/o.scrollbox.clientHeight;
+				o.thumbElem.style.height = o.scrollbox.clientHeight/o.ratio+"px";
+			}
+		}
+		o.init();
+		with(o)
+		{			
+			thumbElem.onmousedown = function(e) 
+			{
+			  
+			  var thumbCoords = getCoords(thumbElem);
+			  var shiftY = e.pageY - thumbCoords.top;
+			  // shiftX здесь не нужен, слайдер двигается только по вертикали
+
+			  var scrollbarCoords = getCoords(scrollbar);
+
+			  document.onmousemove = function(e) {
+				// вычесть координату родителя, т.к. position: relative
+				var newTop = e.pageY - shiftY - scrollbarCoords.top;
+
+				// курсор ушёл вне слайдера
+				if (newTop < 0) {
+				  newTop = 0;
+				}
+				var bottomEdge = scrollbar.offsetHeight - thumbElem.offsetHeight;
+				if (newTop > bottomEdge) {
+				  newTop = bottomEdge;
+				}
+				scrollbox.scrollTop = newTop*ratio;
+				thumbElem.style.top = newTop + 'px';
+			  }
+			  scrollbar.onclick = function(e)
+			  {
+				var scrollbarCoords = getCoords(scrollbar);
+				var newTop = e.pageY - scrollbarCoords.top;
+				var bottomEdge = scrollbar.offsetHeight - thumbElem.offsetHeight;
+				if (newTop > bottomEdge) {
+				  newTop = bottomEdge;
+				}
+				scrollbox.scrollTop = newTop*ratio;
+				thumbElem.style.top = newTop + "px";
+			  }
+			  
+			  document.onmouseup = function() 
+			  {
+				document.onmousemove = document.onmouseup = null;
+			  };
+
+			  return false; // disable selection start (cursor change)
+			};
+			
+			scrollbox.onscroll = function()
+			{
+				thumbElem.style.top = scrollbox.scrollTop/ratio + "px";
+			}
+			
+			thumbElem.ondragstart = function() 
+			{
+			  return false;
+			};
+		}
+		function getCoords(elem) 
+		{ 
+		  var box = elem.getBoundingClientRect();
+
+		  return {
+			top: box.top + pageYOffset,
+			left: box.left + pageXOffset
+		  };
+
+		}
+		return o;
+	}
+	_scrollbar = scrollbarTop("chatParent");
+	
 	//SPECIAL
 	this.outputSystemMessage = function( message )
 	{
@@ -1682,7 +1789,16 @@ wtsplayer.elementsController = function()
 
 	function start()
 	{
-		__peerController.connectToServer( init )
+		_inputLink.value = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d";
+		_localURL.value = "";
+		_peersSrc.innerHTML = "";
+		_muteVideo = false;
+		_volume.value = 1;
+		_volumeButton.src = "volume.svg";
+		_seekRange.value = 0;
+		_currentTimeOutput.innerHTML = "00:00";
+		
+		__peerController.connectToServer( init );
 	}
 
 	window.onload = start;
@@ -1696,6 +1812,11 @@ wtsplayer.elementsController = function()
 			__peerController.fakeReload( init, location.reload );
 		}
 	};
+	
+	window.onresize = function()
+	{
+		_scrollbar.init();
+	}
 
 	//Initializing _playPauseButton object
 	switchToWaiting();

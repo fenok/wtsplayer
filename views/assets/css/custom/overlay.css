@@ -3,16 +3,16 @@
 }
 #overlay{
   position: absolute;
+  min-width: 500px!important;
   width: 100%;
-  min-width: 805px;
   height: 100%;
   background-color: gray;
   opacity: 0.9;
   top: 0;
   left: 0;
-  /*display: flex;
+  display: flex;
   justify-content: center;
-  align-items: center;*/
+  align-items: center;
   z-index: 1000;
 }
 #overlayContent{
@@ -21,16 +21,19 @@
   border-radius: 10px;
   border: 3px solid orange;
   background: white;
-  margin: 50px auto;
-  /*overflow-x: hidden;
+  /*margin: 20px auto;
+  overflow-x: hidden;
   overflow-y: auto;
   max-height: 95%;*/
+}
+body{
+	min-width: 500px;
 }
 h1{
 	margin-bottom: 0;
 }
 
-@media screen and (max-height: 600px)
+@media screen and (max-height: 550px)
 {
 	.create #overlayContent{
 		width: 800px;
@@ -42,8 +45,11 @@ h1{
 	.create #overlayContent > div:last-of-type{
 		width: 100%;
 	}
+	#overlay.create {
+		min-width: 800px;
+	}
 }	
-@media screen and (max-height: 400px)
+@media screen and (max-height: 350px)
 {
 	.join #overlayContent{
 		width: 800px;
@@ -63,18 +69,16 @@ h1{
 		.create #overlayContent > div{
 			width: 33%!important;
 		}
+		
 	}
 	.create #overlayContent{
 		margin-top: 0;
 	}
-}
-@media screen and (max-width: 805px)
-{
-	body{
-		min-width: 800px;
+	#overlay.create,#overlay.join {
+		min-width: 800px!important;
 	}
-
 }
+
 #overlayContent > div{
 	vertical-align: top;
 }

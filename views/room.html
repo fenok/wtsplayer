@@ -17,7 +17,7 @@
 					<div class="korpus1"> 
 						<span data-type="inputLink">Ссылка</span><span data-type="localURL">Локальный файл</span><span data-type="peers">Источники пиров</span>
 						<div>
-							<input type="text" id="inputLink" style="width:95%" value='magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d'>
+							<input type="text" id="inputLink" style="width:95%">
 							Введите ссылку на видео. На данный момент поддерживаются: magnet-ссылки WebTorrent, ссылки на youtube и прямые ссылки.
 						</div> 
 						<div><input type="file" id="localURL"></div> 
@@ -73,7 +73,12 @@
 					<td><input id = "backOverlayBut" type = "button" value = "Back"></td>
 				</table>
 			</div>
-			<div id="chat"></div>
+			<div id="chatParent">
+				<div id="scrollbar">
+					<div id="thumb"></div>
+				</div>
+				<div id="chat"></div>
+			</div>
 			<div id="send">
 				<input id="messageInput" type = "text" />
 				<input id="sendMessageButton" type="image" src = "send.svg">
