@@ -754,14 +754,18 @@ wtsplayer.elementsController = function()
 
 			_video.changeQuality = function( quality )
 			{
+				/*
 				player.setPlaybackQuality( quality );
+				*/
 			};
 
 			_video.changeOffset = function( n )
 			{
+				/*
 				var tempOffset = n - _video.offset;
 				_video.offset  = n;
 				player.seekTo( player.getCurrentTime() - tempOffset );
+				*/
 			};
 		}
 	}
