@@ -92,21 +92,21 @@ wtsplayer.elementsController = function()
 	switchToPlay = function()
 	{
 		_playPauseButton.state    = 'play';
-		_playPauseButton.value    = "Play";
+		_playPauseButton.src      = "play.svg";
 		_playPauseButton.disabled = false;
 	};
 
 	switchToPause = function()
 	{
 		_playPauseButton.state    = 'pause';
-		_playPauseButton.value    = "Pause";
+		_playPauseButton.src      = "pause.svg";
 		_playPauseButton.disabled = false;
 	};
 
 	switchToWaiting = function()
 	{
 		_playPauseButton.state    = 'waiting';
-		_playPauseButton.value    = "Waiting";
+		_playPauseButton.src      = "wait.svg";
 		_playPauseButton.disabled = true;
 	};
 
@@ -131,8 +131,13 @@ wtsplayer.elementsController = function()
 
 	_video.addEventListener( 'timeupdate', function()
 	{
+		function val(n)
+		{
+			return n<10?"0"+n:n;
+		}
 		_seekRange.value         = ( 100 / _video.duration ) * _video.currentTime;
-		_currentTimeOutput.value = _video.currentTime / 1000;
+		var time = _video.currentTime / 1000>>0;
+		_currentTimeOutput.innerHTML = (time/60>>0)+(time<3600?":":(":"+val(time%3600/60>>0)+":"))+val(time%60);
 	} );
 
 	_video.addEventListener( 'waiting', function()
@@ -805,6 +810,11 @@ wtsplayer.elementsController = function()
 			sendMsg();
 		}
 	};
+	document.onkeypress = function (e)
+	{
+		if ( document.activeElement.type != "text" && _overlay.className == "close" )
+			_messageInput.focus();
+	}
 
 	function parseYoutubeLinkIntoID( link )
 	{
@@ -844,7 +854,7 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			var el = document.getElementById( "player" );
+			var el = document.body;
 			if ( el.requestFullScreen )
 			{
 				el.requestFullScreen();
@@ -860,10 +870,6 @@ wtsplayer.elementsController = function()
 
 	_backOvervayBut.addEventListener( 'click', function()
 	{
-		if ( document.mozFullScreen || document.webkitIsFullScreen )
-		{
-			_fullscreenButton.click();
-		}
 		_overlay.className = 'join';
 	} );
 
@@ -968,13 +974,22 @@ wtsplayer.elementsController = function()
 	{
 		_peers[ peerId ][ _peerVars.VIDEO_SRC ] = data;
 		var opt                                 = document.querySelector( "#peersSrc option[data-peer='" + peerId + "']" );
-		if ( opt )
+		var newopt = opt?false:true;
+		if (newopt) // создать элемент если его не было
 		{
-			opt.dataset.type = data[ 0 ];
-			if ( data[ 0 ] !== "localURL" )
+			opt              = document.createElement( "option" );
+			opt.dataset.peer = peerId;
+		}
+		
+		opt.dataset.type = data[ 0 ];
+		if ( data[ 0 ] !== "localURL" )
+		{
+			opt.value     = data[ 1 ];
+			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
+			if (!newopt) // если элемент уже существовал, то при необходимости убрать disableb и при слежение за пиром изменить viseo_src 
 			{
-				opt.value     = data[ 1 ];
-				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
+				if (opt.disabled) 
+					opt.disabled  = false;
 				if ( _follow.checked && _session.video_info == peerId )
 				{
 					_session.type_src  = data[ 0 ];
@@ -983,32 +998,14 @@ wtsplayer.elementsController = function()
 					enterRoom();
 				}
 			}
-			else
-			{
-				opt.value = "";
-				opt.setAttribute( "disabled", "disabled" );
-				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
-			}
 		}
 		else
 		{
-			opt              = document.createElement( "option" );
-			opt.dataset.peer = peerId;
-			opt.dataset.type = data[ 0 ];
-			if ( data[ 0 ] !== "localURL" )
-			{
-				opt.value     = data[ 1 ];
-				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
-			}
-			else
-			{
-				opt.value = "";
-				opt.setAttribute( "disabled", "disabled" );
-				opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
-			}
-			_peersSrc.appendChild( opt );
+			opt.value     = "";
+			opt.disabled  = true;
+			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
 		}
-
+		if (newopt)	_peersSrc.appendChild( opt );
 	}
 
 	this.onRecieved = function( what, from, data )

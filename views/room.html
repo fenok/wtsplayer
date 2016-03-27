@@ -7,7 +7,7 @@
 		<link rel="stylesheet" type="text/css" href="/player.css">
 		<link rel="stylesheet" type="text/css" href="/overlay.css">
 	</head>
-	<body>
+	<body bgcolor="black">
 		<div id="overlay" class="closeContent">
 			<div id="overlayContent">
 				<h1 id="title">Создание комнаты</h1>
@@ -50,36 +50,33 @@
 				<input id="joinButton" type="button" value="Join room">			
 			</div>
 		</div>
-		<div id="playerExternal">
-			<div id = "player">
-				<div id = "video"></div>
-				<br>
-				<div id = "videoControls">
-					<div>
-						<div id = "peerList"><table id = "peerTable"></table></div>
-						<input id = "playerPlayPauseButton" type = "button" value = "Waiting" disabled = "disabled">
-						<input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" >
-						<input id = "playerCurrentTimeOutput" type = "input" style="width:50px">
-						<div id = "vol">
-							<div id = "volume_area">
-								<input id = "volume" class = "vrange" type = "range" value = "1" min="0" max="1" step="0.01">
-							</div>
-							<img id = "volume_button" src="/volume.svg" height="25px">
+		<div id = "player">
+			<div id = "video"></div>
+			<br>
+			<div id = "peerList"><table id = "peerTable"></table></div>
+			<div id = "videoControls">
+				<table>
+					<td><input id = "playerPlayPauseButton" type = "image" src="wait.svg" disabled = "disabled"></td>
+					<td><input id = "addOffsetButton" type = "button" value = "<"></td>
+					<td><input id = "subOffsetButton" type = "button" value = ">"></td>
+					<td width="100%"><input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" step="0.01"></td>
+					<td><span id = "playerCurrentTimeOutput" style="width:50px">00:00</span></td>
+					<td><div id = "vol">
+						<div id = "volume_area">
+							<input id = "volume" class = "vrange" type = "range" value = "1" min="0" max="1" step="0.01">
 						</div>
-						<select id="quality"><option>Качество</option></select>
-						<input type="button" id="peerListButton">
-						<input id = "fullscreen" type = "button" value = "Fullscreen">
-						<input id = "backOverlayBut" type = "button" value = "Back">
-						<input id = "addOffsetButton" type = "button" value = "<">
-						<input id = "subOffsetButton" type = "button" value = ">">
-					</div>
-				</div>
-				
-				<div id="chat"></div>
-				<div id="send">
-					<input id="messageInput" type = "text" />
-					<input id="sendMessageButton" type="button" value = "sendMessage">
-				</div>
+						<img id = "volume_button" src="/volume.svg" height="25px">
+					</div></td>
+					<td><select id="quality"><option>Качество</option></select></td>
+					<td><input type="button" id="peerListButton"></td>
+					<td><input id = "fullscreen" type = "image" src="full.svg"></td>
+					<td><input id = "backOverlayBut" type = "button" value = "Back"></td>
+				</table>
+			</div>
+			<div id="chat"></div>
+			<div id="send">
+				<input id="messageInput" type = "text" />
+				<input id="sendMessageButton" type="button" value = "sendMessage">
 			</div>
 		</div>
 		<!-- TODO: make perfect package.json and include assets from node_modules  -->
