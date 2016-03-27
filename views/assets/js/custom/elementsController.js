@@ -58,6 +58,7 @@ wtsplayer.elementsController = function()
 	var _overlay         = document.getElementById( "overlay" );
 	var _joinButton      = document.getElementById( "joinButton" );
 	var _addOffsetButton = document.getElementById( "addOffsetButton" );
+	var _subOffsetButton = document.getElementById( "subOffsetButton" );
 
 	var _inputLink = document.getElementById( "inputLink" );
 	var _localURL  = document.getElementById( "localURL" );
@@ -157,7 +158,12 @@ wtsplayer.elementsController = function()
 
 	_addOffsetButton.addEventListener( 'click', function()
 	{
-		_video.changeOffset( -5000 );
+		_video.changeOffset( _video.offset + 100 );
+	} );
+
+	_subOffsetButton.addEventListener( 'click', function()
+	{
+		_video.changeOffset( _video.offset - 100 );
 	} );
 
 	/*
@@ -434,7 +440,7 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'canplay', function()
 		{
-			//if (!ended)
+			if (!ended)
 			{
 				_video.dispatchEvent( new Event( 'canplay' ) );
 				emittedCanPlay = true;
@@ -468,24 +474,35 @@ wtsplayer.elementsController = function()
 				configurable : true,
 				set          : function( n )
 				{
-					if (n < videoElement.duration * 1000)
+					if (n - _video.offset < videoElement.duration * 1000)
 					{
 						ended = false;
 					}
-					_video.dispatchEvent( new Event( 'timeupdate' ) );
 
 					if ( n - _video.offset < 0 )
 					{
-						_video.dispatchEvent( new Event( 'underflow' ) );
+						setTimeout( function()
+						{
+							_video.dispatchEvent( new Event( 'underflow' ) );
+						}, 1 );
 					}
 					else if ( n - _video.offset > videoElement.duration * 1000 )
 					{
-						videoElement.currentTime = videoElement.duration;// == _video.dispatchEvent( new Event( 'ended' ) );
+						videoElement.currentTime = videoElement.duration;
+						ended = true;
+						setTimeout( function()
+						{
+							_video.dispatchEvent( new Event( 'ended' ) );
+						}, 1 );
 					}
 					else
 					{
 						videoElement.currentTime = (n - _video.offset) / 1000;
 					}
+					setTimeout( function()
+					{
+						_video.dispatchEvent( new Event( 'timeupdate' ) );
+					}, 1 );
 				},
 				get          : function()
 				{
@@ -513,7 +530,7 @@ wtsplayer.elementsController = function()
 
 		_video.wait = function()
 		{
-			if (!ended)
+			if (!ended && videoElement.currentTime !== videoElement.duration)
 			{
 				_video.play();
 				_video.pause();
@@ -544,7 +561,8 @@ wtsplayer.elementsController = function()
 		{
 			var tempOffset           = n - _video.offset;
 			_video.offset            = n;
-			videoElement.currentTime = videoElement.currentTime - tempOffset;
+			_video.currentTime = _video.currentTime - ( tempOffset );
+			//TODO: doesn't work while playing. WTF?!
 		};
 
 		return videoElement;
