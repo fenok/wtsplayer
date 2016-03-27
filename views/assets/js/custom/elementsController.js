@@ -131,13 +131,14 @@ wtsplayer.elementsController = function()
 
 	_video.addEventListener( 'timeupdate', function()
 	{
-		function val(n)
+		function val( n )
 		{
-			return n<10?"0"+n:n;
+			return n < 10 ? "0" + n : n;
 		}
-		_seekRange.value         = ( 100 / _video.duration ) * _video.currentTime;
-		var time = _video.currentTime / 1000>>0;
-		_currentTimeOutput.innerHTML = (time<3600?(time/60>>0):((time/3600>>0)+":"+val(time%3600/60>>0)))+":"+val(time%60);
+
+		_seekRange.value             = ( 100 / _video.duration ) * _video.currentTime;
+		var time                     = _video.currentTime / 1000 >> 0;
+		_currentTimeOutput.innerHTML = (time < 3600 ? (time / 60 >> 0) : ((time / 3600 >> 0) + ":" + val( time % 3600 / 60 >> 0 ))) + ":" + val( time % 60 );
 	} );
 
 	_video.addEventListener( 'waiting', function()
@@ -445,7 +446,7 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'canplay', function()
 		{
-			if (!ended)
+			if ( !ended )
 			{
 				_video.dispatchEvent( new Event( 'canplay' ) );
 				emittedCanPlay = true;
@@ -479,7 +480,7 @@ wtsplayer.elementsController = function()
 				configurable : true,
 				set          : function( n )
 				{
-					if (n - _video.offset < videoElement.duration * 1000)
+					if ( n - _video.offset < videoElement.duration * 1000 )
 					{
 						ended = false;
 					}
@@ -494,7 +495,7 @@ wtsplayer.elementsController = function()
 					else if ( n - _video.offset > videoElement.duration * 1000 )
 					{
 						videoElement.currentTime = videoElement.duration;
-						ended = true;
+						ended                    = true;
 						setTimeout( function()
 						{
 							_video.dispatchEvent( new Event( 'ended' ) );
@@ -535,7 +536,7 @@ wtsplayer.elementsController = function()
 
 		_video.wait = function()
 		{
-			if (!ended && videoElement.currentTime !== videoElement.duration)
+			if ( !ended && videoElement.currentTime !== videoElement.duration )
 			{
 				_video.play();
 				_video.pause();
@@ -564,8 +565,8 @@ wtsplayer.elementsController = function()
 
 		_video.changeOffset = function( n )
 		{
-			var tempOffset           = n - _video.offset;
-			_video.offset            = n;
+			var tempOffset     = n - _video.offset;
+			_video.offset      = n;
 			_video.currentTime = _video.currentTime - ( tempOffset );
 			//TODO: doesn't work while playing. WTF?!
 		};
@@ -581,7 +582,16 @@ wtsplayer.elementsController = function()
 		var div       = document.createElement( 'div' );
 		div.id        = "youtube-iframe";
 		_video.appendChild( div );
-		// 2. This code loads the IFrame Player API code asynchronously.
+
+		var qualities = {
+			default : "auto",
+			highres : "God",
+			hd1080  : "1080p",
+			hd720   : "720p",
+			large   : "480p",
+			medium  : "360p",
+			small   : "240p"
+		};
 
 		player = new YT.Player( 'youtube-iframe', {
 			height     : '100%',
@@ -605,6 +615,10 @@ wtsplayer.elementsController = function()
 
 		var buffering      = true;
 		var emittedCanplay = false;
+		var ended = false;
+		var formedQualityList = false;
+		var initialTime_crutch;
+
 
 		function onPlayerStateChange( event )
 		{
@@ -621,19 +635,50 @@ wtsplayer.elementsController = function()
 				if ( !emittedCanplay )
 				{
 					player.pauseVideo();
+					player.seekTo(initialTime_crutch);
+					if (!formedQualityList)
+					{
+						var availableQualities = player.getAvailableQualityLevels();
+						for ( var prop in qualities )
+						{
+							if (availableQualities.indexOf(prop) !== -1)
+							{
+								var opt       = document.createElement( "option" );
+								opt.innerHTML = qualities[ prop ];
+								opt.value     = prop;
+								_quality.appendChild( opt );
+							}
+						}
+
+						_quality.onchange = function()
+						{
+							_video.changeQuality( this.value );
+						};
+
+						formedQualityList = true;
+					}
 				}
-				_video.dispatchEvent( new Event( 'canplay' ) );
-				buffering      = false;
-				emittedCanplay = true;
+				if (!ended)
+				{
+					_video.dispatchEvent( new Event( 'canplay' ) );
+					buffering      = false;
+					emittedCanplay = true;
+				}
 			}
 			else if ( event.data === YT.PlayerState.ENDED )
 			{
-				_video.dispatchEvent( new Event( 'ended' ) );
+				if (!ended)
+				{
+					ended = true;
+					_video.dispatchEvent( new Event( 'ended' ) );
+				}
 			}
 		}
 
 		function onPlayerReady()
 		{
+			player.setPlaybackQuality( 'auto' );
+
 			_video.restore = function()
 			{
 				player.setVolume( videoData.volume * 100 );
@@ -662,7 +707,7 @@ wtsplayer.elementsController = function()
 					_video.dispatchEvent( new Event( 'timeupdate' ) );
 				}
 			}, 100 );
-			player.setPlaybackQuality( "highres" );
+			initialTime_crutch = player.getCurrentTime();
 			player.playVideo();
 			//player.pauseVideo();
 			//_video.dispatchEvent( new Event( 'canplay' ) );
@@ -701,19 +746,36 @@ wtsplayer.elementsController = function()
 					configurable : true,
 					set          : function( n )
 					{
-						_video.dispatchEvent( new Event( 'timeupdate' ) );
+						if (n - _video.offset < player.getDuration() * 1000)
+						{
+							ended = false;
+						}
 						if ( n - _video.offset < 0 )
 						{
-							_video.dispatchEvent( new Event( 'underflow' ) );
+							setTimeout(function()
+							{
+								_video.dispatchEvent( new Event( 'underflow' ) );
+							},1);
 						}
 						else if ( n - _video.offset > player.getDuration() * 1000 )
 						{
-							player.seekTo( player.getDuration() );
+							player.pauseVideo();
+							player.seekTo( player.getDuration() - 0.100 );
+							ended = true;
+							setTimeout(function()
+							{
+								_video.dispatchEvent( new Event( 'ended' ) );
+							},1);
 						}
 						else
 						{
 							player.seekTo( (n - _video.offset) / 1000, true );
 						}
+						setTimeout(function()
+						{
+							_video.dispatchEvent( new Event( 'timeupdate' ) );
+						},1);
+
 					},
 					get          : function()
 					{
@@ -739,38 +801,39 @@ wtsplayer.elementsController = function()
 			};
 			_video.wait  = function()
 			{
-				switch ( player.getPlayerState() )
+				if (!ended && player.getCurrentTime() !== player.getDuration())
 				{
-					case YT.PlayerState.PLAYING:
-						player.pauseVideo();
-					case YT.PlayerState.PAUSED:
-						setTimeout( function()
-						{
-							console.log( "Custom canplay dispatched" );
-							_video.dispatchEvent( new Event( 'canplay' ) );
-						}, 1 );
-						break;
-					case YT.PlayerState.BUFFERING:
-					case YT.PlayerState.ENDED:
-					default:
-						break;
+					switch ( player.getPlayerState() )
+					{
+						case YT.PlayerState.PLAYING:
+							player.pauseVideo();
+						case YT.PlayerState.PAUSED:
+							setTimeout( function()
+							{
+								console.log( "Custom canplay dispatched" );
+								_video.dispatchEvent( new Event( 'canplay' ) );
+							}, 1 );
+							break;
+						case YT.PlayerState.BUFFERING:
+						case YT.PlayerState.ENDED:
+						default:
+							break;
+					}
 				}
 			};
 
 			_video.changeQuality = function( quality )
 			{
-				/*
 				player.setPlaybackQuality( quality );
-				*/
 			};
 
 			_video.changeOffset = function( n )
 			{
-				/*
+
 				var tempOffset = n - _video.offset;
 				_video.offset  = n;
-				player.seekTo( player.getCurrentTime() - tempOffset );
-				*/
+				_video.currentTime = _video.currentTime - tempOffset;
+
 			};
 		}
 	}
@@ -810,10 +873,12 @@ wtsplayer.elementsController = function()
 			sendMsg();
 		}
 	};
-	document.onkeypress = function (e)
+	document.onkeypress     = function( e )
 	{
 		if ( document.activeElement.type != "text" && _overlay.className == "close" )
+		{
 			_messageInput.focus();
+		}
 	}
 
 	function parseYoutubeLinkIntoID( link )
@@ -974,22 +1039,22 @@ wtsplayer.elementsController = function()
 	{
 		_peers[ peerId ][ _peerVars.VIDEO_SRC ] = data;
 		var opt                                 = document.querySelector( "#peersSrc option[data-peer='" + peerId + "']" );
-		var newopt = opt?false:true;
-		if (newopt) // создать элемент если его не было
+		var newopt                              = opt ? false : true;
+		if ( newopt ) // создать элемент если его не было
 		{
 			opt              = document.createElement( "option" );
 			opt.dataset.peer = peerId;
 		}
-		
+
 		opt.dataset.type = data[ 0 ];
 		if ( data[ 0 ] !== "localURL" )
 		{
 			opt.value     = data[ 1 ];
 			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
-			if (!newopt) // если элемент уже существовал, то при необходимости убрать disableb и при слежение за пиром изменить viseo_src 
+			if ( !newopt ) // если элемент уже существовал, то при необходимости убрать disableb и при слежение за пиром изменить viseo_src
 			{
-				if (opt.disabled) 
-					opt.disabled  = false;
+				if ( opt.disabled )
+					opt.disabled = false;
 				if ( _follow.checked && _session.video_info == peerId )
 				{
 					_session.type_src  = data[ 0 ];
@@ -1005,7 +1070,7 @@ wtsplayer.elementsController = function()
 			opt.disabled  = true;
 			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
 		}
-		if (newopt)	_peersSrc.appendChild( opt );
+		if ( newopt )    _peersSrc.appendChild( opt );
 	}
 
 	this.onRecieved = function( what, from, data )
