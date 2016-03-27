@@ -410,7 +410,7 @@ wtsplayer.stateController = function()
 					name              : 'waiting',
 					timestamp         : __peerController.currentTimestamp(),
 					playerTime        : __elementsController.getPlayerCurrentTime(),
-					lastAction        : 'pause',
+					lastAction        : _currentState.lastAction,//'pause',
 					previousStateName : 'waiting'
 				} );
 			sendCurrentState();
