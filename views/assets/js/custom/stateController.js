@@ -381,7 +381,7 @@ wtsplayer.stateController = function()
 				{
 					name              : "waiting",
 					timestamp         : __peerController.currentTimestamp(),
-					playerTime        : _currentState.playerTime,
+					playerTime        : __elementsController.getPlayerCurrentTime(),//_currentState.playerTime,
 					lastAction        : _currentState.lastAction,
 					previousStateName : _currentState.name
 				} );
