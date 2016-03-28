@@ -583,6 +583,8 @@ wtsplayer.elementsController = function()
 		return videoElement;
 	}
 
+	//TODO:{NOT CRITICAL} it is posssible to set time to 0:00 with positive offset. Not affects the playback though.
+	//TODO:{NOT CRITICAL} frequent clicks may set time beyond bounds. Not affects the playback though.
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
 		var videoData = _video.safeClear();
@@ -766,10 +768,10 @@ wtsplayer.elementsController = function()
 								_video.dispatchEvent( new Event( 'underflow' ) );
 							},1);
 						}
-						else if ( n - _video.offset > player.getDuration() * 1000 )
+						else if ( n - _video.offset >= player.getDuration() * 1000 )
 						{
 							player.pauseVideo();
-							player.seekTo( player.getDuration() - 0.100 );
+//							player.seekTo( player.getDuration() );
 							ended = true;
 							setTimeout(function()
 							{
@@ -788,7 +790,14 @@ wtsplayer.elementsController = function()
 					},
 					get          : function()
 					{
-						return (player.getCurrentTime() * 1000 + _video.offset);
+						if (ended)
+						{
+							return player.getDuration() * 1000 + _video.offset;
+						}
+						else
+						{
+							return (player.getCurrentTime() * 1000 + _video.offset);
+						}
 					}
 				},
 				"duration"    : {
