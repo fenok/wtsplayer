@@ -53,12 +53,18 @@
 		<div id = "player">
 			<div id = "video"></div>
 			<br>
-			<div id = "peerList"><table id = "peerTable"></table></div>
+			<div id="peerListParent">
+				<div id = "peerList">
+					<span id="noteEmptyRoom">&#160;Комната пуста!&#160;</span>
+					<table id = "peerTable">
+					</table>
+				</div>
+			</div>
 			<div id = "videoControls">
 				<table>
 					<td><input id = "playerPlayPauseButton" type = "image" src="wait.svg" disabled = "disabled"></td>
-					<td><input id = "addOffsetButton" type = "button" value = "<"></td>
-					<td><input id = "subOffsetButton" type = "button" value = ">"></td>
+					<td><input id = "addOffsetButton" type = "image" src = "prev.svg"></td>
+					<td><input id = "subOffsetButton" type = "image" src = "next.svg"></td>
 					<td width="100%"><input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" step="0.01"></td>
 					<td><span id = "playerCurrentTimeOutput" style="width:50px">00:00</span></td>
 					<td><div id = "vol">
@@ -68,9 +74,9 @@
 						<input type="image" id = "volume_button" src="/volume.svg" height="25px">
 					</div></td>
 					<td><select id="quality"><option>Качество</option></select></td>
-					<td><input type="button" id="peerListButton"></td>
+					<td><input id = "peerListButton" type = "image" src="people.svg"></td>
 					<td><input id = "fullscreen" type = "image" src="full.svg"></td>
-					<td><input id = "backOverlayBut" type = "button" value = "Back"></td>
+					<td><input id = "backOverlayBut" type = "image" src="back.svg"></td>
 				</table>
 			</div>
 			<div id="chatParent">

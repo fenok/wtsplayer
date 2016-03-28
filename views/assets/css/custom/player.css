@@ -3,9 +3,13 @@
 }
 html, body{
 	height: 100%;
+	width: 100%;
 	min-width: 500px;
 	margin: 0;
 	padding: 0;
+}
+input:focus{
+	outline: none!important;
 }
 #video{
   /*just in case*/
@@ -37,6 +41,10 @@ html, body{
   overflow: hidden;
 }
 /* Элементы управления */
+#videoControls input[type="image"]
+{
+	height: 25px;
+}
 #videoControls{
   text-align: center;
   position: absolute;
@@ -50,9 +58,9 @@ html, body{
   margin-top: 25px;
   bottom: -30px;
 }
-#videoControls:hover > table{
+#videoControls:hover > table, #peerListParent.show:hover + #videoControls > table{
   bottom: 5px;
- }
+}
 #playerSeekRange{
   width: calc( 100% - 5px);
   margin: 0;
@@ -63,6 +71,29 @@ html, body{
 #playerCurrentTimeOutput{
   color: #fff;
   text-shadow: 1px 1px 0 #333, -1px -1px 0 #333,-1px 1px 0 #333,1px -1px 0 #333;
+}
+#playerPlayPauseButton[src="wait.svg"] {
+    -webkit-animation-name: spin;
+    -webkit-animation-duration: 1000ms;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+
+    animation-name: spin;
+    animation-duration: 1000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
 }
 /* Стилизация слайдеров */
 #playerSeekRange::-moz-range-track {
@@ -158,14 +189,28 @@ html, body{
   display:block!important;
 }
 /* Элементы аудио-чата */
-#peerList{
-	position: absolute;
-	bottom: 35px;
+#peerListParent.hidden #peerList{
+	right: -100%;
+}
+#peerListParent.show #peerList{
 	right: 0;
+}
+#peerListParent{
+	right: 0px;
+	position: absolute; 
+	bottom: 35px;
+}
+#peerListButton{
+	height: 28px;
+	position: relative;
+	top: 2px;
+}
+#peerList{
+	position: relative;
 	min-height: 100px;
-	min-width:  50px;
 	background-color: #fff;
-	display: none;
+	transition: right 1s ease-out 0s;
+	right: -100%;
 }
 /* Ввод сообщений */
 #send{
@@ -212,7 +257,7 @@ html, body{
   top: 35px;
   width: 80%;
   margin-left: 10%;
-  transition: box-shadow 0s step-end 0.5s;
+  /*transition: box-shadow 0s step-end 0.5s;*/
   box-shadow: 0 0 0 0 #333;
   border-radius: 5px;
 }
@@ -245,7 +290,7 @@ html, body{
   margin-right: 20px;
 }
 #chatParent div{
-  transition: opacity 0s step-end 0.5s;
+  /*transition: opacity 0s step-end 0.5s;*/
 }
 #chatParent:hover div{
   opacity: 1!important;

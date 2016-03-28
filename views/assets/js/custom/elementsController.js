@@ -66,9 +66,11 @@ wtsplayer.elementsController = function()
 	var _follow    = document.getElementById( "follow" );
 
 	var _audioChatStatus = document.getElementById( "audioChatStatus" );
+	var _peerListParent  = document.getElementById( "peerListParent" );
 	var _peerList        = document.getElementById( "peerList" );
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
+	var _noteEmptyRoom	 = document.getElementById( "noteEmptyRoom");
 
 	var _session;
 	var _muteVideo;
@@ -887,7 +889,11 @@ wtsplayer.elementsController = function()
 			if (e.which == "32")
 				_playPauseButton.click();
 			else
+			{
 				_messageInput.focus();
+				if (!e.keyCode)
+					_messageInput.value += String.fromCharCode(e.charCode);
+			}
 		}
 	}
 
@@ -1206,17 +1212,19 @@ wtsplayer.elementsController = function()
 
 	_peerListButton.onclick = function()
 	{
-		if ( _peerList.style.display == "block" )
+		if ( _peerListParent.className	!= "show" )
 		{
-			_peerList.style.display = "none";
+			_peerListParent.className = "show";
 		} else
 		{
-			_peerList.style.display = "block";
+			_peerListParent.className = "hidden";
 		}
 	}
 
 	this.onPeerConnected = function( peerId )
 	{
+		if(!_peerTable.children[0])
+			_noteEmptyRoom.innerHTML = "";
 		_peers [ peerId ]                      = [];
 		_peers[ peerId ][ _peerVars.ROW ]      = [];
 		_peers[ peerId ][ _peerVars.ROW ][ 0 ] = document.createElement( "tr" );
@@ -1252,6 +1260,8 @@ wtsplayer.elementsController = function()
 			}
 			document.querySelector( "#peersSrc option[data-peer='" + id + "']" ).remove();
 			delete _peers[ id ];
+			if(!_peerTable.children[0])
+				_noteEmptyRoom.innerHTML = "&#160;Комната пуста!&#160;";
 		}
 	};
 
@@ -1789,6 +1799,13 @@ wtsplayer.elementsController = function()
 
 	function start()
 	{
+		
+		clear();
+		__peerController.connectToServer( init );
+	}
+	
+	function clear()
+	{
 		_inputLink.value = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d";
 		_localURL.value = "";
 		_peersSrc.innerHTML = "";
@@ -1797,8 +1814,6 @@ wtsplayer.elementsController = function()
 		_volumeButton.src = "volume.svg";
 		_seekRange.value = 0;
 		_currentTimeOutput.innerHTML = "00:00";
-		
-		__peerController.connectToServer( init );
 	}
 
 	window.onload = start;
@@ -1809,7 +1824,7 @@ wtsplayer.elementsController = function()
 		if ( newHash !== _session.room_id )
 		{
 			_joinButton.onclick = "";
-			__peerController.fakeReload( init, location.reload );
+			__peerController.fakeReload( function(){clear();init()}, location.reload );
 		}
 	};
 	

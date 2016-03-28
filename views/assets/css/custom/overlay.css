@@ -46,7 +46,7 @@ h1{
 		width: 100%;
 	}
 	#overlay.create {
-		min-width: 800px;
+		min-width: 800px!important;
 	}
 }	
 @media screen and (max-height: 350px)
