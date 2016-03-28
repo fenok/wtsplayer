@@ -501,7 +501,7 @@ wtsplayer.elementsController = function()
 							_video.dispatchEvent( new Event( 'underflow' ) );
 						}, 1 );
 					}
-					else if ( n - _video.offset > videoElement.duration * 1000 )
+					else if ( n - _video.offset >= videoElement.duration * 1000 )
 					{
 						videoElement.currentTime = videoElement.duration;
 						ended                    = true;
@@ -583,7 +583,7 @@ wtsplayer.elementsController = function()
 		return videoElement;
 	}
 
-	//TODO:{NOT CRITICAL} it is posssible to set time to 0:00 with positive offset. Not affects the playback though.
+	//TODO:{NOT CRITICAL} it is possible to set time to 0:00 with positive offset. Not affects the playback though.
 	//TODO:{NOT CRITICAL} frequent clicks may set time beyond bounds. Not affects the playback though.
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
