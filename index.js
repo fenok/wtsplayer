@@ -51,7 +51,7 @@ server.on( 'getYoutubeVideoInfo', function( req, res )
 
 	var options = {
 		host : 'www.youtube.com',
-		path : '/get_video_info?video_id=' + encodeURIComponent(req.query.ID)
+		path : '/get_video_info?video_id=' + encodeURIComponent( req.query.ID )
 	};
 
 	var callback = function( response )

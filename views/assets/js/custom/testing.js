@@ -4,52 +4,52 @@ wtsplayer.stateController_dummy = function()
 {
 	this.getStateData = function()
 	{
-		console.log('getStateData', arguments)
+		console.log( 'getStateData', arguments )
 	};
 
 	this.onRecieved = function( what, from, data )
 	{
-		console.log('onRecieved', arguments)
+		console.log( 'onRecieved', arguments )
 	};
 
 	this.onPeerDeleted = function( id )
 	{
-		console.log('onPeerDeleted', arguments)
+		console.log( 'onPeerDeleted', arguments )
 	};
 
 	this.onPlayerPlay = function( playerTime )
 	{
-		console.log('onPlayerPlay', arguments)
+		console.log( 'onPlayerPlay', arguments )
 	};
 
 	this.onPlayerPause = function( playerTime )
 	{
-		console.log('onPlayerPause', arguments)
+		console.log( 'onPlayerPause', arguments )
 	};
 
 	this.onPlayerSeek = function( playerTime )
 	{
-		console.log('onPlayerSeek', arguments)
+		console.log( 'onPlayerSeek', arguments )
 	};
 
 	this.onPlayerWaiting = function()
 	{
-		console.log('onPlayerWaiting', arguments)
+		console.log( 'onPlayerWaiting', arguments )
 	};
 
 	this.onPlayerCanPlay = function()
 	{
-		console.log('onPlayerCanPlay', arguments)
+		console.log( 'onPlayerCanPlay', arguments )
 	};
 
 	this.onJoinedRoom = function()
 	{
-		console.log('onJoinedRoom', arguments)
+		console.log( 'onJoinedRoom', arguments )
 	};
 
 	this.onLeavedRoom = function()
 	{
-		console.log('onLeavedRoom', arguments)
+		console.log( 'onLeavedRoom', arguments )
 	};
 };
 
@@ -57,57 +57,57 @@ wtsplayer.elementsController_dummy = function()
 {
 	this.wait = function()
 	{
-		console.log('wait', arguments)
+		console.log( 'wait', arguments )
 	};
 
 	this.play = function()
 	{
-		console.log('play', arguments)
+		console.log( 'play', arguments )
 	};
 
 	this.pause = function()
 	{
-		console.log('pause', arguments)
+		console.log( 'pause', arguments )
 	};
 
 	this.seek = function( playerTime )
 	{
-		console.log('seek', arguments)
+		console.log( 'seek', arguments )
 	};
 
 	this.getPlayerCurrentTime = function()
 	{
-		console.log('getPlayerCurrentTime', arguments)
+		console.log( 'getPlayerCurrentTime', arguments )
 	};
 
 	this.onMessageRecieved = function( messageData )
 	{
-		console.log('onMessageRecieved', arguments)
+		console.log( 'onMessageRecieved', arguments )
 	};
 
 	this.outputSystemMessage = function( message )
 	{
-		console.log('outputSystemMessage', arguments)
+		console.log( 'outputSystemMessage', arguments )
 	};
 
 	this.onRecieved = function( what, from, data )
 	{
-		console.log('onRecieved', arguments)
+		console.log( 'onRecieved', arguments )
 	};
 
 	this.getInitialData = function()
 	{
-		console.log('getInitialData', arguments)
+		console.log( 'getInitialData', arguments )
 	};
 
 	this.onPeerDeleted = function( id )
 	{
-		console.log('onPeerDeleted', arguments)
+		console.log( 'onPeerDeleted', arguments )
 	};
 
 	this.onGotAudioStream = function( from, stream )
 	{
-		console.log('onGotAudioStream', arguments)
+		console.log( 'onGotAudioStream', arguments )
 	};
 };
 
@@ -129,4 +129,4 @@ for ( var controllerName in app )
 	}
 }
 
-app.peerController.connectToServer(null, null);
+app.peerController.connectToServer( null, null );

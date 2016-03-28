@@ -70,7 +70,7 @@ wtsplayer.elementsController = function()
 	var _peerList        = document.getElementById( "peerList" );
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
-	var _noteEmptyRoom	 = document.getElementById( "noteEmptyRoom");
+	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
 
 	var _session;
 	var _muteVideo;
@@ -167,10 +167,12 @@ wtsplayer.elementsController = function()
 
 	_video.onclick = function()
 	{
-		if( _playPauseButton.state  != 'waiting')
+		if ( _playPauseButton.state != 'waiting' )
+		{
 			_playPauseButton.click();
+		}
 	}
-	
+
 	_addOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset + 100 );
@@ -619,19 +621,19 @@ wtsplayer.elementsController = function()
 				iv_load_policy : 3
 			},
 			events     : {
-				'onReady'       : onPlayerReady,
-				'onStateChange' : onPlayerStateChange,
+				'onReady'                 : onPlayerReady,
+				'onStateChange'           : onPlayerStateChange,
 				'onPlaybackQualityChange' : onPlayerPlaybackQualityChange
 			}
 		} );
 
-		var buffering      = true;
-		var emittedCanplay = false;
-		var ended = false;
+		var buffering         = true;
+		var emittedCanplay    = false;
+		var ended             = false;
 		var formedQualityList = false;
 		var initialTime_crutch;
 
-		function onPlayerPlaybackQualityChange(value)
+		function onPlayerPlaybackQualityChange( value )
 		{
 			_quality.value = value.data;
 		}
@@ -651,14 +653,14 @@ wtsplayer.elementsController = function()
 				if ( !emittedCanplay )
 				{
 					player.pauseVideo();
-					player.seekTo(initialTime_crutch);
-					if (!formedQualityList)
+					player.seekTo( initialTime_crutch );
+					if ( !formedQualityList )
 					{
-						_quality.innerHTML = '';
+						_quality.innerHTML     = '';
 						var availableQualities = player.getAvailableQualityLevels();
 						for ( var prop in qualities )
 						{
-							if (availableQualities.indexOf(prop) !== -1)
+							if ( availableQualities.indexOf( prop ) !== -1 )
 							{
 								var opt       = document.createElement( "option" );
 								opt.innerHTML = qualities[ prop ];
@@ -678,7 +680,7 @@ wtsplayer.elementsController = function()
 						formedQualityList = true;
 					}
 				}
-				if (!ended)
+				if ( !ended )
 				{
 					_video.dispatchEvent( new Event( 'canplay' ) );
 					buffering      = false;
@@ -687,7 +689,7 @@ wtsplayer.elementsController = function()
 			}
 			else if ( event.data === YT.PlayerState.ENDED )
 			{
-				if (!ended)
+				if ( !ended )
 				{
 					ended = true;
 					_video.dispatchEvent( new Event( 'ended' ) );
@@ -768,40 +770,40 @@ wtsplayer.elementsController = function()
 					configurable : true,
 					set          : function( n )
 					{
-						if (n - _video.offset < player.getDuration() * 1000)
+						if ( n - _video.offset < player.getDuration() * 1000 )
 						{
 							ended = false;
 						}
 						if ( n - _video.offset < 0 )
 						{
-							setTimeout(function()
+							setTimeout( function()
 							{
 								_video.dispatchEvent( new Event( 'underflow' ) );
-							},1);
+							}, 1 );
 						}
 						else if ( n - _video.offset >= player.getDuration() * 1000 )
 						{
 							player.pauseVideo();
 //							player.seekTo( player.getDuration() );
 							ended = true;
-							setTimeout(function()
+							setTimeout( function()
 							{
 								_video.dispatchEvent( new Event( 'ended' ) );
-							},1);
+							}, 1 );
 						}
 						else
 						{
 							player.seekTo( (n - _video.offset) / 1000, true );
 						}
-						setTimeout(function()
+						setTimeout( function()
 						{
 							_video.dispatchEvent( new Event( 'timeupdate' ) );
-						},1);
+						}, 1 );
 
 					},
 					get          : function()
 					{
-						if (ended)
+						if ( ended )
 						{
 							return player.getDuration() * 1000 + _video.offset;
 						}
@@ -830,7 +832,7 @@ wtsplayer.elementsController = function()
 			};
 			_video.wait  = function()
 			{
-				if (!ended && player.getCurrentTime() !== player.getDuration())
+				if ( !ended && player.getCurrentTime() !== player.getDuration() )
 				{
 					switch ( player.getPlayerState() )
 					{
@@ -859,8 +861,8 @@ wtsplayer.elementsController = function()
 			_video.changeOffset = function( n )
 			{
 
-				var tempOffset = n - _video.offset;
-				_video.offset  = n;
+				var tempOffset     = n - _video.offset;
+				_video.offset      = n;
 				_video.currentTime = _video.currentTime - tempOffset;
 
 			};
@@ -906,13 +908,13 @@ wtsplayer.elementsController = function()
 	{
 		if ( document.activeElement.type != "text" && _overlay.className == "close" )
 		{
-			if (e.which == "32")
+			if ( e.which == "32" )
 				_playPauseButton.click();
 			else
 			{
 				_messageInput.focus();
-				if (!e.keyCode)
-					_messageInput.value += String.fromCharCode(e.charCode);
+				if ( !e.keyCode )
+					_messageInput.value += String.fromCharCode( e.charCode );
 			}
 		}
 	}
@@ -926,7 +928,7 @@ wtsplayer.elementsController = function()
 
 	function sendMsg()
 	{
-		if (_messageInput.value!=="")
+		if ( _messageInput.value !== "" )
 		{
 			var messageData =
 				{
@@ -937,7 +939,10 @@ wtsplayer.elementsController = function()
 			_self.onMessageRecieved( messageData );
 			_messageInput.value = '';
 		}
-		setTimeout(function(){_messageInput.blur()},100);
+		setTimeout( function()
+		{
+			_messageInput.blur()
+		}, 100 );
 	}
 
 	_fullscreenButton.addEventListener( 'click', function()
@@ -1019,98 +1024,104 @@ wtsplayer.elementsController = function()
 		_scrollbar.init();
 	};
 
-	function scrollbarTop(scrollbox)
+	function scrollbarTop( scrollbox )
 	{
-		o = {};
-		o.scrollbox = document.getElementById(scrollbox);
-		o.scrollbar = o.scrollbox.children[0];
-		o.scrollbox = o.scrollbox.children[1];
-		o.thumbElem = o.scrollbar.children[0];
-		o.init = function()
+		o           = {};
+		o.scrollbox = document.getElementById( scrollbox );
+		o.scrollbar = o.scrollbox.children[ 0 ];
+		o.scrollbox = o.scrollbox.children[ 1 ];
+		o.thumbElem = o.scrollbar.children[ 0 ];
+		o.init      = function()
 		{
-			o.scrollbar.style.height = o.scrollbox.clientHeight+"px";
-			if (o.scrollbox.scrollHeight <= o.scrollbox.clientHeight)
+			o.scrollbar.style.height = o.scrollbox.clientHeight + "px";
+			if ( o.scrollbox.scrollHeight <= o.scrollbox.clientHeight )
 			{
-				o.ratio = 1;
-				o.thumbElem.style.height = o.scrollbar.scrollHeight+"px";
+				o.ratio                  = 1;
+				o.thumbElem.style.height = o.scrollbar.scrollHeight + "px";
 			}
 			else
 			{
-				o.ratio = o.scrollbox.scrollHeight/o.scrollbox.clientHeight;
-				o.thumbElem.style.height = o.scrollbox.clientHeight/o.ratio+"px";
+				o.ratio                  = o.scrollbox.scrollHeight / o.scrollbox.clientHeight;
+				o.thumbElem.style.height = o.scrollbox.clientHeight / o.ratio + "px";
 			}
 		}
 		o.init();
-		with(o)
-		{			
-			thumbElem.onmousedown = function(e) 
+		with ( o )
+		{
+			thumbElem.onmousedown = function( e )
 			{
-			  
-			  var thumbCoords = getCoords(thumbElem);
-			  var shiftY = e.pageY - thumbCoords.top;
-			  // shiftX здесь не нужен, слайдер двигается только по вертикали
 
-			  var scrollbarCoords = getCoords(scrollbar);
+				var thumbCoords = getCoords( thumbElem );
+				var shiftY      = e.pageY - thumbCoords.top;
+				// shiftX здесь не нужен, слайдер двигается только по вертикали
 
-			  document.onmousemove = function(e) {
-				// вычесть координату родителя, т.к. position: relative
-				var newTop = e.pageY - shiftY - scrollbarCoords.top;
+				var scrollbarCoords = getCoords( scrollbar );
 
-				// курсор ушёл вне слайдера
-				if (newTop < 0) {
-				  newTop = 0;
+				document.onmousemove = function( e )
+				{
+					// вычесть координату родителя, т.к. position: relative
+					var newTop = e.pageY - shiftY - scrollbarCoords.top;
+
+					// курсор ушёл вне слайдера
+					if ( newTop < 0 )
+					{
+						newTop = 0;
+					}
+					var bottomEdge = scrollbar.offsetHeight - thumbElem.offsetHeight;
+					if ( newTop > bottomEdge )
+					{
+						newTop = bottomEdge;
+					}
+					scrollbox.scrollTop = newTop * ratio;
+					thumbElem.style.top = newTop + 'px';
 				}
-				var bottomEdge = scrollbar.offsetHeight - thumbElem.offsetHeight;
-				if (newTop > bottomEdge) {
-				  newTop = bottomEdge;
+				scrollbar.onclick    = function( e )
+				{
+					var scrollbarCoords = getCoords( scrollbar );
+					var newTop          = e.pageY - scrollbarCoords.top;
+					var bottomEdge      = scrollbar.offsetHeight - thumbElem.offsetHeight;
+					if ( newTop > bottomEdge )
+					{
+						newTop = bottomEdge;
+					}
+					scrollbox.scrollTop = newTop * ratio;
+					thumbElem.style.top = newTop + "px";
 				}
-				scrollbox.scrollTop = newTop*ratio;
-				thumbElem.style.top = newTop + 'px';
-			  }
-			  scrollbar.onclick = function(e)
-			  {
-				var scrollbarCoords = getCoords(scrollbar);
-				var newTop = e.pageY - scrollbarCoords.top;
-				var bottomEdge = scrollbar.offsetHeight - thumbElem.offsetHeight;
-				if (newTop > bottomEdge) {
-				  newTop = bottomEdge;
-				}
-				scrollbox.scrollTop = newTop*ratio;
-				thumbElem.style.top = newTop + "px";
-			  }
-			  
-			  document.onmouseup = function() 
-			  {
-				document.onmousemove = document.onmouseup = null;
-			  };
 
-			  return false; // disable selection start (cursor change)
+				document.onmouseup = function()
+				{
+					document.onmousemove = document.onmouseup = null;
+				};
+
+				return false; // disable selection start (cursor change)
 			};
-			
+
 			scrollbox.onscroll = function()
 			{
-				thumbElem.style.top = scrollbox.scrollTop/ratio + "px";
+				thumbElem.style.top = scrollbox.scrollTop / ratio + "px";
 			}
-			
-			thumbElem.ondragstart = function() 
+
+			thumbElem.ondragstart = function()
 			{
-			  return false;
+				return false;
 			};
 		}
-		function getCoords(elem) 
-		{ 
-		  var box = elem.getBoundingClientRect();
+		function getCoords( elem )
+		{
+			var box = elem.getBoundingClientRect();
 
-		  return {
-			top: box.top + pageYOffset,
-			left: box.left + pageXOffset
-		  };
+			return {
+				top  : box.top + pageYOffset,
+				left : box.left + pageXOffset
+			};
 
 		}
+
 		return o;
 	}
-	_scrollbar = scrollbarTop("chatParent");
-	
+
+	_scrollbar = scrollbarTop( "chatParent" );
+
 	//SPECIAL
 	this.outputSystemMessage = function( message )
 	{
@@ -1232,7 +1243,7 @@ wtsplayer.elementsController = function()
 
 	_peerListButton.onclick = function()
 	{
-		if ( _peerListParent.className	!= "show" )
+		if ( _peerListParent.className != "show" )
 		{
 			_peerListParent.className = "show";
 		} else
@@ -1243,7 +1254,7 @@ wtsplayer.elementsController = function()
 
 	this.onPeerConnected = function( peerId )
 	{
-		if(!_peerTable.children[0])
+		if ( !_peerTable.children[ 0 ] )
 			_noteEmptyRoom.innerHTML = "";
 		_peers [ peerId ]                      = [];
 		_peers[ peerId ][ _peerVars.ROW ]      = [];
@@ -1280,7 +1291,7 @@ wtsplayer.elementsController = function()
 			}
 			document.querySelector( "#peersSrc option[data-peer='" + id + "']" ).remove();
 			delete _peers[ id ];
-			if(!_peerTable.children[0])
+			if ( !_peerTable.children[ 0 ] )
 				_noteEmptyRoom.innerHTML = "&#160;Комната пуста!&#160;";
 		}
 	};
@@ -1819,20 +1830,20 @@ wtsplayer.elementsController = function()
 
 	function start()
 	{
-		
+
 		clear();
 		__peerController.connectToServer( init );
 	}
-	
+
 	function clear()
 	{
-		_inputLink.value = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d";
-		_localURL.value = "";
-		_peersSrc.innerHTML = "";
-		_muteVideo = false;
-		_volume.value = 1;
-		_volumeButton.src = "volume.svg";
-		_seekRange.value = 0;
+		_inputLink.value             = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d";
+		_localURL.value              = "";
+		_peersSrc.innerHTML          = "";
+		_muteVideo                   = false;
+		_volume.value                = 1;
+		_volumeButton.src            = "volume.svg";
+		_seekRange.value             = 0;
 		_currentTimeOutput.innerHTML = "00:00";
 	}
 
@@ -1844,10 +1855,14 @@ wtsplayer.elementsController = function()
 		if ( newHash !== _session.room_id )
 		{
 			_joinButton.onclick = "";
-			__peerController.fakeReload( function(){clear();init()}, location.reload );
+			__peerController.fakeReload( function()
+			{
+				clear();
+				init()
+			}, location.reload );
 		}
 	};
-	
+
 	window.onresize = function()
 	{
 		_scrollbar.init();

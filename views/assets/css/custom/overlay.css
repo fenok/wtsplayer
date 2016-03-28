@@ -1,195 +1,216 @@
-.close{
-	display: none!important;
-}
-#overlay{
-  position: absolute;
-  min-width: 500px!important;
-  width: 100%;
-  height: 100%;
-  background-color: gray;
-  opacity: 0.9;
-  top: 0;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-#overlayContent{
-  width: 400px;
-  text-align: center;
-  border-radius: 10px;
-  border: 3px solid orange;
-  background: white;
-  /*margin: 20px auto;
-  overflow-x: hidden;
-  overflow-y: auto;
-  max-height: 95%;*/
-}
-body{
-	min-width: 500px;
-}
-h1{
-	margin-bottom: 0;
+.close {
+    display: none !important;
 }
 
-@media screen and (max-height: 550px)
-{
-	.create #overlayContent{
-		width: 800px;
-	}
-	.create #overlayContent > div{
-		display: inline-block;
-		width: 49%;
-	}
-	.create #overlayContent > div:last-of-type{
-		width: 100%;
-	}
-	#overlay.create {
-		min-width: 800px!important;
-	}
-}	
-@media screen and (max-height: 350px)
-{
-	.join #overlayContent{
-		width: 800px;
-	}
-	.join #overlayContent > div:not(#typeRoom){
-		display: inline-block;
-		width: 49%;
-	}
-	@media screen and (min-width: 1205px)
-	{
-		.create {
-			min-height: 400px;
-		}
-		.create #overlayContent{
-			width: 1200px;
-		}
-		.create #overlayContent > div{
-			width: 33%!important;
-		}
-		
-	}
-	.create #overlayContent{
-		margin-top: 0;
-	}
-	#overlay.create,#overlay.join {
-		min-width: 800px!important;
-	}
+#overlay {
+    position: absolute;
+    min-width: 500px !important;
+    width: 100%;
+    height: 100%;
+    background-color: gray;
+    opacity: 0.9;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-#overlayContent > div{
-	vertical-align: top;
+#overlayContent {
+    width: 400px;
+    text-align: center;
+    border-radius: 10px;
+    border: 3px solid orange;
+    background: white;
+    /*margin: 20px auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 95%;*/
 }
+
+body {
+    min-width: 500px;
+}
+
+h1 {
+    margin-bottom: 0;
+}
+
+@media screen and (max-height: 550px) {
+    .create #overlayContent {
+        width: 800px;
+    }
+
+    .create #overlayContent > div {
+        display: inline-block;
+        width: 49%;
+    }
+
+    .create #overlayContent > div:last-of-type {
+        width: 100%;
+    }
+
+    #overlay.create {
+        min-width: 800px !important;
+    }
+}
+
+@media screen and (max-height: 350px) {
+    .join #overlayContent {
+        width: 800px;
+    }
+
+    .join #overlayContent > div:not(#typeRoom) {
+        display: inline-block;
+        width: 49%;
+    }
+
+    @media screen and (min-width: 1205px) {
+        .create {
+            min-height: 400px;
+        }
+
+        .create #overlayContent {
+            width: 1200px;
+        }
+
+        .create #overlayContent > div {
+            width: 33% !important;
+        }
+
+    }
+    .create #overlayContent {
+        margin-top: 0;
+    }
+
+    #overlay.create, #overlay.join {
+        min-width: 800px !important;
+    }
+}
+
+#overlayContent > div {
+    vertical-align: top;
+}
+
 /*.craete .join .password .error*/
-.password #overlayContent > *:not(#typeRoom), .error #overlayContent *, 
-.password #typeRoom *:not(#wrongPassword), 
-.join #typeRoom, .closeContent #overlayContent, 
-.password .close#wrongPassword{
-	display:none;
+.password #overlayContent > *:not(#typeRoom), .error #overlayContent *,
+.password #typeRoom *:not(#wrongPassword),
+.join #typeRoom, .closeContent #overlayContent,
+.password .close#wrongPassword {
+    display: none;
 }
-.password #joinButton,	.error #joinButton, 
-.password #title, 		.error #title{
-	display:inline!important;
+
+.password #joinButton, .error #joinButton,
+.password #title, .error #title {
+    display: inline !important;
 }
-.password #typeRoom #passwordInput{
-	opacity: 1;
-	margin: 20px 0 0 0;
-	display: inline;
+
+.password #typeRoom #passwordInput {
+    opacity: 1;
+    margin: 20px 0 0 0;
+    display: inline;
 }
 
 #joinButton {
-	position: relative;
-	top: 25px;
-	margin-top: -25px;
-	width: 300px;
-	height: 50px;
-	border: none;
-	background: orange;
-	border-radius: 5px;
-	font-size: 20px;
-	cursor: pointer;
+    position: relative;
+    top: 25px;
+    margin-top: -25px;
+    width: 300px;
+    height: 50px;
+    border: none;
+    background: orange;
+    border-radius: 5px;
+    font-size: 20px;
+    cursor: pointer;
 }
-#but_6:checked + label + input{
-	opacity: 1!important;
+
+#but_6:checked + label + input {
+    opacity: 1 !important;
 }
+
 #wrongPassword {
-	display: inline-block;
-	margin: 0 0 1.25% 45.5%;
-	color: red;
+    display: inline-block;
+    margin: 0 0 1.25% 45.5%;
+    color: red;
 }
+
 #passwordInput {
-	margin: 0 0 1.25% 45.5%;
-	width: 132px;
-	border: none;
-	border-radius: 5px;
-	background: skyblue;
-	opacity: 0;
+    margin: 0 0 1.25% 45.5%;
+    width: 132px;
+    border: none;
+    border-radius: 5px;
+    background: skyblue;
+    opacity: 0;
 }
-
-
-
-
 
 .korpus1 {
-	position: relative; 
-	height: 128px; 
-	width: 388px;
-	margin: auto;
-} 
+    position: relative;
+    height: 128px;
+    width: 388px;
+    margin: auto;
+}
+
 .korpus1 > span {
-	display: inline-block; 
-	width: 128px;
-	line-height: 28px;
-	height: 28px;
-	border-left: 1px solid #aaa;
-	border-top: 1px solid #aaa;
-	text-align: center;
-	cursor: pointer; 
-} 
-.korpus1 > span:last-of-type{
-	border-right: 1px solid #aaa;
+    display: inline-block;
+    width: 128px;
+    line-height: 28px;
+    height: 28px;
+    border-left: 1px solid #aaa;
+    border-top: 1px solid #aaa;
+    text-align: center;
+    cursor: pointer;
 }
+
+.korpus1 > span:last-of-type {
+    border-right: 1px solid #aaa;
+}
+
 .korpus1 > div {
-	position: absolute; 
-	box-sizing: border-box;
-	height: 100px; 
-	width: 100%; 
-	padding: 5px; 
-	border: 1px solid #aaa; 
-	background: #fff; 
-} 
-.korpus1 > div:nth-of-type(n+2) { 
-	visibility: collapse;
-	transition: 999999s;  
-	-webkit-transition: 999999s; 
+    position: absolute;
+    box-sizing: border-box;
+    height: 100px;
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #aaa;
+    background: #fff;
 }
-.korpus1 > span + span:active + span  ~ div:nth-of-type(2),
-.korpus1 > span + span + span:active  ~ div:nth-of-type(3){
-	visibility: visible; 
-	transition: .01s; 
-	-webkit-transition: .01s; 
+
+.korpus1 > div:nth-of-type(n+2) {
+    visibility: collapse;
+    transition: 999999s;
+    -webkit-transition: 999999s;
 }
-.korpus1 > span:active + span + span  ~ div:nth-of-type(2), 
-.korpus1 > span:active + span + span  ~ div:nth-of-type(3), 
-.korpus1 > span + span:active + span  ~ div:nth-of-type(3), 
-.korpus1 > span + span + span:active  ~ div:nth-of-type(2) {
-	visibility: hidden; 
-	-webkit-transition: .01s; 
-	transition: .01s; 
-} 
+
+.korpus1 > span + span:active + span ~ div:nth-of-type(2),
+.korpus1 > span + span + span:active ~ div:nth-of-type(3) {
+    visibility: visible;
+    transition: .01s;
+    -webkit-transition: .01s;
+}
+
+.korpus1 > span:active + span + span ~ div:nth-of-type(2),
+.korpus1 > span:active + span + span ~ div:nth-of-type(3),
+.korpus1 > span + span:active + span ~ div:nth-of-type(3),
+.korpus1 > span + span + span:active ~ div:nth-of-type(2) {
+    visibility: hidden;
+    -webkit-transition: .01s;
+    transition: .01s;
+}
+
 .korpus1 > div:before {
-	border-top: 2px solid #fff;
-	content: ""; 
-	position: absolute; 
-	left: 0; 
-	top: -1px; 
-	width: 128px; 
-} 
+    border-top: 2px solid #fff;
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 128px;
+}
+
 .korpus1 > div:nth-of-type(2):before {
-	left: 129px; 
-} 
+    left: 129px;
+}
+
 .korpus1 > div:nth-of-type(3):before {
-	left: 258px; 
+    left: 258px;
 }

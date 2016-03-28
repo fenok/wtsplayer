@@ -23,26 +23,24 @@ function initServer()
 	app.enable( 'trust proxy' );
 
 	//console.log(req.hostname);
-	
-	
-	app.get('*',function(req,res,next)
-	{  
-		console.log('baseUrl: '+req.path);
-		if(!req.secure && req.hostname !== 'localhost')
+
+	app.get( '*', function( req, res, next )
+	{
+		console.log( 'baseUrl: ' + req.path );
+		if ( !req.secure && req.hostname !== 'localhost' )
 		{
-			res.redirect('https://' + req.headers.host + req.url);
+			res.redirect( 'https://' + req.headers.host + req.url );
 		}
 		else
 		{
 			next();
 		}
-	});
-	
-	
+	} );
+
 	/*app.get( /^\/room\/[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$/, function( req, res )
-	{
-		res.render( 'room.html' );
-	} );*/
+	 {
+	 res.render( 'room.html' );
+	 } );*/
 
 	app.get( '/testing', function( req, res )
 	{

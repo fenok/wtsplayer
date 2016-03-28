@@ -1,106 +1,113 @@
 <!DOCTYPE html>
 <html lang="ru">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<meta charset="utf-8" />
-		<title>WTSPlayer</title>
-		<link rel="stylesheet" type="text/css" href="/player.css">
-		<link rel="stylesheet" type="text/css" href="/overlay.css">
-	</head>
-	<body bgcolor="black">
-		<div id="overlay" class="closeContent">
-			<div id="overlayContent">
-				<h1 id="title">Создание комнаты</h1>
-				<div>
-					<h3>Источник видео:</h3>
-					
-					<div class="korpus1"> 
-						<span data-type="inputLink">Ссылка</span><span data-type="localURL">Локальный файл</span><span data-type="peers">Источники пиров</span>
-						<div>
-							<input type="text" id="inputLink" style="width:95%">
-							Введите ссылку на видео. На данный момент поддерживаются: magnet-ссылки WebTorrent, ссылки на youtube и прямые ссылки.
-						</div> 
-						<div><input type="file" id="localURL"></div> 
-						<div>
-							<select id="peersSrc" size="4" style="width:95%"></select>
-							<input type="checkbox" id="follow"><label for="follow">Динамическое изменение видео вслед за пиром</label>
-						</div> 
-					</div>
-				</div>
-				<div id="typeRoom">
-					<h3>Идентификатор комнаты:</h3>
-					<input id="roomId"><input type="button" id="generateId" value="Сменить ID">
-					<span id="wrongId" class="close">Неверный идентификатор!</span>
-					<h3>Выберите тип комнаты:</h3>
-					<input type = "radio" id="but_5" name = "b" checked>
-					<label id="adress_5" for="but_5">Открытая комната</label>
-					<input type = "radio" id="but_6" name = "b">
-					<label for="but_6">Частная комната</label>
-					<input id="passwordInput" type="password" placeholder=" Введите пароль">
-					<span id="wrongPassword" class="close">Неверный пароль!</span>
-				</div>
-				<div>
-					<input type = "checkbox" id="audioChatStatus">
-					<label for="audioChatStatus">Использование аудио-чата</label>
-					<br><br>
-					<label for="nick">Введите ник для чата:</label>
-					<input id="nick" maxlength="20">
-					<br>
-				</div>
-				<input id="joinButton" type="button" value="Join room">			
-			</div>
-		</div>
-		<div id = "player">
-			<div id = "video"></div>
-			<br>
-			<div id="peerListParent">
-				<div id = "peerList">
-					<span id="noteEmptyRoom">&#160;Комната пуста!&#160;</span>
-					<table id = "peerTable">
-					</table>
-				</div>
-			</div>
-			<div id = "videoControls">
-				<table>
-					<td><input id = "playerPlayPauseButton" type = "image" src="wait.svg" disabled = "disabled"></td>
-					<td><input id = "addOffsetButton" type = "image" src = "prev.svg"></td>
-					<td><input id = "subOffsetButton" type = "image" src = "next.svg"></td>
-					<td width="100%"><input id = "playerSeekRange" class = "playerSliders" type = "range" value = "0" step="0.01"></td>
-					<td><span id = "playerCurrentTimeOutput" style="width:50px">00:00</span></td>
-					<td><div id = "vol">
-						<div id = "volume_area">
-							<input id = "volume" class = "vrange" type = "range" value = "1" min="0" max="1" step="0.01">
-						</div>
-						<input type="image" id = "volume_button" src="/volume.svg" height="25px">
-					</div></td>
-					<td><select id="quality"><option>Качество</option></select></td>
-					<td><input id = "peerListButton" type = "image" src="people.svg"></td>
-					<td><input id = "fullscreen" type = "image" src="full.svg"></td>
-					<td><input id = "backOverlayBut" type = "image" src="back.svg"></td>
-				</table>
-			</div>
-			<div id="chatParent">
-				<div id="scrollbar">
-					<div id="thumb"></div>
-				</div>
-				<div id="chat"></div>
-			</div>
-			<div id="send">
-				<input id="messageInput" type = "text" />
-				<input id="sendMessageButton" type="image" src = "send.svg">
-			</div>
-		</div>
-		<!-- TODO: make perfect package.json and include assets from node_modules  -->
-		<script src="https://www.youtube.com/iframe_api"></script>
-		<script src="/jquery.min.js"></script>
-		<script src="/webtorrent.min.js"></script>
-		<script src="/peer.peerjs_fork_firefox40.min.js"></script>
-		<!--<script src="/peer.js"></script>-->
-		<script src="/timesync/timesync.js"></script>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8"/>
+    <title>WTSPlayer</title>
+    <link rel="stylesheet" type="text/css" href="/player.css">
+    <link rel="stylesheet" type="text/css" href="/overlay.css">
+</head>
+<body bgcolor="black">
+<div id="overlay" class="closeContent">
+    <div id="overlayContent">
+        <h1 id="title">Создание комнаты</h1>
+        <div>
+            <h3>Источник видео:</h3>
 
-		<script src="/elementsController.js"></script>
-		<script src="/peerController.js"></script>
-		<script src="/stateController.js"></script>
-		<script src="/roomScripts.js"></script>
-	</body>
+            <div class="korpus1">
+                <span data-type="inputLink">Ссылка</span><span data-type="localURL">Локальный файл</span><span
+                    data-type="peers">Источники пиров</span>
+                <div>
+                    <input type="text" id="inputLink" style="width:95%">
+                    Введите ссылку на видео. На данный момент поддерживаются: magnet-ссылки WebTorrent, ссылки на
+                    youtube и прямые ссылки.
+                </div>
+                <div><input type="file" id="localURL"></div>
+                <div>
+                    <select id="peersSrc" size="4" style="width:95%"></select>
+                    <input type="checkbox" id="follow"><label for="follow">Динамическое изменение видео вслед за
+                    пиром</label>
+                </div>
+            </div>
+        </div>
+        <div id="typeRoom">
+            <h3>Идентификатор комнаты:</h3>
+            <input id="roomId"><input type="button" id="generateId" value="Сменить ID">
+            <span id="wrongId" class="close">Неверный идентификатор!</span>
+            <h3>Выберите тип комнаты:</h3>
+            <input type="radio" id="but_5" name="b" checked>
+            <label id="adress_5" for="but_5">Открытая комната</label>
+            <input type="radio" id="but_6" name="b">
+            <label for="but_6">Частная комната</label>
+            <input id="passwordInput" type="password" placeholder=" Введите пароль">
+            <span id="wrongPassword" class="close">Неверный пароль!</span>
+        </div>
+        <div>
+            <input type="checkbox" id="audioChatStatus">
+            <label for="audioChatStatus">Использование аудио-чата</label>
+            <br><br>
+            <label for="nick">Введите ник для чата:</label>
+            <input id="nick" maxlength="20">
+            <br>
+        </div>
+        <input id="joinButton" type="button" value="Join room">
+    </div>
+</div>
+<div id="player">
+    <div id="video"></div>
+    <br>
+    <div id="peerListParent">
+        <div id="peerList">
+            <span id="noteEmptyRoom">&#160;Комната пуста!&#160;</span>
+            <table id="peerTable">
+            </table>
+        </div>
+    </div>
+    <div id="videoControls">
+        <table>
+            <td><input id="playerPlayPauseButton" type="image" src="wait.svg" disabled="disabled"></td>
+            <td><input id="addOffsetButton" type="image" src="prev.svg"></td>
+            <td><input id="subOffsetButton" type="image" src="next.svg"></td>
+            <td width="100%"><input id="playerSeekRange" class="playerSliders" type="range" value="0" step="0.01"></td>
+            <td><span id="playerCurrentTimeOutput" style="width:50px">00:00</span></td>
+            <td>
+                <div id="vol">
+                    <div id="volume_area">
+                        <input id="volume" class="vrange" type="range" value="1" min="0" max="1" step="0.01">
+                    </div>
+                    <input type="image" id="volume_button" src="/volume.svg" height="25px">
+                </div>
+            </td>
+            <td><select id="quality">
+                <option>Качество</option>
+            </select></td>
+            <td><input id="peerListButton" type="image" src="people.svg"></td>
+            <td><input id="fullscreen" type="image" src="full.svg"></td>
+            <td><input id="backOverlayBut" type="image" src="back.svg"></td>
+        </table>
+    </div>
+    <div id="chatParent">
+        <div id="scrollbar">
+            <div id="thumb"></div>
+        </div>
+        <div id="chat"></div>
+    </div>
+    <div id="send">
+        <input id="messageInput" type="text"/>
+        <input id="sendMessageButton" type="image" src="send.svg">
+    </div>
+</div>
+<!-- TODO: make perfect package.json and include assets from node_modules  -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="/jquery.min.js"></script>
+<script src="/webtorrent.min.js"></script>
+<script src="/peer.peerjs_fork_firefox40.min.js"></script>
+<!--<script src="/peer.js"></script>-->
+<script src="/timesync/timesync.js"></script>
+
+<script src="/elementsController.js"></script>
+<script src="/peerController.js"></script>
+<script src="/stateController.js"></script>
+<script src="/roomScripts.js"></script>
+</body>
 </html>
