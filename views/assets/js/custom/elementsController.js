@@ -909,12 +909,15 @@ wtsplayer.elementsController = function()
 		if ( document.activeElement.type != "text" && _overlay.className == "close" )
 		{
 			if ( e.which == "32" )
+			{
 				_playPauseButton.click();
-			else
+			} else
 			{
 				_messageInput.focus();
 				if ( !e.keyCode )
+				{
 					_messageInput.value += String.fromCharCode( e.charCode );
+				}
 			}
 		}
 	}
@@ -1021,7 +1024,6 @@ wtsplayer.elementsController = function()
 	this.onMessageRecieved = function( messageData )
 	{
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
-		_scrollbar.init();
 	};
 
 	function scrollbarTop( scrollbox )
@@ -1050,6 +1052,7 @@ wtsplayer.elementsController = function()
 		{
 			thumbElem.onmousedown = function( e )
 			{
+				scrollbar.onmousedown = null;
 
 				var thumbCoords = getCoords( thumbElem );
 				var shiftY      = e.pageY - thumbCoords.top;
@@ -1075,21 +1078,21 @@ wtsplayer.elementsController = function()
 					scrollbox.scrollTop = newTop * ratio;
 					thumbElem.style.top = newTop + 'px';
 				}
-				scrollbar.onclick    = function( e )
-				{
-					var scrollbarCoords = getCoords( scrollbar );
-					var newTop          = e.pageY - scrollbarCoords.top;
-					var bottomEdge      = scrollbar.offsetHeight - thumbElem.offsetHeight;
-					if ( newTop > bottomEdge )
-					{
-						newTop = bottomEdge;
-					}
-					scrollbox.scrollTop = newTop * ratio;
-					thumbElem.style.top = newTop + "px";
-				}
 
 				document.onmouseup = function()
 				{
+					scrollbar.onmousedown = function( e )
+					{
+						var scrollbarCoords = getCoords( scrollbar );
+						var newTop          = e.pageY - scrollbarCoords.top;
+						var bottomEdge      = scrollbar.offsetHeight - thumbElem.offsetHeight;
+						if ( newTop > bottomEdge )
+						{
+							newTop = bottomEdge;
+						}
+						scrollbox.scrollTop = newTop * ratio;
+						thumbElem.style.top = newTop + "px";
+					}
 					document.onmousemove = document.onmouseup = null;
 				};
 
@@ -1125,6 +1128,7 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.outputSystemMessage = function( message )
 	{
+		_scrollbar.init();
 		var div         = document.createElement( 'div' );
 		var chat        = document.getElementById( "chat" );
 		div.textContent = message;
@@ -1198,7 +1202,9 @@ wtsplayer.elementsController = function()
 			if ( !newopt ) // если элемент уже существовал, то при необходимости убрать disableb и при слежение за пиром изменить viseo_src
 			{
 				if ( opt.disabled )
+				{
 					opt.disabled = false;
+				}
 				if ( _follow.checked && _session.video_info == peerId )
 				{
 					_session.type_src  = data[ 0 ];
@@ -1214,7 +1220,10 @@ wtsplayer.elementsController = function()
 			opt.disabled  = true;
 			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
 		}
-		if ( newopt )    _peersSrc.appendChild( opt );
+		if ( newopt )
+		{
+			_peersSrc.appendChild( opt );
+		}
 	}
 
 	this.onRecieved = function( what, from, data )
@@ -1255,7 +1264,9 @@ wtsplayer.elementsController = function()
 	this.onPeerConnected = function( peerId )
 	{
 		if ( !_peerTable.children[ 0 ] )
+		{
 			_noteEmptyRoom.innerHTML = "";
+		}
 		_peers [ peerId ]                      = [];
 		_peers[ peerId ][ _peerVars.ROW ]      = [];
 		_peers[ peerId ][ _peerVars.ROW ][ 0 ] = document.createElement( "tr" );
@@ -1292,7 +1303,9 @@ wtsplayer.elementsController = function()
 			document.querySelector( "#peersSrc option[data-peer='" + id + "']" ).remove();
 			delete _peers[ id ];
 			if ( !_peerTable.children[ 0 ] )
+			{
 				_noteEmptyRoom.innerHTML = "&#160;Комната пуста!&#160;";
+			}
 		}
 	};
 

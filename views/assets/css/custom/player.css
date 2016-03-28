@@ -51,6 +51,8 @@ input:focus {
 /* Элементы управления */
 #videoControls input[type="image"] {
     height: 25px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
 }
 
 #videoControls {
@@ -319,6 +321,7 @@ input:focus {
     background: #888;
     cursor: pointer;
     opacity: 0;
+    min-height: 6px;
 }
 
 #chatParent:hover {
