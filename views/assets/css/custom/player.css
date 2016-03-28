@@ -10,7 +10,11 @@ html, body {
     padding: 0;
 }
 
-input:focus {
+input[type='image']:active{
+    transform: scale(0.9, 0.9);
+}
+
+input:focus, select:focus {
     outline: none !important;
 }
 
@@ -77,10 +81,13 @@ input:focus {
 #playerSeekRange {
     width: calc(100% - 5px);
     margin: 0;
+    position: relative;
+    top: -3.5px;
 }
 
 #quality {
     width: 70px;
+    border-radius: 5px;
 }
 
 #playerCurrentTimeOutput {

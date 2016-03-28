@@ -374,7 +374,9 @@ wtsplayer.elementsController = function()
 			_video.restore();
 			_video.clear = function()
 			{
-				//TODO: accurate cleaner
+				videoElement.pause();
+				videoElement.src = "";
+				videoElement.load();
 				_video.innerHTML = '';
 			};
 		} );
@@ -399,7 +401,10 @@ wtsplayer.elementsController = function()
 				_video.restore();
 				_video.clear = function()
 				{
-					//TODO: accurate cleaner
+					client.destroy();
+					videoElement.pause();
+					videoElement.src = '';
+					videoElement.load();
 					_video.innerHTML = '';
 				};
 			} );
@@ -414,14 +419,15 @@ wtsplayer.elementsController = function()
 		_video.restore();
 		_video.clear = function()
 		{
-			//TODO: accurate cleaner
+			videoElement.pause();
+			videoElement.src = "";
+			videoElement.load();
 			_video.innerHTML = '';
 		};
 	}
 
 	function getCleanVideoContent_video()
 	{
-		//TODO: make sure that everything deletes properly
 		var videoData                    = _video.safeClear();
 		var videoElement                 = document.createElement( 'video' );
 		videoElement.style.width         = "100%";
@@ -618,7 +624,7 @@ wtsplayer.elementsController = function()
 				rel            : 0,
 				origin         : window.location.hostname,
 				enablejsapi    : 1,
-				iv_load_policy : 3
+				iv_load_policy : 3//, start          : videoData.currentTime / 1000 >> 0
 			},
 			events     : {
 				'onReady'                 : onPlayerReady,
@@ -635,7 +641,7 @@ wtsplayer.elementsController = function()
 
 		function onPlayerPlaybackQualityChange( value )
 		{
-			_quality.value = value.data;
+			//_quality.value = value.data;
 		}
 
 		function onPlayerStateChange( event )
@@ -652,6 +658,7 @@ wtsplayer.elementsController = function()
 			{
 				if ( !emittedCanplay )
 				{
+					//TODO: youtube player is fucked up =/. Make proper restore of current time
 					player.pauseVideo();
 					player.seekTo( initialTime_crutch );
 					if ( !formedQualityList )
@@ -674,7 +681,7 @@ wtsplayer.elementsController = function()
 						_quality.onchange = function()
 						{
 							_video.changeQuality( this.value );
-							_quality.value = player.getPlaybackQuality();
+							//_quality.value = player.getPlaybackQuality();
 						};
 
 						formedQualityList = true;
@@ -719,7 +726,7 @@ wtsplayer.elementsController = function()
 			_video.restore();
 			_video.clear        = function()
 			{
-				//TODO: accurate cleaning
+				player.destroy();
 				_video.innerHTML = '';
 			};
 			var lastCurrentTime = null;
@@ -1093,7 +1100,7 @@ wtsplayer.elementsController = function()
 						scrollbox.scrollTop = newTop * ratio;
 						thumbElem.style.top = newTop + "px";
 					}
-					document.onmousemove = document.onmouseup = null;
+					document.onmousemove  = document.onmouseup = null;
 				};
 
 				return false; // disable selection start (cursor change)
@@ -1850,7 +1857,7 @@ wtsplayer.elementsController = function()
 
 	function clear()
 	{
-		_inputLink.value             = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d";
+		_inputLink.value             = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel-1024-surround.mp4";
 		_localURL.value              = "";
 		_peersSrc.innerHTML          = "";
 		_muteVideo                   = false;
@@ -1884,3 +1891,4 @@ wtsplayer.elementsController = function()
 	//Initializing _playPauseButton object
 	switchToWaiting();
 };
+//TODO: make sure that everything deletes properly
