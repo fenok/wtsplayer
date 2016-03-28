@@ -620,7 +620,8 @@ wtsplayer.elementsController = function()
 			},
 			events     : {
 				'onReady'       : onPlayerReady,
-				'onStateChange' : onPlayerStateChange
+				'onStateChange' : onPlayerStateChange,
+				'onPlaybackQualityChange' : onPlayerPlaybackQualityChange
 			}
 		} );
 
@@ -630,6 +631,10 @@ wtsplayer.elementsController = function()
 		var formedQualityList = false;
 		var initialTime_crutch;
 
+		function onPlayerPlaybackQualityChange(value)
+		{
+			_quality.value = value.data;
+		}
 
 		function onPlayerStateChange( event )
 		{
@@ -649,6 +654,7 @@ wtsplayer.elementsController = function()
 					player.seekTo(initialTime_crutch);
 					if (!formedQualityList)
 					{
+						_quality.innerHTML = '';
 						var availableQualities = player.getAvailableQualityLevels();
 						for ( var prop in qualities )
 						{
@@ -661,9 +667,12 @@ wtsplayer.elementsController = function()
 							}
 						}
 
+						_quality.value = player.getPlaybackQuality();
+
 						_quality.onchange = function()
 						{
 							_video.changeQuality( this.value );
+							_quality.value = player.getPlaybackQuality();
 						};
 
 						formedQualityList = true;
@@ -688,7 +697,8 @@ wtsplayer.elementsController = function()
 
 		function onPlayerReady()
 		{
-			player.setPlaybackQuality( 'auto' );
+			//now player state is YT.PlayerState.CUED
+			player.setPlaybackQuality( 'default' );
 
 			_video.restore = function()
 			{
@@ -701,6 +711,7 @@ wtsplayer.elementsController = function()
 				{
 					player.unMute();
 				}
+				//turns out to force player to play video
 				player.seekTo( videoData.currentTime / 1000, true );
 			};
 			_video.restore();
@@ -719,7 +730,7 @@ wtsplayer.elementsController = function()
 				}
 			}, 100 );
 			initialTime_crutch = player.getCurrentTime();
-			player.playVideo();
+			//player.playVideo();
 			//player.pauseVideo();
 			//_video.dispatchEvent( new Event( 'canplay' ) );
 
