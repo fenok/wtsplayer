@@ -215,8 +215,6 @@ wtsplayer.elementsController = function()
 	 The first event to be emitted is 'canplay', and the video must be paused
 
 	 construct quality lists in 'constructors', display them on the player GUI
-	 //TODO: store video duration with dataSource, pass it to _video, emulate it
-	 //TODO: pass offset from the beginning, emulate
 	 */
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
@@ -386,7 +384,6 @@ wtsplayer.elementsController = function()
 	{
 		_quality.onchange = null;
 
-		//TODO: seeing hundreds of "webtorrent.min.js:10 Uncaught InvalidStateError: Failed to read the 'buffered' property from 'SourceBuffer': This SourceBuffer has been removed from the parent media source." is actually pretty cool, but.. client should be removed properly. Or whatever. Check webtorrent docs.
 		var videoElement = getCleanVideoContent_video();
 
 		var client = new WebTorrent();
@@ -585,7 +582,6 @@ wtsplayer.elementsController = function()
 			var tempOffset     = n - _video.offset;
 			_video.offset      = n;
 			_video.currentTime = _video.currentTime - ( tempOffset );
-			//TODO: doesn't work while playing. WTF?!
 		};
 
 		return videoElement;
@@ -946,7 +942,7 @@ wtsplayer.elementsController = function()
 					message : _messageInput.value
 				};
 			__peerController.send( __peerController.sending.MESSAGE, messageData );
-			_self.onMessageRecieved( messageData );
+			formMessage( messageData );
 			_messageInput.value = '';
 		}
 		setTimeout( function()
@@ -1027,8 +1023,7 @@ wtsplayer.elementsController = function()
 		return _video.currentTime;
 	};
 
-	//TODO: remove, it has been replaced with onRecieved
-	this.onMessageRecieved = function( messageData )
+	function formMessage( messageData )
 	{
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
 	};
@@ -1238,7 +1233,7 @@ wtsplayer.elementsController = function()
 		switch ( what )
 		{
 			case __peerController.sending.MESSAGE:
-				_self.onMessageRecieved( data );
+				formMessage( data );
 				break;
 			case __peerController.sending.DATA_SOURCE:
 				newPeerSrc( from, data );
