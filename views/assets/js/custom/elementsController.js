@@ -164,7 +164,7 @@ wtsplayer.elementsController = function()
 	_video.addEventListener( 'canplay', function()
 	{
 		console.log( "canplay accepted" );
-		if (!_videoLoaded)
+		if ( !_videoLoaded )
 		{
 			_videoLoaded = true;
 			onVideoLoaded();
@@ -236,9 +236,17 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
+		volume      = volume || 1;
+		muted       = muted || false;
+		currentTime = currentTime || 0
+
 		_videoLoaded = false;
 		onVideoLoading();
-		var videoData = { muted : _video.muted || muted, volume : _video.volume || volume, currentTime : _video.currentTime || currentTime };
+		var videoData = {
+			muted       : _video.muted || muted,
+			volume      : _video.volume || volume,
+			currentTime : _video.currentTime || currentTime
+		};
 
 		_video.play          = function()
 		{
@@ -298,11 +306,11 @@ wtsplayer.elementsController = function()
 			}
 		} );
 
-		_quality.onchange = null;
+		_quality.onchange  = null;
 		_quality.innerHTML = '';
-		var opt       = document.createElement( "option" );
-		opt.innerHTML = "Source";
-		opt.value     = 'source';
+		var opt            = document.createElement( "option" );
+		opt.innerHTML      = "Source";
+		opt.value          = 'source';
 		_quality.appendChild( opt );
 		_quality.disabled = "disabled";
 		_video.offset     = 0;
@@ -378,7 +386,7 @@ wtsplayer.elementsController = function()
 		{
 			var obj            = parse( text );
 			_quality.innerHTML = "";
-			_quality.removeAttribute('disabled');
+			_quality.removeAttribute( 'disabled' );
 			for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
 			{
 				var opt       = document.createElement( "option" );
@@ -593,8 +601,8 @@ wtsplayer.elementsController = function()
 
 		_video.restore = function()
 		{
-			videoElement.volume      = videoData.volume;
-			videoElement.muted       = videoData.muted;
+			videoElement.volume = videoData.volume;
+			videoElement.muted  = videoData.muted;
 			//videoElement.currentTime = videoData.currentTime / 1000;
 		};
 
@@ -641,12 +649,12 @@ wtsplayer.elementsController = function()
 				rel            : 0,
 				origin         : window.location.hostname,
 				enablejsapi    : 1,
-				iv_load_policy : 3//, start          : videoData.currentTime / 1000 >> 0
+				iv_load_policy : 3,
+				start          : 0
 			},
 			events     : {
-				'onReady'                 : onPlayerReady,
-				'onStateChange'           : onPlayerStateChange,
-				'onPlaybackQualityChange' : onPlayerPlaybackQualityChange
+				'onReady'       : onPlayerReady,
+				'onStateChange' : onPlayerStateChange
 			}
 		} );
 
@@ -654,12 +662,6 @@ wtsplayer.elementsController = function()
 		var emittedCanplay    = false;
 		var ended             = false;
 		var formedQualityList = false;
-		var initialTime_crutch;
-
-		function onPlayerPlaybackQualityChange( value )
-		{
-			//_quality.value = value.data;
-		}
 
 		function onPlayerStateChange( event )
 		{
@@ -678,10 +680,21 @@ wtsplayer.elementsController = function()
 					//TODO: have no idea how, but it seems to work. Understand and optimize maybe?
 					player.pauseVideo();
 					player.seekTo( videoData.currentTime / 1000 );
+
+					player.setVolume( videoData.volume * 100 );
+					if ( videoData.muted === true )
+					{
+						player.mute();
+					}
+					else
+					{
+						player.unMute();
+					}
+
 					if ( !formedQualityList )
 					{
-						_quality.innerHTML     = '';
-						_quality.removeAttribute('disabled');
+						_quality.innerHTML = '';
+						_quality.removeAttribute( 'disabled' );
 						var availableQualities = player.getAvailableQualityLevels();
 						for ( var prop in qualities )
 						{
@@ -699,7 +712,6 @@ wtsplayer.elementsController = function()
 						_quality.onchange = function()
 						{
 							_video.changeQuality( this.value );
-							//_quality.value = player.getPlaybackQuality();
 						};
 
 						formedQualityList = true;
@@ -726,22 +738,9 @@ wtsplayer.elementsController = function()
 		{
 			//now player state is YT.PlayerState.CUED
 			player.setPlaybackQuality( 'default' );
+			player.mute();
+			player.playVideo();
 
-			_video.restore = function()
-			{
-				player.setVolume( videoData.volume * 100 );
-				if ( videoData.muted === true )
-				{
-					player.mute();
-				}
-				else
-				{
-					player.unMute();
-				}
-				//turns out to force player to play video
-				player.seekTo( videoData.currentTime / 1000, true );
-			};
-			_video.restore();
 			_video.clear        = function()
 			{
 				player.destroy();
@@ -750,16 +749,12 @@ wtsplayer.elementsController = function()
 			var lastCurrentTime = null;
 			setInterval( function()
 			{
-				if ( player.getCurrentTime() !== lastCurrentTime )
+				if ( player.getCurrentTime() !== lastCurrentTime || player.getCurrentTime() === 0 )
 				{
 					lastCurrentTime = player.getCurrentTime();
 					_video.dispatchEvent( new Event( 'timeupdate' ) );
 				}
 			}, 100 );
-			initialTime_crutch = player.getCurrentTime();
-			//player.playVideo();
-			//player.pauseVideo();
-			//_video.dispatchEvent( new Event( 'canplay' ) );
 
 			Object.defineProperties( _video, {
 				"volume"      : {
@@ -809,7 +804,6 @@ wtsplayer.elementsController = function()
 						else if ( n - _video.offset >= player.getDuration() * 1000 )
 						{
 							player.pauseVideo();
-//							player.seekTo( player.getDuration() );
 							ended = true;
 							setTimeout( function()
 							{
@@ -866,7 +860,7 @@ wtsplayer.elementsController = function()
 						case YT.PlayerState.PAUSED:
 							setTimeout( function()
 							{
-								if (!buffering)
+								if ( !buffering )
 								{
 									console.log( "Custom canplay dispatched" );
 									_video.dispatchEvent( new Event( 'canplay' ) );
@@ -1664,7 +1658,7 @@ wtsplayer.elementsController = function()
 		_muteVideo      = false;
 		_audioStream    = null;
 		_videoSrcChange = true;
-		_videoLoaded = false;
+		_videoLoaded    = false;
 		if ( id )
 		{
 			if ( _session.nick !== '' )
