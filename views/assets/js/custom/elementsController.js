@@ -675,9 +675,9 @@ wtsplayer.elementsController = function()
 			{
 				if ( !emittedCanplay )
 				{
-					//TODO: youtube player is fucked up =/. Make proper restore of current time
+					//TODO: have no idea how, but it seems to work. Understand and optimize maybe?
 					player.pauseVideo();
-					player.seekTo( initialTime_crutch );
+					player.seekTo( videoData.currentTime / 1000 );
 					if ( !formedQualityList )
 					{
 						_quality.innerHTML     = '';
