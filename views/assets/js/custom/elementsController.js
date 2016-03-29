@@ -866,8 +866,11 @@ wtsplayer.elementsController = function()
 						case YT.PlayerState.PAUSED:
 							setTimeout( function()
 							{
-								console.log( "Custom canplay dispatched" );
-								_video.dispatchEvent( new Event( 'canplay' ) );
+								if (!buffering)
+								{
+									console.log( "Custom canplay dispatched" );
+									_video.dispatchEvent( new Event( 'canplay' ) );
+								}
 							}, 1 );
 							break;
 						case YT.PlayerState.BUFFERING:
