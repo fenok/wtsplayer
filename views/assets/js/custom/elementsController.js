@@ -73,6 +73,7 @@ wtsplayer.elementsController = function()
 	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
 
 	var _videoLoaded;
+	var _seekRangeIsDragged = false;
 
 	var _session;
 	var _muteVideo;
@@ -137,23 +138,37 @@ wtsplayer.elementsController = function()
 		}
 	} );
 
-	_seekRange.addEventListener( 'change', function()
+	_seekRange.onmousedown = function()
 	{
-		//converting to ms
-		var playerTime = _seekRange.value * ( _video.duration / 100 );
-		__stateController.onPlayerSeek( playerTime );
-	} );
+		_seekRange.onchange = null;
+		_seekRangeIsDragged = true;
+
+	};
+
+	_seekRange.onmouseup = function()
+	{
+		_seekRange.onchange = function()
+		{
+			//converting to ms
+			var playerTime = _seekRange.value * ( _video.duration / 100 );
+			__stateController.onPlayerSeek( playerTime );
+		};
+		_seekRangeIsDragged = false;
+	};
 
 	_video.addEventListener( 'timeupdate', function()
 	{
-		function val( n )
+		if ( !_seekRangeIsDragged )
 		{
-			return n < 10 ? "0" + n : n;
-		}
+			function val( n )
+			{
+				return n < 10 ? "0" + n : n;
+			}
 
-		_seekRange.value             = ( 100 / _video.duration ) * _video.currentTime;
-		var time                     = _video.currentTime / 1000 >> 0;
-		_currentTimeOutput.innerHTML = (time < 3600 ? (time / 60 >> 0) : ((time / 3600 >> 0) + ":" + val( time % 3600 / 60 >> 0 ))) + ":" + val( time % 60 );
+			_seekRange.value             = ( 100 / _video.duration ) * _video.currentTime;
+			var time                     = _video.currentTime / 1000 >> 0;
+			_currentTimeOutput.innerHTML = (time < 3600 ? (time / 60 >> 0) : ((time / 3600 >> 0) + ":" + val( time % 3600 / 60 >> 0 ))) + ":" + val( time % 60 );
+		}
 	} );
 
 	_video.addEventListener( 'waiting', function()
