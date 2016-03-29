@@ -72,6 +72,8 @@ wtsplayer.elementsController = function()
 	var _peerListButton  = document.getElementById( "peerListButton" );
 	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
 
+	var _videoLoaded;
+
 	var _session;
 	var _muteVideo;
 	var _audioStream;
@@ -113,6 +115,16 @@ wtsplayer.elementsController = function()
 		_playPauseButton.disabled = true;
 	};
 
+	function onVideoLoading()
+	{
+		//TODO: hide controls
+	}
+
+	function onVideoLoaded()
+	{
+		//TODO: show controls
+	}
+
 	_playPauseButton.addEventListener( 'click', function()
 	{
 		if ( _playPauseButton.state === 'play' )
@@ -152,6 +164,11 @@ wtsplayer.elementsController = function()
 	_video.addEventListener( 'canplay', function()
 	{
 		console.log( "canplay accepted" );
+		if (!_videoLoaded)
+		{
+			_videoLoaded = true;
+			onVideoLoaded();
+		}
 		__stateController.onPlayerCanPlay();
 	} );
 
@@ -219,6 +236,8 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
+		_videoLoaded = false;
+		onVideoLoading();
 		var videoData = { muted : _video.muted || muted, volume : _video.volume || volume, currentTime : _video.currentTime || currentTime };
 
 		_video.play          = function()
@@ -1642,6 +1661,7 @@ wtsplayer.elementsController = function()
 		_muteVideo      = false;
 		_audioStream    = null;
 		_videoSrcChange = true;
+		_videoLoaded = false;
 		if ( id )
 		{
 			if ( _session.nick !== '' )
