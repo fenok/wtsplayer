@@ -582,7 +582,7 @@ wtsplayer.elementsController = function()
 		{
 			videoElement.volume      = videoData.volume;
 			videoElement.muted       = videoData.muted;
-			videoElement.currentTime = videoData.currentTime / 1000;
+			//videoElement.currentTime = videoData.currentTime / 1000;
 		};
 
 		_video.changeOffset = function( n )
