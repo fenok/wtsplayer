@@ -227,6 +227,12 @@ wtsplayer.elementsController = function()
 			var videoData = { muted : _video.muted, volume : _video.volume, currentTime : _video.currentTime };
 
 			_quality.onchange = null;
+			_quality.innerHTML = '';
+			var opt       = document.createElement( "option" );
+			opt.innerHTML = "Source";
+			opt.value     = 'source'
+			_quality.appendChild( opt );
+			_quality.disabled = "disabled";
 			_video.offset     = 0;
 
 			if ( _video.clear )
@@ -359,6 +365,7 @@ wtsplayer.elementsController = function()
 		{
 			var obj            = parse( text );
 			_quality.innerHTML = "";
+			_quality.removeAttribute('disabled');
 			for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
 			{
 				var opt       = document.createElement( "option" );
@@ -382,6 +389,7 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_webtorrentMagnet( magnetLink )
 	{
+		//TODO: on connection playback time returns to 0:00. Fix.
 		_quality.onchange = null;
 
 		var videoElement = getCleanVideoContent_video();
@@ -396,16 +404,16 @@ wtsplayer.elementsController = function()
 			file.renderTo( videoElement, function( err, elem )
 			{
 				_video.restore();
-				_video.clear = function()
-				{
-					client.destroy();
-					videoElement.pause();
-					videoElement.src = '';
-					videoElement.load();
-					_video.innerHTML = '';
-				};
 			} );
 		} );
+		_video.clear = function()
+		{
+			client.destroy();
+			videoElement.pause();
+			videoElement.src = '';
+			videoElement.load();
+			_video.innerHTML = '';
+		};
 	}
 
 	function constructVideoContent_directSource( directSource )
@@ -660,6 +668,7 @@ wtsplayer.elementsController = function()
 					if ( !formedQualityList )
 					{
 						_quality.innerHTML     = '';
+						_quality.removeAttribute('disabled');
 						var availableQualities = player.getAvailableQualityLevels();
 						for ( var prop in qualities )
 						{
