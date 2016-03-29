@@ -219,37 +219,25 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
-		_video.safeClear = function()
+		var videoData = { muted : _video.muted || muted, volume : _video.volume || volume, currentTime : _video.currentTime || currentTime };
+
+		_video.play          = function()
 		{
-			_video.pause();
-			_video.dispatchEvent( new Event( 'waiting' ) );
-
-			var videoData = { muted : _video.muted, volume : _video.volume, currentTime : _video.currentTime };
-
-			_quality.onchange = null;
-			_quality.innerHTML = '';
-			var opt       = document.createElement( "option" );
-			opt.innerHTML = "Source";
-			opt.value     = 'source'
-			_quality.appendChild( opt );
-			_quality.disabled = "disabled";
-			_video.offset     = 0;
-
-			if ( _video.clear )
-			{
-				_video.clear();
-			}
-			else
-			{
-				_video.clear = function()
-				{
-					_video.innerHTML = '';
-				};
-				_video.clear();
-			}
-
-			return videoData;
 		};
+		_video.pause         = function()
+		{
+		};
+		_video.wait          = function()
+		{
+		};
+		_video.changeQuality = function( data )
+		{
+		};
+		_video.changeOffset  = function( n )
+		{
+		};
+
+		_video.dispatchEvent( new Event( 'waiting' ) );
 
 		Object.defineProperties( _video, {
 			"volume"      : {
@@ -291,23 +279,29 @@ wtsplayer.elementsController = function()
 			}
 		} );
 
-		_video.play          = function()
+		_quality.onchange = null;
+		_quality.innerHTML = '';
+		var opt       = document.createElement( "option" );
+		opt.innerHTML = "Source";
+		opt.value     = 'source';
+		_quality.appendChild( opt );
+		_quality.disabled = "disabled";
+		_video.offset     = 0;
+
+		if ( _video.clear )
 		{
-		};
-		_video.pause         = function()
+			_video.clear();
+		}
+		else
 		{
-		};
-		_video.wait          = function()
-		{
-		};
-		_video.changeQuality = function( data )
-		{
-		};
-		_video.changeOffset  = function( n )
-		{
+			_video.clear = function()
+			{
+				_video.innerHTML = '';
+			};
+			_video.clear();
 		}
 
-		_video.safeClear();
+		return videoData;
 	}
 
 	function constructVideoContent_youtubeDirect( videoLink )
@@ -433,7 +427,7 @@ wtsplayer.elementsController = function()
 
 	function getCleanVideoContent_video()
 	{
-		var videoData                    = _video.safeClear();
+		var videoData                    = constructVideoContent_dummy();
 		var videoElement                 = document.createElement( 'video' );
 		videoElement.style.width         = "100%";
 		videoElement.style.height        = "100%";
@@ -599,7 +593,7 @@ wtsplayer.elementsController = function()
 	//TODO:{NOT CRITICAL} frequent clicks may set time beyond bounds. Not affects the playback though.
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
-		var videoData = _video.safeClear();
+		var videoData = constructVideoContent_dummy();
 		var videoID   = parseYoutubeLinkIntoID( videoLink );
 		var player;
 		var div       = document.createElement( 'div' );
