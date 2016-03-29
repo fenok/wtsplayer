@@ -865,7 +865,7 @@ wtsplayer.elementsController = function()
 									console.log( "Custom canplay dispatched" );
 									_video.dispatchEvent( new Event( 'canplay' ) );
 								}
-							}, 1 );
+							}, 300 ); //Actual buffering should start within this delay (if any)
 							break;
 						case YT.PlayerState.BUFFERING:
 						case YT.PlayerState.ENDED:

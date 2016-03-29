@@ -29,7 +29,7 @@ wtsplayer.stateController = function()
 	//delay (ms) to be applied before actual play/pause to prevent possible microdesync
 	//it is about to change
 	//TODO: may be calculated depending on actual latency in future
-	var _magicDelay = 100; //200ms
+	var _magicDelay = 200; //200ms
 
 	//Maximum difference (ms) between currentTimes of players when they are considered to be synced
 	var _desyncInterval = 200; //100ms
