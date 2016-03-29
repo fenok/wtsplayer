@@ -114,7 +114,10 @@ wtsplayer.stateController = function()
 		if ( diff > _desyncInterval )
 		{
 			__elementsController.outputSystemMessage( "Desync: " + diff + " ms" );
-			__elementsController.seek( supposedTime );
+			if ( state.name !== 'pause' || state.previousStateName !== 'play' )
+			{
+				__elementsController.seek( supposedTime );
+			}
 			return ( false );
 		}
 		else
@@ -221,14 +224,30 @@ wtsplayer.stateController = function()
 			{
 				_delayedPlayPauseTimeout = setTimeout( function()
 				{
+					if ( timeCorrection === false && state.previousStateName === 'play' )
+					{
+						__elementsController.pause();
+						__elementsController.seek( state.playerTime + _magicDelay );
+					}
+					else
+					{
+						__elementsController.pause();
+					}
 					__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
-					__elementsController.pause();
 				}, offset );
 			}
 			else // magic delay was less than latency
 			{
+				if ( timeCorrection === false && state.previousStateName === 'play' )
+				{
+					__elementsController.pause();
+					__elementsController.seek( state.playerTime + _magicDelay );
+				}
+				else
+				{
+					__elementsController.pause();
+				}
 				__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
-				__elementsController.pause();
 			}
 		}
 		else //state.name === 'waiting'
