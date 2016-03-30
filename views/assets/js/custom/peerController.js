@@ -175,8 +175,8 @@ wtsplayer.peerController = function()
 							{ url : 'stun:stun.xten.com' },
 							{
 								url        : 'turn:numb.viagenie.ca',
-								credential : 'muazkh',
-								username   : 'webrtc@live.com'
+								credential : 'wtsplayer',
+								username   : 'fenok2112@gmail.com' //TODO: register wtsplayer@gmail.com user
 							},
 							{
 								url        : 'turn:192.158.29.39:3478?transport=udp',
