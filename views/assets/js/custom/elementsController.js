@@ -307,6 +307,7 @@ wtsplayer.elementsController = function()
 				configurable : true,
 				set          : function( n )
 				{
+					currentTime = n;
 				},
 				get          : function()
 				{
@@ -436,11 +437,18 @@ wtsplayer.elementsController = function()
 			// Torrents can contain many files. Let's use the first.
 			var file = torrent.files[ 0 ];
 
-			// Display the file by adding it to the DOM. Supports video, audio, image, etc. files
+			//TODO: display file without full download and restore video data before canplay
+			//without full download
 			file.renderTo( videoElement, function( err, elem )
 			{
 				_video.restore();
 			} );
+			//restore data before canplay
+			/*file.getBlobURL(function (err, url) {
+				if (err) console.error(err.toString());
+				videoElement.src = url;
+				_video.restore();
+			})*/
 		} );
 		_video.clear = function()
 		{
@@ -618,7 +626,7 @@ wtsplayer.elementsController = function()
 		{
 			videoElement.volume = videoData.volume;
 			videoElement.muted  = videoData.muted;
-			//videoElement.currentTime = videoData.currentTime / 1000;
+			videoElement.currentTime = videoData.currentTime / 1000;
 		};
 
 		_video.changeOffset = function( n )
@@ -744,6 +752,7 @@ wtsplayer.elementsController = function()
 				if ( !ended )
 				{
 					ended = true;
+					player.pauseVideo();
 					_video.dispatchEvent( new Event( 'ended' ) );
 				}
 			}
