@@ -197,7 +197,7 @@ wtsplayer.peerController = function()
 
 			_peer.on( 'open', function( id )
 			{
-				__elementsController.outputSystemMessage( "Your id is: " + id );
+				__elementsController.outputSystemMessage( "Подключение к серверу завершено" );
 				if ( _serverTimeSync )
 				{
 					syncTime_Server( function()
@@ -382,7 +382,7 @@ wtsplayer.peerController = function()
 		{
 			__elementsController.onPeerConnected( conn.peer );
 			console.log( "connectionHandler -- open" );
-			__elementsController.outputSystemMessage( "Connected to " + conn.peer );
+			//__elementsController.outputSystemMessage( "Connected to " + conn.peer );
 			conn.on( 'data', function( data )
 			{
 				console.log( "connectionHandler -- data" );
@@ -466,7 +466,7 @@ wtsplayer.peerController = function()
 			}
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.onPeerDeleted( conn.peer );
-			__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
+			//__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
 
 		conn.on( 'error', function( err )
@@ -537,7 +537,7 @@ wtsplayer.peerController = function()
 						if ( peersToConnect.length === 0 && initialStatesToGet === 0 && timeIsSynced )
 						{
 							_joinedRoom = true;
-							__elementsController.outputSystemMessage( "Connected, recieved, synced time" );
+							__elementsController.outputSystemMessage( "Вход в комнату выполнен" );
 							__stateController.onJoinedRoom();
 							joinedCallback( roomID ); //TODO: remove ASAP!!
 						}
@@ -617,7 +617,7 @@ wtsplayer.peerController = function()
 										}
 										else
 										{
-											__elementsController.outputSystemMessage( "Connection takes too long; most likely some peers are unreachable" );
+											//__elementsController.outputSystemMessage( "Connection takes too long; most likely some peers are unreachable" );
 											connectionProblemsCallback();
 										}
 									} );
@@ -886,7 +886,7 @@ wtsplayer.peerController = function()
 		GETFromServer( '/joinRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
 			function( data )
 			{
-				__elementsController.outputSystemMessage( data.type );
+				//__elementsController.outputSystemMessage( data.type );
 				switch ( data.type )
 				{
 					case _self.responses.JOINED:

@@ -113,7 +113,7 @@ wtsplayer.stateController = function()
 		var diff = Math.abs( supposedTime - __elementsController.getPlayerCurrentTime() );
 		if ( diff > _desyncInterval )
 		{
-			__elementsController.outputSystemMessage( "Desync: " + diff + " ms" );
+			//__elementsController.outputSystemMessage( "Desync: " + diff + " ms" );
 			if ( state.name !== 'pause' || state.previousStateName !== 'play' )
 			{
 				__elementsController.seek( supposedTime );
@@ -122,7 +122,7 @@ wtsplayer.stateController = function()
 		}
 		else
 		{
-			__elementsController.outputSystemMessage( "Sync: " + diff + " ms" );
+			//__elementsController.outputSystemMessage( "Sync: " + diff + " ms" );
 			return ( supposedTime - __elementsController.getPlayerCurrentTime() );
 		}
 	}
@@ -143,7 +143,7 @@ wtsplayer.stateController = function()
 		{
 			if ( _waitingStates[ prop ] === true )
 			{
-				__elementsController.outputSystemMessage( "Tried to switch from waiting, denied (not all peers ready)" );
+				//__elementsController.outputSystemMessage( "Tried to switch from waiting, denied (not all peers ready)" );
 				console.log( _waitingStates );
 				return;
 			}
@@ -189,7 +189,7 @@ wtsplayer.stateController = function()
 		console.log( "Accepted:" );
 		console.log( state );
 
-		__elementsController.outputSystemMessage( state.name );
+		//__elementsController.outputSystemMessage( state.name );
 
 		//New state is being applied, so we need to clear the timeout to prevent unexpected changes
 		clearTimeout( _delayedPlayPauseTimeout );
@@ -233,7 +233,7 @@ wtsplayer.stateController = function()
 					{
 						__elementsController.pause();
 					}
-					__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
+					//__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
 				}, offset );
 			}
 			else // magic delay was less than latency
@@ -247,7 +247,7 @@ wtsplayer.stateController = function()
 				{
 					__elementsController.pause();
 				}
-				__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
+				//__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
 			}
 		}
 		else //state.name === 'waiting'

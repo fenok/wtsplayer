@@ -118,12 +118,22 @@ wtsplayer.elementsController = function()
 
 	function onVideoLoading()
 	{
-		//TODO: hide controls
+		//_self.outputSystemMessage("Видео загружается");
+		var nodesToHide = document.getElementsByClassName('video-sensitive' );
+		for(var i = 0; i < nodesToHide.length; ++i)
+		{
+			nodesToHide[i ].disabled = 'disabled';
+		}
 	}
 
 	function onVideoLoaded()
 	{
-		//TODO: show controls
+		_self.outputSystemMessage("Видео загружено");
+		var nodesToHide = document.getElementsByClassName('video-sensitive' );
+		for(var i = 0; i < nodesToHide.length; ++i)
+		{
+			nodesToHide[i ].removeAttribute('disabled');
+		}
 	}
 
 	_playPauseButton.addEventListener( 'click', function()
@@ -287,6 +297,7 @@ wtsplayer.elementsController = function()
 				configurable : true,
 				set          : function( n )
 				{
+					volume = n;
 				},
 				get          : function()
 				{
@@ -297,6 +308,7 @@ wtsplayer.elementsController = function()
 				configurable : true,
 				set          : function( n )
 				{
+					muted = n;
 				},
 				get          : function()
 				{
@@ -430,6 +442,7 @@ wtsplayer.elementsController = function()
 		_quality.onchange = null;
 
 		var videoElement = getCleanVideoContent_video();
+		_video.restore();
 
 		var client = new WebTorrent();
 		client.add( magnetLink, function( torrent )
@@ -441,7 +454,6 @@ wtsplayer.elementsController = function()
 			//without full download
 			file.renderTo( videoElement, function( err, elem )
 			{
-				_video.restore();
 			} );
 			//restore data before canplay
 			/*file.getBlobURL(function (err, url) {
@@ -1282,10 +1294,12 @@ wtsplayer.elementsController = function()
 				newPeerSrc( from, data );
 				break;
 			case __peerController.sending.NICK:
+				_self.outputSystemMessage(_peers[ from ][ _peerVars.NICK ] + " теперь известен как " + data);
 				_peers[ from ][ _peerVars.NICK ]               = data;
 				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data;
 				break;
 			case __peerController.sending.INITIAL_INFO:
+				_self.outputSystemMessage("В комнату зашел " + data[ 0 ]);
 				_peers[ from ][ _peerVars.NICK ]               = data[ 0 ];
 				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data[ 0 ];
 				newPeerSrc( from, data[ 1 ] );
@@ -1331,6 +1345,7 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.onPeerDeleted = function( id )
 	{
+		_self.outputSystemMessage(_peers[id][_peerVars.NICK] + " вышел");
 		if ( _peers[ id ] )
 		{
 			if ( _peers[ id ][ _peerVars.AUDIO ] )
