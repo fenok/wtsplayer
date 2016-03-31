@@ -160,6 +160,7 @@ h1 {
     border-top: 1px solid #aaa;
     text-align: center;
     cursor: pointer;
+	overflow: hidden;
 }
 
 .korpus1 > span:last-of-type {
@@ -168,6 +169,7 @@ h1 {
 
 .korpus1 > div {
     position: absolute;
+	top: 28px;
     box-sizing: border-box;
     height: 100px;
     width: 100%;

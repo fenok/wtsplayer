@@ -1526,7 +1526,6 @@ wtsplayer.elementsController = function()
 		{
 			_session.password = _passwordInput.value;
 		}
-
 		if ( _videoSrcTabs == "inputLink" )
 		{
 			if ( _inputLink.value !== "" && _session.video_src !== _inputLink.value )
@@ -1570,6 +1569,7 @@ wtsplayer.elementsController = function()
 				_session.video_src  = _peersSrc.value;
 				_session.type_src   = data.dataset.type;
 				_session.video_info = data.dataset.peer;
+				_videoSrcChange     = true;
 			}
 		}
 

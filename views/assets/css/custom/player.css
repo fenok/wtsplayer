@@ -82,15 +82,29 @@ input:focus, select:focus {
     width: calc(100% - 5px);
     margin: 0;
     position: relative;
-    top: -3.5px;
+    top: -2.5px;
 }
 
 #quality {
+	top: -3px;
+	position: relative;
     width: 70px;
-    border-radius: 5px;
+	box-shadow: 0 0 1px 1px #fff, 0 0 0 2px #333;
+	margin: 1px 2px;
+	height: 20px;
+	border: none;
+	color: #fff;
+	border-radius: 5px;
+	text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;
+	background-color: transparent;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+    text-indent: 0.01px; 
 }
 
 #playerCurrentTimeOutput {
+	position: relative;
+	top: -2px;
     color: #fff;
     text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;
 }
@@ -128,14 +142,15 @@ input:focus, select:focus {
 /* Стилизация слайдеров */
 #playerSeekRange::-moz-range-track {
     border-radius: 8px;
-    height: 7px;
-    border: 1px solid #bdc3c7;
+    height: 9px;
+	padding: 0;
+    border: 1px solid #333;
     background-color: #fff;
 }
 
 #playerSeekRange::-moz-range-thumb {
     background: #ecf0f1;
-    border: 1px solid #bdc3c7;
+    border: 1px solid #333;
     width: 20px;
     height: 20px;
     border-radius: 10px;
@@ -145,15 +160,16 @@ input:focus, select:focus {
 #playerSeekRange {
     -webkit-appearance: none;
     border-radius: 8px;
-    height: 7px;
-    border: 1px solid #bdc3c7;
+    height: 9px;
+	padding: 0;
+    border: 1px solid #333;
     background-color: #fff;
 }
 
 #playerSeekRange::-webkit-slider-thumb {
     -webkit-appearance: none;
     background-color: #ecf0f1;
-    border: 1px solid #bdc3c7;
+    border: 1px solid #333;
     width: 20px;
     height: 20px;
     border-radius: 10px;
@@ -223,9 +239,11 @@ input:focus, select:focus {
 #vol {
     display: inline;
     position: relative;
-    top: 1px;
+	top: -2px;
 }
-
+#volume_button{
+	vertical-align: bottom;
+}
 #vol:hover #volume_area {
     display: block !important;
 }
@@ -247,8 +265,6 @@ input:focus, select:focus {
 
 #peerListButton {
     height: 28px;
-    position: relative;
-    top: 2px;
 }
 
 #peerList {

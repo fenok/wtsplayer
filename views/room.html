@@ -69,7 +69,7 @@
             <td><input id="addOffsetButton" type="image" src="prev.svg"></td>
             <td><input id="subOffsetButton" type="image" src="next.svg"></td>
             <td width="100%"><input id="playerSeekRange" class="playerSliders" type="range" value="0" step="0.01"></td>
-            <td><span id="playerCurrentTimeOutput" style="width:50px">00:00</span></td>
+            <td><span id="playerCurrentTimeOutput">00:00</span></td>
             <td>
                 <div id="vol">
                     <div id="volume_area">
@@ -78,9 +78,11 @@
                     <input type="image" id="volume_button" src="/volume.svg" height="25px">
                 </div>
             </td>
-            <td><select id="quality">
-                <option>Качество</option>
-            </select></td>
+            <td>
+				<div id="parentQual">
+					<select id="quality"><option>Качество</option></select>
+				</div>
+			</td>
             <td><input id="peerListButton" type="image" src="people.svg"></td>
             <td><input id="fullscreen" type="image" src="full.svg"></td>
             <td><input id="backOverlayBut" type="image" src="back.svg"></td>
