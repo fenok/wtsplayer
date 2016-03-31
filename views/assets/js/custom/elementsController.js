@@ -20,7 +20,6 @@ wtsplayer.elementsController = function()
 			dropAllConnections  : null,
 			getRoomStatus       : null,
 			getRoomID           : null,
-			leaveRoom           : null,
 			joinVoiceChat       : null,
 			leaveVoiceChat      : null,
 			responses           : null,
@@ -58,6 +57,7 @@ wtsplayer.elementsController = function()
 	var _overlay         = document.getElementById( "overlay" );
 	var _joinButton      = document.getElementById( "joinButton" );
 	var _addOffsetButton = document.getElementById( "addOffsetButton" );
+	var _delOffsetButton = document.getElementById( "delOffsetButton" );
 	var _subOffsetButton = document.getElementById( "subOffsetButton" );
 
 	var _inputLink = document.getElementById( "inputLink" );
@@ -218,6 +218,11 @@ wtsplayer.elementsController = function()
 	_addOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset + 100 );
+	} );
+	
+	_delOffsetButton.addEventListener( 'click', function()
+	{
+		_video.changeOffset( 0 );
 	} );
 
 	_subOffsetButton.addEventListener( 'click', function()
@@ -416,25 +421,35 @@ wtsplayer.elementsController = function()
 			var obj            = parse( text );
 			_quality.innerHTML = "";
 			_quality.removeAttribute( 'disabled' );
-			for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
+			if(obj.url_encoded_fmt_stream_map)
 			{
-				var opt       = document.createElement( "option" );
-				opt.innerHTML = obj.url_encoded_fmt_stream_map[ i ].quality;
-				opt.value     = obj.url_encoded_fmt_stream_map[ i ].url;
-				_quality.appendChild( opt );
+				for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
+				{
+					var opt       = document.createElement( "option" );
+					opt.innerHTML = obj.url_encoded_fmt_stream_map[ i ].quality;
+					opt.value     = obj.url_encoded_fmt_stream_map[ i ].url;
+					_quality.appendChild( opt );
+				}
+
+				videoElement.src = _quality.value;
+
+				_video.restore();
+				_video.clear = function()
+				{
+					videoElement.pause();
+					videoElement.src = "";
+					videoElement.load();
+					_video.innerHTML = '';
+				}
 			}
-
-			videoElement.src = _quality.value;
-
-			_video.restore();
-			_video.clear = function()
+			else 
 			{
-				videoElement.pause();
-				videoElement.src = "";
-				videoElement.load();
-				_video.innerHTML = '';
-			};
-		} );
+				_self.outputSystemMessage("Не удалось загрузить видео");
+			}
+		}, function(err)
+		{
+			_self.outputSystemMessage("Не удалось загрузить видео");
+		});
 	}
 
 	function constructVideoContent_webtorrentMagnet( magnetLink )
@@ -1233,7 +1248,11 @@ wtsplayer.elementsController = function()
 		__peerController.getRoomID( function( id )
 		{
 			_roomIdInput.value = id;
-		} )
+		},function(err)
+		{
+			alert("Ошибка получения идентификатора комнаты\n"+err.toString());
+			location.reload();
+		})
 	}
 
 	//what -- peerController.sending enum
@@ -1498,14 +1517,21 @@ wtsplayer.elementsController = function()
 		_overlay.className  = "error";
 	}
 
+	function connectionProblems()
+	{
+		_self.outputSystemMessage("Подключение выполняется дольше обычного");
+	}
+	
+	function joinRoomError(err)
+	{
+		alert("Ошибка при подключении к комнате\n"+err.toString());
+		location.reload();
+	}
+	
 	function joinRoomWithPassword()
 	{
 		_wrongPassword.className = "close"; //закрыть надпись о неверном пароле
-		__peerController.joinRoom( window.location.hash.substr( 1 ), _passwordInput.value, [ __peerController.responses.JOINED ], enterRoom,
-			function()
-			{
-				//connectionProblems
-			},
+		__peerController.joinRoom( window.location.hash.substr( 1 ), _passwordInput.value, [ __peerController.responses.JOINED ], enterRoom, connectionProblems,
 			function( response )//unexpected response
 			{
 				if ( response === __peerController.responses.WRONG_PASSWORD )
@@ -1520,7 +1546,7 @@ wtsplayer.elementsController = function()
 				{
 					__peerController.dropAllConnections( start );
 				}
-			} )
+			},joinRoomError )
 	}
 
 	function createRoom()
@@ -1528,15 +1554,11 @@ wtsplayer.elementsController = function()
 		processInputs();
 		_wrongId.className = "close"; //закрыть надпись о неверном idRoom
 		_title.innerHTML = "Создать комнату";
-		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom,
-			function()
-			{
-				//connectionProblems
-			},
+		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom,connectionProblems,
 			function()//unexpected response
 			{
 				_wrongId.className = ""; //вывод надписи о неверном idRoom
-			} )
+			}, joinRoomError )
 	}
 
 	function processInputs() //здесь происходит изменение сессии (не инициализация)
@@ -1558,15 +1580,19 @@ wtsplayer.elementsController = function()
 				_inputLink.value    = _inputLink.value.trim();
 				_session.video_src  = _inputLink.value;
 				_session.video_info = "";
-				if ( parseYoutubeLinkIntoID( _inputLink.value ) )
-				{
-					_session.type_src = "youtubeID_embedded"; // или "youtubeID_direct"
-				}
-				else if ( _inputLink.value.indexOf( "magnet:?" ) === 0 )
+				if ( _inputLink.value.indexOf( "magnet:?" ) === 0 )
 				{
 					_session.type_src = "magnet";
 				}
-				else
+				else if ( _inputLink.value.indexOf( "pull:" ) === 0 )
+				{
+					_session.type_src = "youtubeID_direct";
+				}
+				else if ( parseYoutubeLinkIntoID( _inputLink.value ) )
+				{
+					_session.type_src = "youtubeID_embedded";
+				}
+				else 
 				{
 					_session.type_src = "globalURL";
 				}
@@ -1726,7 +1752,11 @@ wtsplayer.elementsController = function()
 				_title.innerHTML     = "Создание комнаты";
 				_joinButton.onclick  = createRoom;
 				_overlay.className   = "create";
-			} );
+			},function(err)
+			{
+				alert("Ошибка получения идентификатора комнаты\n"+err.toString());
+				location.reload();
+			});
 		}
 		else
 		{
@@ -1736,11 +1766,7 @@ wtsplayer.elementsController = function()
 				__peerController.joinRoom( _session.room_id, _session.password, [
 						__peerController.responses.JOINED,
 						__peerController.responses.CREATED
-					], enterRoom,
-					function()
-					{
-						//connectionProblems
-					},
+					], enterRoom, connectionProblems,
 					function( response )//unexpected response
 					{
 						if ( response === __peerController.responses.WRONG_PASSWORD )
@@ -1750,7 +1776,7 @@ wtsplayer.elementsController = function()
 						{
 							__peerController.dropAllConnections( start );
 						}
-					} )
+					}, joinRoomError )
 			}
 			else
 			{
@@ -1760,11 +1786,7 @@ wtsplayer.elementsController = function()
 				{
 					if ( status === __peerController.responses.PUBLIC_ROOM )
 					{
-						__peerController.joinRoom( desiredRoomID, '', [ __peerController.responses.JOINED ], enterRoom,
-							function()
-							{
-								//connectionProblems
-							},
+						__peerController.joinRoom( desiredRoomID, '', [ __peerController.responses.JOINED ], enterRoom,	connectionProblems,
 							function( response )//unexpected response
 							{
 								if ( response === __peerController.responses.WRONG_PASSWORD )
@@ -1777,7 +1799,7 @@ wtsplayer.elementsController = function()
 								{
 									__peerController.dropAllConnections( start );
 								}
-							} )
+							},joinRoomError	)
 					}
 					else if ( status === __peerController.responses.PRIVATE_ROOM )
 					{
@@ -1790,7 +1812,11 @@ wtsplayer.elementsController = function()
 					{
 						error404();
 					}
-				} )
+				} , function(err)
+				{
+					alert("Не удалось получить статус комнаты\n"+err.toString());
+					location.reload();
+				})
 			}
 		}
 		//console.log(window.location.hash);
@@ -1906,7 +1932,11 @@ wtsplayer.elementsController = function()
 	{
 
 		clear();
-		__peerController.connectToServer( init );
+		__peerController.connectToServer( init, function(err)
+		{
+			alert("Ошибка соединения с сервером\n"+err.toString());
+			location.reload();			
+		});
 	}
 
 	function clear()

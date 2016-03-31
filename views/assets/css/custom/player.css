@@ -100,6 +100,9 @@ input:focus, select:focus {
 	-webkit-appearance: none;
 	-moz-appearance: none;
     text-indent: 0.01px; 
+	background-image: url('prev.svg');
+    background-position: right center;
+    background-repeat: no-repeat;
 }
 
 #playerCurrentTimeOutput {

@@ -7,8 +7,7 @@
     min-width: 500px !important;
     width: 100%;
     height: 100%;
-    background-color: gray;
-    opacity: 0.9;
+    background-color: rgba(136,136,136,0.9);
     top: 0;
     left: 0;
     display: flex;
@@ -18,6 +17,8 @@
 }
 
 #overlayContent {
+	position: relative;
+	top: -12px;
     width: 400px;
     text-align: center;
     border-radius: 10px;
@@ -36,8 +37,11 @@ body {
 h1 {
     margin-bottom: 0;
 }
+h3 {
+    margin-bottom: 5px;
+}
 
-@media screen and (max-height: 550px) {
+@media screen and (max-height: 600px) {
     .create #overlayContent {
         width: 800px;
     }
@@ -56,19 +60,19 @@ h1 {
     }
 }
 
-@media screen and (max-height: 350px) {
-    .join #overlayContent {
-        width: 800px;
-    }
+@media screen and (max-height: 436px) {
 
-    .join #overlayContent > div:not(#typeRoom) {
-        display: inline-block;
-        width: 49%;
+    #overlay.create{
+		min-width:  800px!important;
+		min-height: 436px!important;
+	}
+	#overlay.join {
+		min-height: 380px!important;
     }
 
     @media screen and (min-width: 1205px) {
-        .create {
-            min-height: 400px;
+        #overlay.create {
+            min-height: 370px!important;
         }
 
         .create #overlayContent {
@@ -79,20 +83,45 @@ h1 {
             width: 33% !important;
         }
 
-    }
-    .create #overlayContent {
-        margin-top: 0;
-    }
-
-    #overlay.create, #overlay.join {
-        min-width: 800px !important;
-    }
+    }  
 }
 
 #overlayContent > div {
     vertical-align: top;
 }
 
+#logo{
+	border-radius: 7px 7px 0 0;
+	background-color: #0bf;
+	margin: 0;
+}
+#logo a{
+	text-decoration: none;
+}
+#logo img{
+	height: 55px;
+	letter-spacing: -1em;
+}
+#logo span{
+	position: relative;
+	top: -5px;
+	left: -7px;
+	font-family: Verdana;
+	font-size: 60px;
+	font-weight: bold;
+	color: #FFFFFF;
+	letter-spacing: -0.3em;
+	text-shadow: -0.05em 0px 0.07em #000000;
+}
+#logo span:nth-of-type(n+4)
+{
+	color: #F00000;
+	letter-spacing: -0.23em;
+}
+#logo span:nth-of-type(3)
+{
+	letter-spacing: 0;
+}
 /*.craete .join .password .error*/
 .password #overlayContent > *:not(#typeRoom), .error #overlayContent *,
 .password #typeRoom *:not(#wrongPassword),
