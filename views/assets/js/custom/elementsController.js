@@ -248,12 +248,13 @@ wtsplayer.elementsController = function()
 
 	 construct quality lists in 'constructors', display them on the player GUI
 	 */
+	//TODO: on connection to ended video playback time is being set to 0:00. Fix.
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
 		volume      = volume || 1;
 		muted       = muted || false;
-		currentTime = currentTime || 0
+		currentTime = currentTime || 0;
 
 		_videoLoaded = false;
 		onVideoLoading();
@@ -289,7 +290,7 @@ wtsplayer.elementsController = function()
 				},
 				get          : function()
 				{
-					return (volume || 1);
+					return volume;
 				}
 			},
 			"muted"       : {
@@ -299,7 +300,7 @@ wtsplayer.elementsController = function()
 				},
 				get          : function()
 				{
-					return (muted || false);
+					return muted;
 				}
 			},
 			"currentTime" : {
@@ -309,14 +310,14 @@ wtsplayer.elementsController = function()
 				},
 				get          : function()
 				{
-					return (currentTime || 0);
+					return currentTime;
 				}
 			},
 			"duration"    : {
 				configurable : true,
 				get          : function()
 				{
-					return (0);
+					return 0;
 				}
 			}
 		} );
@@ -425,7 +426,6 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_webtorrentMagnet( magnetLink )
 	{
-		//TODO: on connection playback time returns to 0:00. Fix.
 		_quality.onchange = null;
 
 		var videoElement = getCleanVideoContent_video();
@@ -769,7 +769,7 @@ wtsplayer.elementsController = function()
 					lastCurrentTime = player.getCurrentTime();
 					_video.dispatchEvent( new Event( 'timeupdate' ) );
 				}
-			}, 100 );
+			}, 500 );
 
 			Object.defineProperties( _video, {
 				"volume"      : {
