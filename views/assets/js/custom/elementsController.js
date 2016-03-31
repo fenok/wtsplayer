@@ -336,12 +336,12 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			_video.clear = function()
-			{
-				_video.innerHTML = '';
-			};
-			_video.clear();
+			_video.innerHTML = '';
 		}
+		_video.clear = function()
+		{
+			_video.innerHTML = '';
+		};
 
 		return videoData;
 	}
