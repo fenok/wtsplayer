@@ -1607,7 +1607,7 @@ wtsplayer.elementsController = function()
 
 	function processInputs() //здесь происходит изменение сессии (не инициализация)
 	{
-		if (( _nick.value !== _session.nick )||( _follow.checked && _session.video_info ))
+		if ( _nick.value !== _session.nick )
 		{
 			_session.nick = _nick.value;
 			__peerController.send( __peerController.sending.NICK, _session.nick );//sending on creation/joining/return. sending on creation does nothing.
@@ -1657,13 +1657,15 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			if ( _peersSrc.value && _session.video_src !== _peersSrc.value )
+			if ( _peersSrc.value && ( _session.video_src !== _peersSrc.value || _session.video_info === "" ))
 			{
 				var data            = document.querySelector( "#peersSrc option:checked" );
+				if ( _session.video_src !== _peersSrc.value )
+					_videoSrcChange = true;
 				_session.video_src  = _peersSrc.value;
 				_session.type_src   = data.dataset.type;
 				_session.video_info = data.dataset.peer;
-				_videoSrcChange     = true;
+				
 			}
 		}
 
@@ -1692,6 +1694,7 @@ wtsplayer.elementsController = function()
 
 		if ( _session.video_src === '' )
 		{
+			document.querySelector( "span[data-type='peers']" ).click();
 			_title.innerHTML    = "";
 			_joinButton.value   = "Войти в комнату";
 			_joinButton.onclick = function()
@@ -1779,11 +1782,20 @@ wtsplayer.elementsController = function()
 				_nick.value   = id;
 			}
 		}
-		if ( _session.type_src !== '' && _session.type_src !== 'localURL' )
+		if ( _session.type_src !== '' )
 		{
-			//document.querySelector( "span[data-type ='" + _session.type_src + "']" ).click(); - придумать как реалтизовать
-			_inputLink.value = _session.video_src;
+			if ( _session.type_src !== 'localURL' )
+			{
+				_inputLink.value = _session.video_src;
+				document.querySelector( "span[data-type='inputLink']" ).click();
+			}
+			else
+			{
+				document.querySelector( "span[data-type='localURL']" ).click();
+			}
+			
 		}
+		
 		constructVideoContent_dummy();
 		if ( window.location.hash === '' )
 		{
@@ -1963,14 +1975,24 @@ wtsplayer.elementsController = function()
 		}
 	} );
 
-	var a = document.querySelectorAll( ".korpus1 > span" );
-	for ( var i = 0; i < a.length; i++ )
+	function tabs()
 	{
-		a[ i ].onclick = function()
+		var a = document.querySelectorAll( ".korpus1 > span" );
+		for ( var i = a.length-1; i >= 0; i-- )
 		{
-			_videoSrcTabs = this.dataset.type
-		};
-	}
+			a[ i ].onclick = function()
+			{
+				var n = parseInt(this.dataset.num);
+				_videoSrcTabs = this.dataset.type;
+				document.querySelector(".korpus1 div:nth-of-type("+n+")").style.visibility = "visible";
+				for (var j = n+1; j <= a.length; j++ )
+				{
+					document.querySelector(".korpus1 div:nth-of-type("+j+")").style.visibility = "hidden";
+				}
+			};
+		}
+	};
+	tabs();
 
 	function start()
 	{

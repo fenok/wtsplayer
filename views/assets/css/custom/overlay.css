@@ -225,24 +225,6 @@ h3 {
 
 .korpus1 > div:nth-of-type(n+2) {
     visibility: collapse;
-    transition: 999999s;
-    -webkit-transition: 999999s;
-}
-
-.korpus1 > span + span:active + span ~ div:nth-of-type(2),
-.korpus1 > span + span + span:active ~ div:nth-of-type(3) {
-    visibility: visible;
-    transition: .01s;
-    -webkit-transition: .01s;
-}
-
-.korpus1 > span:active + span + span ~ div:nth-of-type(2),
-.korpus1 > span:active + span + span ~ div:nth-of-type(3),
-.korpus1 > span + span:active + span ~ div:nth-of-type(3),
-.korpus1 > span + span + span:active ~ div:nth-of-type(2) {
-    visibility: hidden;
-    -webkit-transition: .01s;
-    transition: .01s;
 }
 
 .korpus1 > div:before {
