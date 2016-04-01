@@ -215,19 +215,38 @@ wtsplayer.elementsController = function()
 		}
 	}
 
+	function showOffset()
+	{
+		if ( _video.offset > 0 )
+		{
+			_delOffsetButton.innerHTML = "-"+( _video.offset / 1000 );
+		}
+		else if ( _video.offset == 0 )
+		{
+			_delOffsetButton.innerHTML = "0";
+		}
+		else
+		{
+			_delOffsetButton.innerHTML = "+"+( (_video.offset / 1000)*(-1) );
+		}
+	}
+	
 	_addOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset + 100 );
+		showOffset();
 	} );
 	
 	_delOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( 0 );
+		showOffset();
 	} );
 
 	_subOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset - 100 );
+		showOffset();
 	} );
 
 	/*
@@ -348,6 +367,7 @@ wtsplayer.elementsController = function()
 		_quality.appendChild( opt );
 		_quality.disabled = "disabled";
 		_video.offset     = 0;
+		_delOffsetButton.innerHTML = "0";
 
 		if ( _video.clear )
 		{
@@ -1563,7 +1583,7 @@ wtsplayer.elementsController = function()
 
 	function processInputs() //здесь происходит изменение сессии (не инициализация)
 	{
-		if ( _nick.value !== _session.nick )
+		if (( _nick.value !== _session.nick )||( _follow.checked && _session.video_info ))
 		{
 			_session.nick = _nick.value;
 			__peerController.send( __peerController.sending.NICK, _session.nick );//sending on creation/joining/return. sending on creation does nothing.
@@ -1932,11 +1952,11 @@ wtsplayer.elementsController = function()
 	{
 
 		clear();
-		__peerController.connectToServer( init, function(err)
-		{
+		__peerController.connectToServer( init/*, function(err)  // на данный момент вызывается при перезагрузке страницы
+		{														 // с ошибкой "Lost connection to server"
 			alert("Ошибка соединения с сервером\n"+err.toString());
 			location.reload();			
-		});
+		}*/);
 	}
 
 	function clear()
@@ -1949,6 +1969,7 @@ wtsplayer.elementsController = function()
 		_volumeButton.src            = "volume.svg";
 		_seekRange.value             = 0;
 		_currentTimeOutput.innerHTML = "00:00";
+		_videoSrcTabs 				 = 'inputLink';
 	}
 
 	window.onload = start;
@@ -1962,7 +1983,7 @@ wtsplayer.elementsController = function()
 			__peerController.fakeReload( function()
 			{
 				clear();
-				init()
+				init();
 			}, location.reload );
 		}
 	};
