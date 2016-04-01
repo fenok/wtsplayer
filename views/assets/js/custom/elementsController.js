@@ -1128,7 +1128,7 @@ wtsplayer.elementsController = function()
 	_chatParent.onmouseout = function()
 	{
 		_mouseOnChat = false;
-		setTimeout(function(){if (!_mouseOnChat) _chatParent.className = "" },100)
+		setTimeout(function(){if (!_mouseOnChat) { _chatParent.className = ""; _scrollbar.toTop(); }},100)
 	}
 
 	function scrollbarTop( scrollbox )
@@ -1212,6 +1212,11 @@ wtsplayer.elementsController = function()
 			{
 				return false;
 			};
+			
+			o.toTop = function()
+			{
+				scrollbox.scrollTop = 0;
+			}
 		}
 		function getCoords( elem )
 		{
@@ -1223,6 +1228,7 @@ wtsplayer.elementsController = function()
 			};
 
 		}
+		
 
 		return o;
 	}
