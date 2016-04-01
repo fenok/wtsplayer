@@ -71,12 +71,13 @@ wtsplayer.elementsController = function()
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
 	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
-
+ 
 	var _videoLoaded;
 	var _seekRangeIsDragged = false;
+	var _muteVideo;
 
 	var _session;
-	var _muteVideo;
+	var _noReload 	  = true;
 	var _audioStream;
 	var _scrollbar;
 	var _videoSrcChange;
@@ -1953,24 +1954,29 @@ wtsplayer.elementsController = function()
 			_videoSrcTabs = this.dataset.type
 		};
 	}
-	var onreload = true;
+
 	function start()
 	{
 
 		clear();
-		__peerController.connectToServer( init, function(err)  // на данный момент вызывается при перезагрузке страницы
-		{														 // с ошибкой "Lost connection to server"
-			if (onreload)
+		__peerController.connectToServer( init, function(err)
+		{
+			if (_noReload)
 			{
 				alert( "Ошибка соединения с сервером\n" + err.toString() );
 				location.reload();
 			}
 		});
 	}
+	
+	window.onbeforeunload = function()
+	{
+		_noReload = false;
+	};
 
 	function clear()
 	{
-		_inputLink.value             = "https://youtu.be/-npBowNYDfg";
+		_inputLink.value             = "http://www.youtube.com/watch?v=c6rP-YP4c5I";
 		_localURL.value              = "";
 		_peersSrc.innerHTML          = "";
 		_muteVideo                   = false;
@@ -2001,12 +2007,9 @@ wtsplayer.elementsController = function()
 	{
 		_scrollbar.init();
 	}
-
+	
 	//Initializing _playPauseButton object
 	switchToWaiting();
-	window.onbeforeunload = function(evnt)
-	{
-		//onreload = false;
-	};
+	
 };
 //TODO: make sure that everything deletes properly
