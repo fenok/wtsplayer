@@ -11,7 +11,7 @@ html, body {
 }
 
 input[type='image']:active{
-    transform: scale(0.9, 0.9);
+    transform: scale(0.9);
 }
 
 input:focus, select:focus {
@@ -55,6 +55,10 @@ input:focus, select:focus {
 /* Элементы управления */
 #videoControls input[type="image"] {
     height: 25px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+#videoControls span {
     -moz-user-select: none;
     -webkit-user-select: none;
 }
@@ -133,11 +137,13 @@ td{
     background-position: right center;
     background-repeat: no-repeat;
 }
-
 @-moz-document url-prefix() {
     #quality{
         padding: 0!important;
     }
+}
+#quality option{
+	background-color: #000;
 }
 
 #playerCurrentTimeOutput {
@@ -324,19 +330,26 @@ td{
     top: 4px;
     width: 80%;
     text-align: center;
+	height: 31px;
 }
 
 #player #send:hover #sendMessageButton,
-#chatParent:hover + #send #sendMessageButton {
+#player #send:hover #leftBorder,
+#chatParent:hover + #send #sendMessageButton,
+#chatParent:hover + #send #leftBorder {
     top: 0;
 }
 
-#sendMessageButton {
-    height: 100%;
-    box-shadow: -2px 0 0px 0px #444, -3px 0 0px 0px #fff, -5px 0 0px 0px #555;
+#sendMessageButton, #leftBorder{
+    height: calc( 100% - 3px );
     position: absolute;
     right: 4px;
     top: -35px;
+}
+#leftBorder{
+	width: 3px;
+	right: 31px;
+	box-shadow: -2px 0 0px 0px #444, -3px 0 0px 0px #fff, -5px 0 0px 0px #555;
 }
 
 #player #send:hover #messageInput,
@@ -346,7 +359,6 @@ td{
 }
 
 #messageInput {
-
     padding-right: 40px;
     box-sizing: border-box;
     width: 100%;
@@ -367,7 +379,6 @@ td{
     top: 35px;
     width: 80%;
     margin-left: 10%;
-    /*transition: box-shadow 0s step-end 0.5s;*/
     box-shadow: 0 0 0 0 #333;
     border-radius: 5px;
 }
@@ -389,10 +400,6 @@ td{
     min-height: 6px;
 }
 
-#chatParent:hover {
-    box-shadow: 0 0 1px 1px #333, 0 0 0 2px #fff, 0 0 1px 3px #333;
-}
-
 #chat {
     height: 100%;
     width: 100%;
@@ -406,10 +413,9 @@ td{
     word-wrap: break-word;
 }
 
-#chatParent div {
-    /*transition: opacity 0s step-end 0.5s;*/
+#chatParent.chat {
+    box-shadow: 0 0 1px 1px #333, 0 0 0 2px #fff, 0 0 1px 3px #333;
 }
-
-#chatParent:hover div {
+#chatParent.chat div {
     opacity: 1 !important;
 }

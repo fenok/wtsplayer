@@ -42,10 +42,11 @@ wtsplayer.elementsController = function()
 	var _seekRange         = document.getElementById( "playerSeekRange" );
 	var _currentTimeOutput = document.getElementById( "playerCurrentTimeOutput" );
 	var _sendMessageButton = document.getElementById( "sendMessageButton" );
-	var _messageInput      = document.getElementById( "messageInput" );
 	var _fullscreenButton  = document.getElementById( "fullscreen" );
 	var _backOvervayBut    = document.getElementById( "backOverlayBut" );
 	var _quality           = document.getElementById( "quality" );
+	var _messageInput      = document.getElementById( "messageInput" );
+	var _chatParent        = document.getElementById( "chatParent" );
 
 	var _generateId      = document.getElementById( "generateId" );
 	var _roomIdInput     = document.getElementById( "roomId" );
@@ -75,7 +76,7 @@ wtsplayer.elementsController = function()
 	var _videoLoaded;
 	var _seekRangeIsDragged = false;
 	var _muteVideo;
-
+	var _mouseOnChat;
 	var _session;
 	var _noReload 	  = true;
 	var _audioStream;
@@ -1005,7 +1006,7 @@ wtsplayer.elementsController = function()
 			if ( e.which == "32" )
 			{
 				_playPauseButton.click();
-			} else
+			} else if ( e.which != "0" )
 			{
 				_messageInput.focus();
 				if ( !e.keyCode )
@@ -1118,13 +1119,23 @@ wtsplayer.elementsController = function()
 	{
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
 	};
+	
+	_chatParent.onmouseover = function(event)
+	{
+		_mouseOnChat = true;
+		setTimeout(function(){if (_mouseOnChat) _chatParent.className = "chat" },500)
+	}
+	_chatParent.onmouseout = function()
+	{
+		_mouseOnChat = false;
+		setTimeout(function(){if (!_mouseOnChat) _chatParent.className = "" },100)
+	}
 
 	function scrollbarTop( scrollbox )
 	{
 		o           = {};
-		o.scrollbox = document.getElementById( scrollbox );
-		o.scrollbar = o.scrollbox.children[ 0 ];
-		o.scrollbox = o.scrollbox.children[ 1 ];
+		o.scrollbar = scrollbox.children[ 0 ];
+		o.scrollbox = scrollbox.children[ 1 ];
 		o.thumbElem = o.scrollbar.children[ 0 ];
 		o.init      = function()
 		{
@@ -1216,7 +1227,7 @@ wtsplayer.elementsController = function()
 		return o;
 	}
 
-	_scrollbar = scrollbarTop( "chatParent" );
+	_scrollbar = scrollbarTop( _chatParent );
 
 	//SPECIAL
 	this.outputSystemMessage = function( message )
