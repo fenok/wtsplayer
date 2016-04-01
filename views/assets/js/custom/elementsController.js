@@ -1289,9 +1289,15 @@ wtsplayer.elementsController = function()
 			opt              = document.createElement( "option" );
 			opt.dataset.peer = peerId;
 		}
-
 		opt.dataset.type = data[ 0 ];
-		if ( data[ 0 ] !== "localURL" )
+
+		if ( data[ 0 ] === "" )
+		{
+			opt.value     = "";
+			opt.disabled  = true;
+			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - источник не выбран";
+		}
+		else if ( data[ 0 ] !== "localURL" )
 		{
 			opt.value     = data[ 1 ];
 			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - " + data[ 1 ];
@@ -1947,16 +1953,19 @@ wtsplayer.elementsController = function()
 			_videoSrcTabs = this.dataset.type
 		};
 	}
-
+	var onreload = true;
 	function start()
 	{
 
 		clear();
-		__peerController.connectToServer( init/*, function(err)  // на данный момент вызывается при перезагрузке страницы
+		__peerController.connectToServer( init, function(err)  // на данный момент вызывается при перезагрузке страницы
 		{														 // с ошибкой "Lost connection to server"
-			alert("Ошибка соединения с сервером\n"+err.toString());
-			location.reload();			
-		}*/);
+			if (onreload)
+			{
+				alert( "Ошибка соединения с сервером\n" + err.toString() );
+				location.reload();
+			}
+		});
 	}
 
 	function clear()
@@ -1994,7 +2003,10 @@ wtsplayer.elementsController = function()
 	}
 
 	//Initializing _playPauseButton object
-	switchToWaiting
-	document.body.onreload= function(){alert('1')};
+	switchToWaiting();
+	window.onbeforeunload = function(evnt)
+	{
+		//onreload = false;
+	};
 };
 //TODO: make sure that everything deletes properly
