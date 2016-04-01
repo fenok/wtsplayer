@@ -1119,16 +1119,20 @@ wtsplayer.elementsController = function()
 	{
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
 	};
-	
+
+	var _chatTimeout = null
+
 	_chatParent.onmouseover = function(event)
 	{
 		_mouseOnChat = true;
-		setTimeout(function(){if (_mouseOnChat) _chatParent.className = "chat" },500)
+		clearTimeout( _chatTimeout );
+		_chatTimeout = setTimeout(function(){if (_mouseOnChat) _chatParent.className = "chat" },500)
 	}
 	_chatParent.onmouseout = function()
 	{
+		clearTimeout( _chatTimeout );
 		_mouseOnChat = false;
-		setTimeout(function(){if (!_mouseOnChat) { _chatParent.className = ""; _scrollbar.toTop(); }},100)
+		_chatTimeout = setTimeout(function(){if (!_mouseOnChat) { _chatParent.className = ""; _scrollbar.toTop(); }},350)
 	}
 
 	function scrollbarTop( scrollbox )
