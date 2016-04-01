@@ -77,6 +77,7 @@ wtsplayer.elementsController = function()
 	var _seekRangeIsDragged = false;
 	var _muteVideo;
 	var _mouseOnChat;
+	var _chatTimeout = null;
 	var _session;
 	var _noReload 	  = true;
 	var _audioStream;
@@ -288,17 +289,12 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
-		volume      = volume || 1;
-		muted       = muted || false;
-		currentTime = currentTime || 0;
+		volume      = _video.volume || volume || 1;
+		muted       = _video.muted || muted || false;
+		currentTime = _video.currentTime || currentTime || 0;
 
 		_videoLoaded = false;
 		onVideoLoading();
-		var videoData = {
-			muted       : _video.muted || muted,
-			volume      : _video.volume || volume,
-			currentTime : _video.currentTime || currentTime
-		};
 
 		_video.play          = function()
 		{
@@ -384,7 +380,7 @@ wtsplayer.elementsController = function()
 			_video.innerHTML = '';
 		};
 
-		return videoData;
+		//return videoData;
 	}
 
 	function constructVideoContent_youtubeDirect( videoLink )
@@ -526,13 +522,21 @@ wtsplayer.elementsController = function()
 
 	function getCleanVideoContent_video()
 	{
-		var videoData                    = constructVideoContent_dummy();
+		constructVideoContent_dummy();
 		var videoElement                 = document.createElement( 'video' );
 		videoElement.style.width         = "100%";
 		videoElement.style.height        = "100%";
 		videoElement.style.verticalAlign = "bottom";
 
 		_video.appendChild( videoElement );
+
+		var initialVolume      = _video.volume;
+		var initialMuted       = _video.muted;
+		var initialCurrentTime = _video.currentTime / 1000;
+
+		videoElement.volume = initialVolume;
+		videoElement.muted = initialMuted;
+		videoElement.currentTime = initialCurrentTime / 1000;
 
 		var emittedCanPlay = false;
 		var ended          = false;
@@ -673,9 +677,6 @@ wtsplayer.elementsController = function()
 
 		_video.restore = function()
 		{
-			videoElement.volume = videoData.volume;
-			videoElement.muted  = videoData.muted;
-			videoElement.currentTime = videoData.currentTime / 1000;
 		};
 
 		_video.changeOffset = function( n )
@@ -692,7 +693,8 @@ wtsplayer.elementsController = function()
 	//TODO:{NOT CRITICAL} frequent clicks may set time beyond bounds. Not affects the playback though.
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
-		var videoData = constructVideoContent_dummy();
+		_video.restore = null;
+		constructVideoContent_dummy();
 		var videoID   = parseYoutubeLinkIntoID( videoLink );
 		var player;
 		var div       = document.createElement( 'div' );
@@ -734,7 +736,9 @@ wtsplayer.elementsController = function()
 		var emittedCanplay    = false;
 		var ended             = false;
 		var formedQualityList = false;
-
+		var initialMuted = _video.muted;
+		var initialVolume = _video.volume;
+		var initialCurrentTime = _video.currentTime;
 		function onPlayerStateChange( event )
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
@@ -751,10 +755,10 @@ wtsplayer.elementsController = function()
 				{
 					//TODO: have no idea how, but it seems to work. Understand and optimize maybe?
 					player.pauseVideo();
-					player.seekTo( videoData.currentTime / 1000 );
+					player.seekTo( initialCurrentTime / 1000 );
 
-					player.setVolume( videoData.volume * 100 );
-					if ( videoData.muted === true )
+					player.setVolume( initialVolume * 100 );
+					if ( initialMuted === true )
 					{
 						player.mute();
 					}
@@ -813,6 +817,11 @@ wtsplayer.elementsController = function()
 			player.setPlaybackQuality( 'default' );
 			player.mute();
 			player.playVideo();
+
+			initialMuted = _video.muted;
+			initialCurrentTime = _video.currentTime;
+			initialVolume = _video.volume;
+
 
 			_video.clear        = function()
 			{
@@ -1120,8 +1129,6 @@ wtsplayer.elementsController = function()
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
 	};
 
-	var _chatTimeout = null
-
 	_chatParent.onmouseover = function(event)
 	{
 		_mouseOnChat = true;
@@ -1132,7 +1139,7 @@ wtsplayer.elementsController = function()
 	{
 		clearTimeout( _chatTimeout );
 		_mouseOnChat = false;
-		_chatTimeout = setTimeout(function(){if (!_mouseOnChat) { _chatParent.className = ""; _scrollbar.toTop(); }},350)
+		_chatTimeout = setTimeout(function(){if (!_mouseOnChat && _scrollbar.mouseup) { _chatParent.className = ""; _scrollbar.toTop(); }},350)
 	}
 
 	function scrollbarTop( scrollbox )
@@ -1141,6 +1148,7 @@ wtsplayer.elementsController = function()
 		o.scrollbar = scrollbox.children[ 0 ];
 		o.scrollbox = scrollbox.children[ 1 ];
 		o.thumbElem = o.scrollbar.children[ 0 ];
+		o.mouseup = true;
 		o.init      = function()
 		{
 			o.scrollbar.style.height = o.scrollbox.clientHeight + "px";
@@ -1160,6 +1168,7 @@ wtsplayer.elementsController = function()
 		{
 			thumbElem.onmousedown = function( e )
 			{
+				mouseup = false;
 				scrollbar.onmousedown = null;
 
 				var thumbCoords = getCoords( thumbElem );
@@ -1189,6 +1198,9 @@ wtsplayer.elementsController = function()
 
 				document.onmouseup = function()
 				{
+					mouseup = true;
+					_mouseOnChat = false;
+					_chatTimeout = setTimeout(function(){if (!_mouseOnChat) { _chatParent.className = ""; _scrollbar.toTop(); }},350)
 					scrollbar.onmousedown = function( e )
 					{
 						var scrollbarCoords = getCoords( scrollbar );
@@ -1242,11 +1254,11 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.outputSystemMessage = function( message )
 	{
-		_scrollbar.init();
 		var div         = document.createElement( 'div' );
 		var chat        = document.getElementById( "chat" );
 		div.textContent = message;
 		chat.insertBefore( div, chat.firstChild );
+		_scrollbar.init();
 		setTimeout( function()
 		{
 			animate( function( timePassed )
@@ -1468,6 +1480,7 @@ wtsplayer.elementsController = function()
 		var img                                        = document.createElement( "img" );
 		img.style                                      = "width : 20px;";
 		img.src                                        = "/volume.svg";
+		img.style.verticalAlign = "bottom";
 		img.onclick                                    = function( event )
 		{
 			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
@@ -1478,6 +1491,7 @@ wtsplayer.elementsController = function()
 
 		_peers[ peer ][ _peerVars.RANGE ]         = document.createElement( "input" );
 		_peers[ peer ][ _peerVars.RANGE ].type    = "range";
+		_peers[ peer ][ _peerVars.RANGE ].className  = "volume volume_crutch";
 		_peers[ peer ][ _peerVars.RANGE ].id      = "range_" + peer;
 		_peers[ peer ][ _peerVars.RANGE ].value   = "1";
 		_peers[ peer ][ _peerVars.RANGE ].min     = "0";
@@ -1698,7 +1712,17 @@ wtsplayer.elementsController = function()
 
 		if ( _session.video_src === '' )
 		{
-			document.querySelector( "span[data-type='peers']" ).click();
+			var enabledOption = document.querySelector("#peersSrc option:not(:disabled)");
+			var disabledOption = document.querySelector("#peersSrc option:disabled");
+			if (enabledOption)
+			{
+				document.querySelector( "span[data-type='peers']" ).click();
+				_peersSrc.value = enabledOption.value;
+			}
+			else if (disabledOption)
+			{
+				document.querySelector( "span[data-type='localURL']" ).click();
+			}
 			_title.innerHTML    = "";
 			_joinButton.value   = "Войти в комнату";
 			_joinButton.onclick = function()

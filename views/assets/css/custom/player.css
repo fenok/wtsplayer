@@ -1,5 +1,5 @@
 .green {
-    color: green;
+    color: darkorange;
 }
 
 html, body {
@@ -229,14 +229,14 @@ td{
     transform-origin: 0 0;
 }
 
-#volume::-moz-range-track {
+.volume::-moz-range-track {
     height: 4px;
     border: 1px solid #000;
     background-color: #fff;
     cursor: pointer;
 }
 
-#volume::-moz-range-thumb {
+.volume::-moz-range-thumb {
     background-color: #fff;
     border: 1px solid #000;
     width: 4px;
@@ -245,15 +245,17 @@ td{
     cursor: pointer;
 }
 
-#volume {
+.volume {
     -webkit-appearance: none;
     height: 4px;
     border: 1px solid #000;
     background-color: #fff;
     cursor: pointer;
+    margin-left: 0;
+    margin-right: 0;
 }
 
-#volume::-webkit-slider-thumb {
+.volume::-webkit-slider-thumb {
     -webkit-appearance: none;
     background-color: #fff;
     border: 1px solid #000;
@@ -293,6 +295,12 @@ td{
 }
 
 /* Элементы аудио-чата */
+.volume_crutch{
+    vertical-align: bottom;
+    display: inline-block;
+    margin-bottom: 6px
+}
+
 #peerListParent.hidden #peerList {
     right: -100%;
 }
@@ -314,13 +322,15 @@ td{
 #peerList {
     position: relative;
     min-height: 100px;
-    background-color: #fff;
+    background-color: #000;
     transition: right 1s ease-out 0s;
     right: -100%;
 	box-shadow: 0 0 1px 1px #333, 0 0 0 2px #fff, 0 0 1px 3px #333;
 	border-radius: 10px;
 	max-height: 70vh;
 	overflow: auto;
+    color: #fff;
+    text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;
 }
 
 /* Ввод сообщений */
@@ -370,6 +380,7 @@ td{
     text-align: center;
     text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;
     transition: all 0s ease-out 0.35s;
+    height: 28px;
 }
 
 /* Элементы чата */

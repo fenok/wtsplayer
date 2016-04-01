@@ -666,7 +666,10 @@ wtsplayer.peerController = function()
 			currentRoomID   = '';
 			currentPassword = '';
 
-			_self.leaveVoiceChat();
+			if (_joinedVoiceChat)
+			{
+				_self.leaveVoiceChat();
+			}
 
 			_joinedRoom = false;
 			for ( var prop in _dataConnections )
