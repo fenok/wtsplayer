@@ -1994,6 +1994,7 @@ wtsplayer.elementsController = function()
 	}
 
 	//Initializing _playPauseButton object
-	switchToWaiting();
+	switchToWaiting
+	document.body.onreload= function(){alert('1')};
 };
 //TODO: make sure that everything deletes properly
