@@ -132,7 +132,6 @@ wtsplayer.peerController = function()
 
 	/*
 	 Connect to peerJS
-	 Set nick in session to self peer ID
 	 Apply handlers for incoming data and media connections
 
 	 If time is being synced with server, callback is called after connecting to PeerJS and syncing time
@@ -154,64 +153,49 @@ wtsplayer.peerController = function()
 					secure : location.protocol === 'https:',
 					config : {
 						'iceServers' : [
-							//{ url : 'stun:stun01.sipphone.com' },
 							{ url : 'stun:stun.ekiga.net' },
-							//{ url : 'stun:stun.fwdnet.net' },
 							{ url : 'stun:stun.ideasip.com' },
 							{ url : 'stun:stun.iptel.org' },
-							//{ url : 'stun:stun.rixtelecom.se' },
 							{ url : 'stun:stun.schlund.de' },
 							{ url : 'stun:stun.l.google.com:19302' },
 							{ url : 'stun:stun1.l.google.com:19302' },
 							{ url : 'stun:stun2.l.google.com:19302' },
 							{ url : 'stun:stun3.l.google.com:19302' },
 							{ url : 'stun:stun4.l.google.com:19302' },
-							//{ url : 'stun:stunserver.org' },
-							//{ url : 'stun:stun.softjoys.com' },
 							{ url : 'stun:stun.voiparound.com' },
 							{ url : 'stun:stun.voipbuster.com' },
 							{ url : 'stun:stun.voipstunt.com' },
 							{ url : 'stun:stun.voxgratia.org' },
-							//{ url : 'stun:stun.xten.com' },
 							{
 								url        : 'turn:numb.viagenie.ca',
 								credential : 'wtsplayer',
 								username   : 'fenok2112@gmail.com' //TODO: register wtsplayer@gmail.com user
-							}//,
-							/*{
-								url        : 'turn:192.158.29.39:3478?transport=udp',
-								credential : 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-								username   : '28224511:1379330808'
-							},
-							{
-								url        : 'turn:192.158.29.39:3478?transport=tcp',
-								credential : 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-								username   : '28224511:1379330808'
-							}*/
+							}
 						]
 					},
 					debug  : 1
 				} );
 
-			console.log( location.hostname, location.port, location.protocol );
-
 			_peer.on( 'open', function( id )
 			{
-				__elementsController.outputSystemMessage( "Подключение к серверу завершено" );
+				var onConnected = function()
+				{
+					_connectingToServer = false;
+					_connectedToServer  = true;
+					__elementsController.outputSystemMessage( "Подключение к серверу завершено" );
+					callback( id );
+				};
+
 				if ( _serverTimeSync )
 				{
 					syncTime_Server( function()
 					{
-						_connectingToServer = false;
-						_connectedToServer  = true;
-						callback( id );
+						onConnected();
 					} );
 				}
 				else
 				{
-					_connectingToServer = false;
-					_connectedToServer  = true;
-					callback( id );
+					onConnected();
 				}
 			} );
 
@@ -263,21 +247,24 @@ wtsplayer.peerController = function()
 	{
 		_self.abortActiveRequests();
 
+		var onDropped = function()
+		{
+			__stateController.onLeavedRoom();
+			init();
+			callback();
+		};
+
 		if ( peer && !peer.destroyed )
 		{
 			_peer.on( 'close', function()
 			{
-				__stateController.onLeavedRoom();
-				init();
-				callback();
+				onDropped();
 			} );
 			_peer.destroy();
 		}
 		else
 		{
-			__stateController.onLeavedRoom();
-			init();
-			callback();
+			onDropped();
 		}
 	};
 
@@ -381,11 +368,8 @@ wtsplayer.peerController = function()
 		conn.on( 'open', function()
 		{
 			__elementsController.onPeerConnected( conn.peer );
-			console.log( "connectionHandler -- open" );
-			//__elementsController.outputSystemMessage( "Connected to " + conn.peer );
 			conn.on( 'data', function( data )
 			{
-				console.log( "connectionHandler -- data" );
 				switch ( data.type )
 				{
 					case _self.sending.FAKE_CALL:
@@ -452,7 +436,6 @@ wtsplayer.peerController = function()
 
 		conn.on( 'close', function()
 		{
-			console.log( "connectionHandler -- close" );
 			/*TODO: testing showed rare connection drop, we can try to re-establish the connection*/
 			delete _dataConnections[ conn.peer ];
 			if ( _calls[ conn.peer ] !== undefined )
@@ -466,13 +449,12 @@ wtsplayer.peerController = function()
 			}
 			__stateController.onPeerDeleted( conn.peer );
 			__elementsController.onPeerDeleted( conn.peer );
-			//__elementsController.outputSystemMessage( "Closed connection to " + conn.peer );
 		} );
 
 		conn.on( 'error', function( err )
 		{
 			//TODO: make sure that close event always fires after fatal error
-			console.error( err.name + ': ' + err.message );
+			console.error( err.toString() );
 		} );
 	}
 
@@ -515,7 +497,6 @@ wtsplayer.peerController = function()
 	//SPECIAL
 
 	//Creating or joining room, reporting result, connect to all peers, get all initial states (aka initial data)
-	//when connected to all -- time sync
 	//also calling to all peers, though it's not necessary for joining
 	this.joinRoom = function( roomID, password, successResponsesArray, joinedCallback, connectionProblemsCallback, unexpectedResponseCallback, failCallback )
 	{
@@ -527,7 +508,6 @@ wtsplayer.peerController = function()
 			{
 				if ( successResponsesArray.indexOf( response ) !== -1 )
 				{
-					console.log( "got initial peers" );
 					var peersToConnect     = peers;
 					var initialStatesToGet = peersToConnect.length;
 					var timeIsSynced       = _serverTimeSync;
@@ -545,7 +525,6 @@ wtsplayer.peerController = function()
 
 					var onConnectedToAllPeers = function()
 					{
-						console.log( "connected to all peers" );
 						if ( !_serverTimeSync )
 						{
 							syncTime_Peers( function()
@@ -567,14 +546,11 @@ wtsplayer.peerController = function()
 
 					peers.forEach( function( peer )
 					{
-						console.log( "processing peer: " + peer );
 						connectToPeer( peer, function()
 						{
 							//success
-							console.log( "connected to: " + peer );
 							controlInitialStateRecieving( peer, function()
 							{
-								console.log( "got initial state from: " + peer );
 								if ( --initialStatesToGet === 0 )
 								{
 									onJoinConditionChanged();
@@ -617,7 +593,6 @@ wtsplayer.peerController = function()
 										}
 										else
 										{
-											//__elementsController.outputSystemMessage( "Connection takes too long; most likely some peers are unreachable" );
 											connectionProblemsCallback();
 										}
 									} );
@@ -628,7 +603,6 @@ wtsplayer.peerController = function()
 				}
 				else
 				{
-					console.log( "unexpected response" );
 					if ( response === _self.responses.CREATED || response === _self.responses.JOINED )
 					{
 						_joinedRoom = true;
@@ -648,7 +622,6 @@ wtsplayer.peerController = function()
 		else
 		{
 			console.error( new Error( "Can't join room: not connected to server, already joined room or already joining room. Also, roomID must be non-empty" ).toString() );
-			//return;
 		}
 	};
 
@@ -666,7 +639,7 @@ wtsplayer.peerController = function()
 			currentRoomID   = '';
 			currentPassword = '';
 
-			if (_joinedVoiceChat)
+			if ( _joinedVoiceChat )
 			{
 				_self.leaveVoiceChat();
 			}
@@ -739,21 +712,10 @@ wtsplayer.peerController = function()
 
 	function syncTime_Server( callback )
 	{
-		_ts.on( 'change', function( offset )
-		{
-			console.error( 'offset from system time (server):', offset, 'ms' );
-		} );
-
 		_ts.on( 'sync', function( state )
 		{
-			if ( state == 'start' )
-			{
-				//ts.options.peers = openConnections();
-				//console.log( 'syncing with peers [' + _ts.options.peers.join( ', ' ) + ']' );
-			}
 			if ( state === 'end' )
 			{
-				//_self.currentTimestamp = _ts.now;
 				callback();
 			}
 		} );
@@ -768,35 +730,23 @@ wtsplayer.peerController = function()
 
 		_ts.send = function( id, data )
 		{
-			console.error( 'send', id, data );
 			var conn = _dataConnections[ id ];
-			/*&& all.filter( function( conn )
-			 {
-			 return conn.open;
-			 } )[ 0 ];*/
 
 			if ( conn )
 			{
-				console.error( "timesync: sending" );
 				data.type = _self.sending.TIMESYNC_INFO;
 				conn.send( data );
 			}
 			else
 			{
-				console.error( new Error( 'Cannot send message: not connected to ' + id ).toString() );
+				console.error( new Error( 'Timesync: cannot send message: not connected to ' + id ).toString() );
 			}
 		};
 
 		_ts.on( 'sync', function( state )
 		{
-			if ( state == 'start' )
-			{
-				//ts.options.peers = openConnections();
-				//console.log( 'syncing with peers [' + _ts.options.peers.join( ', ' ) + ']' );
-			}
 			if ( state === 'end' )
 			{
-				//_self.currentTimestamp = _ts.now;
 				callback();
 			}
 		} );
@@ -823,7 +773,6 @@ wtsplayer.peerController = function()
 
 	function controlInitialStateRecieving( peer, callback )
 	{
-		console.log( "getting initial state from: " + peer );
 		var callIsNeeded = true;
 		_dataConnections[ peer ].on( 'data', function( data )
 		{
@@ -850,7 +799,6 @@ wtsplayer.peerController = function()
 
 	function connectToPeer( peer, successCallback )
 	{
-		console.log( "connecting to: " + peer );
 		var conn = _peer.connect( peer, {
 			serialization : 'json',
 			reliable      : _reliableDataChannels,
@@ -889,7 +837,6 @@ wtsplayer.peerController = function()
 		GETFromServer( '/joinRoom?roomID=' + encodeURIComponent( currentRoomID ) + '&password=' + encodeURIComponent( currentPassword ) + '&peerID=' + encodeURIComponent( _peer.id ),
 			function( data )
 			{
-				//__elementsController.outputSystemMessage( data.type );
 				switch ( data.type )
 				{
 					case _self.responses.JOINED:
@@ -945,7 +892,6 @@ wtsplayer.peerController = function()
 
 			var err = new Error( "Request aborted" );
 			console.error( err.toString() );
-			//failCallback( err );
 		};
 
 		_activeRequests.push( xhr );

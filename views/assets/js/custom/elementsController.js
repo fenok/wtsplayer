@@ -1,5 +1,5 @@
 var wtsplayer = wtsplayer || {};
-
+//TODO: clean code
 wtsplayer.elementsController = function()
 {
 	this.externals =
@@ -72,20 +72,20 @@ wtsplayer.elementsController = function()
 	var _peerTable       = document.getElementById( "peerTable" );
 	var _peerListButton  = document.getElementById( "peerListButton" );
 	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
- 
+
 	var _videoLoaded;
 	var _seekRangeIsDragged = false;
 	var _muteVideo;
 	var _mouseOnChat;
-	var _chatTimeout = null;
+	var _chatTimeout        = null;
 	var _session;
-	var _noReload 	  = true;
+	var _noReload           = true;
 	var _audioStream;
 	var _scrollbar;
 	var _videoSrcChange;
-	var _videoSrcTabs = 'inputLink';
-	var _peers        = {};
-	var _peerVars     = Object.freeze( {
+	var _videoSrcTabs       = 'inputLink';
+	var _peers              = {};
+	var _peerVars           = Object.freeze( {
 		NICK      : 0,
 		VIDEO_SRC : 1,
 		ROW       : 2,
@@ -93,9 +93,6 @@ wtsplayer.elementsController = function()
 		RANGE     : 4,
 		MUTED     : 5
 	} );
-
-	//var _torrentId = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d';
-	//var _torrentId = 'magnet:?xt=urn:btih:e628257c63e2dbe3a3e58ba8eba7272439b35e48&dn=MadMaxMadness.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io';
 
 	//switching user interface
 	switchToPlay = function()
@@ -121,21 +118,20 @@ wtsplayer.elementsController = function()
 
 	function onVideoLoading()
 	{
-		//_self.outputSystemMessage("Видео загружается");
-		var nodesToHide = document.getElementsByClassName('video-sensitive' );
-		for(var i = 0; i < nodesToHide.length; ++i)
+		var nodesToHide = document.getElementsByClassName( 'video-sensitive' );
+		for ( var i = 0; i < nodesToHide.length; ++i )
 		{
-			nodesToHide[i ].disabled = 'disabled';
+			nodesToHide[ i ].disabled = 'disabled';
 		}
 	}
 
 	function onVideoLoaded()
 	{
-		_self.outputSystemMessage("Видео загружено");
-		var nodesToHide = document.getElementsByClassName('video-sensitive' );
-		for(var i = 0; i < nodesToHide.length; ++i)
+		_self.outputSystemMessage( "Видео загружено" );
+		var nodesToHide = document.getElementsByClassName( 'video-sensitive' );
+		for ( var i = 0; i < nodesToHide.length; ++i )
 		{
-			nodesToHide[i ].removeAttribute('disabled');
+			nodesToHide[ i ].removeAttribute( 'disabled' );
 		}
 	}
 
@@ -191,7 +187,6 @@ wtsplayer.elementsController = function()
 
 	_video.addEventListener( 'canplay', function()
 	{
-		console.log( "canplay accepted" );
 		if ( !_videoLoaded )
 		{
 			_videoLoaded = true;
@@ -222,7 +217,7 @@ wtsplayer.elementsController = function()
 	{
 		if ( _video.offset > 0 )
 		{
-			_delOffsetButton.innerHTML = "-"+( _video.offset / 1000 );
+			_delOffsetButton.innerHTML = "-" + ( _video.offset / 1000 );
 		}
 		else if ( _video.offset == 0 )
 		{
@@ -230,16 +225,16 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			_delOffsetButton.innerHTML = "+"+( (_video.offset / 1000)*(-1) );
+			_delOffsetButton.innerHTML = "+" + ( (_video.offset / 1000) * (-1) );
 		}
 	}
-	
+
 	_addOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset + 100 );
 		showOffset();
 	} );
-	
+
 	_delOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( 0 );
@@ -260,11 +255,11 @@ wtsplayer.elementsController = function()
 	 Events to dispatch:
 	 timeupdate
 	 ended
-	 waiting
-	 canplay
+	 waiting -- waiting for the video to buffer
+	 canplay -- asynchronously emitted after waiting
 
 	 Properties:
-	 volume
+	 volume -- [0;1]
 	 muted
 	 currentTime -- ms
 	 duration -- ms
@@ -272,20 +267,17 @@ wtsplayer.elementsController = function()
 	 Methods:
 	 play
 	 pause
-	 wait -- force buffering, 'canplay' must be emitted (asynchronously)
+	 wait -- force buffering (waiting)
 	 changeQuality
-	 changeDuration
 	 changeOffset
 	 clear
-	 restore
 
 	 BEHAVIOR:
 
 	 The first event to be emitted is 'canplay', and the video must be paused
 
-	 construct quality lists in 'constructors', display them on the player GUI
+	 Quality lists are constructed in 'constructors'
 	 */
-	//TODO: on connection to ended video playback time is being set to 0:00. Fix.
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
@@ -363,8 +355,8 @@ wtsplayer.elementsController = function()
 		opt.innerHTML      = "Source";
 		opt.value          = 'source';
 		_quality.appendChild( opt );
-		_quality.disabled = "disabled";
-		_video.offset     = 0;
+		_quality.disabled          = "disabled";
+		_video.offset              = 0;
 		_delOffsetButton.innerHTML = "0";
 
 		if ( _video.clear )
@@ -379,8 +371,6 @@ wtsplayer.elementsController = function()
 		{
 			_video.innerHTML = '';
 		};
-
-		//return videoData;
 	}
 
 	function constructVideoContent_youtubeDirect( videoLink )
@@ -439,7 +429,7 @@ wtsplayer.elementsController = function()
 			var obj            = parse( text );
 			_quality.innerHTML = "";
 			_quality.removeAttribute( 'disabled' );
-			if(obj.url_encoded_fmt_stream_map)
+			if ( obj.url_encoded_fmt_stream_map )
 			{
 				for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
 				{
@@ -451,7 +441,6 @@ wtsplayer.elementsController = function()
 
 				videoElement.src = _quality.value;
 
-				_video.restore();
 				_video.clear = function()
 				{
 					videoElement.pause();
@@ -460,14 +449,14 @@ wtsplayer.elementsController = function()
 					_video.innerHTML = '';
 				}
 			}
-			else 
+			else
 			{
-				_self.outputSystemMessage("Не удалось загрузить видео");
+				_self.outputSystemMessage( "Не удалось загрузить видео" );
 			}
-		}, function(err)
+		}, function( err )
 		{
-			_self.outputSystemMessage("Не удалось загрузить видео");
-		});
+			_self.outputSystemMessage( "Не удалось загрузить видео" );
+		} );
 	}
 
 	function constructVideoContent_webtorrentMagnet( magnetLink )
@@ -475,25 +464,15 @@ wtsplayer.elementsController = function()
 		_quality.onchange = null;
 
 		var videoElement = getCleanVideoContent_video();
-		_video.restore();
 
 		var client = new WebTorrent();
 		client.add( magnetLink, function( torrent )
 		{
-			// Torrents can contain many files. Let's use the first.
 			var file = torrent.files[ 0 ];
 
-			//TODO: display file without full download and restore video data before canplay
-			//without full download
 			file.renderTo( videoElement, function( err, elem )
 			{
 			} );
-			//restore data before canplay
-			/*file.getBlobURL(function (err, url) {
-				if (err) console.error(err.toString());
-				videoElement.src = url;
-				_video.restore();
-			})*/
 		} );
 		_video.clear = function()
 		{
@@ -510,8 +489,7 @@ wtsplayer.elementsController = function()
 		var videoElement = getCleanVideoContent_video();
 
 		videoElement.src = directSource;
-		_video.restore();
-		_video.clear = function()
+		_video.clear     = function()
 		{
 			videoElement.pause();
 			videoElement.src = "";
@@ -530,13 +508,9 @@ wtsplayer.elementsController = function()
 
 		_video.appendChild( videoElement );
 
-		var initialVolume      = _video.volume;
-		var initialMuted       = _video.muted;
-		var initialCurrentTime = _video.currentTime / 1000;
-
-		videoElement.volume = initialVolume;
-		videoElement.muted = initialMuted;
-		videoElement.currentTime = initialCurrentTime / 1000;
+		videoElement.volume      = _video.volume;
+		videoElement.muted       = _video.muted;
+		videoElement.currentTime = _video.currentTime / 1000;
 
 		var emittedCanPlay = false;
 		var ended          = false;
@@ -547,7 +521,6 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'ended', function()
 		{
-			//videoElement.pause();
 			if ( !ended )
 			{
 				ended = true;
@@ -643,7 +616,6 @@ wtsplayer.elementsController = function()
 			}
 		} );
 
-		//TODO: can't invoke them directly. Find out how to fix.
 		_video.play  = function()
 		{
 			videoElement.play();
@@ -663,7 +635,6 @@ wtsplayer.elementsController = function()
 				{
 					setTimeout( function()
 					{
-						console.log( "Custom canplay dispatched" );
 						_video.dispatchEvent( new Event( 'canplay' ) );
 					}, 1 );
 				}
@@ -673,10 +644,6 @@ wtsplayer.elementsController = function()
 		_video.changeQuality = function( src )
 		{
 			videoElement.src = src;
-		};
-
-		_video.restore = function()
-		{
 		};
 
 		_video.changeOffset = function( n )
@@ -693,12 +660,11 @@ wtsplayer.elementsController = function()
 	//TODO:{NOT CRITICAL} frequent clicks may set time beyond bounds. Not affects the playback though.
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
-		_video.restore = null;
 		constructVideoContent_dummy();
-		var videoID   = parseYoutubeLinkIntoID( videoLink );
+		var videoID = parseYoutubeLinkIntoID( videoLink );
 		var player;
-		var div       = document.createElement( 'div' );
-		div.id        = "youtube-iframe";
+		var div     = document.createElement( 'div' );
+		div.id      = "youtube-iframe";
 		_video.appendChild( div );
 
 		var qualities = {
@@ -736,9 +702,11 @@ wtsplayer.elementsController = function()
 		var emittedCanplay    = false;
 		var ended             = false;
 		var formedQualityList = false;
-		var initialMuted = _video.muted;
-		var initialVolume = _video.volume;
+
+		var initialMuted       = _video.muted;
+		var initialVolume      = _video.volume;
 		var initialCurrentTime = _video.currentTime;
+
 		function onPlayerStateChange( event )
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
@@ -818,10 +786,9 @@ wtsplayer.elementsController = function()
 			player.mute();
 			player.playVideo();
 
-			initialMuted = _video.muted;
+			initialMuted       = _video.muted;
 			initialCurrentTime = _video.currentTime;
-			initialVolume = _video.volume;
-
+			initialVolume      = _video.volume;
 
 			_video.clear        = function()
 			{
@@ -844,6 +811,7 @@ wtsplayer.elementsController = function()
 					set          : function( n )
 					{
 						player.setVolume( n * 100 );
+						initialVolume = n;
 					},
 					get          : function()
 					{
@@ -862,6 +830,7 @@ wtsplayer.elementsController = function()
 						{
 							player.unMute();
 						}
+						initialMuted = n;
 					},
 					get          : function()
 					{
@@ -900,7 +869,7 @@ wtsplayer.elementsController = function()
 						{
 							_video.dispatchEvent( new Event( 'timeupdate' ) );
 						}, 1 );
-
+						//no need to set initialCurrentTime;
 					},
 					get          : function()
 					{
@@ -944,7 +913,6 @@ wtsplayer.elementsController = function()
 							{
 								if ( !buffering )
 								{
-									console.log( "Custom canplay dispatched" );
 									_video.dispatchEvent( new Event( 'canplay' ) );
 								}
 							}, 300 ); //Actual buffering should start within this delay (if any)
@@ -1101,7 +1069,6 @@ wtsplayer.elementsController = function()
 	this.play = function()
 	{
 		_video.play();
-		//console.log("Hit play:" + new Date().getTime()); //DEBUG
 		switchToPause();
 	};
 
@@ -1129,17 +1096,30 @@ wtsplayer.elementsController = function()
 		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
 	};
 
-	_chatParent.onmouseover = function(event)
+	_chatParent.onmouseover = function( event )
 	{
 		_mouseOnChat = true;
 		clearTimeout( _chatTimeout );
-		_chatTimeout = setTimeout(function(){if (_mouseOnChat) _chatParent.className = "chat" },500)
+		_chatTimeout = setTimeout( function()
+		{
+			if ( _mouseOnChat )
+			{
+				_chatParent.className = "chat"
+			}
+		}, 500 )
 	}
-	_chatParent.onmouseout = function()
+	_chatParent.onmouseout  = function()
 	{
 		clearTimeout( _chatTimeout );
 		_mouseOnChat = false;
-		_chatTimeout = setTimeout(function(){if (!_mouseOnChat && _scrollbar.mouseup) { _chatParent.className = ""; _scrollbar.toTop(); }},350)
+		_chatTimeout = setTimeout( function()
+		{
+			if ( !_mouseOnChat && _scrollbar.mouseup )
+			{
+				_chatParent.className = "";
+				_scrollbar.toTop();
+			}
+		}, 350 )
 	}
 
 	function scrollbarTop( scrollbox )
@@ -1148,7 +1128,7 @@ wtsplayer.elementsController = function()
 		o.scrollbar = scrollbox.children[ 0 ];
 		o.scrollbox = scrollbox.children[ 1 ];
 		o.thumbElem = o.scrollbar.children[ 0 ];
-		o.mouseup = true;
+		o.mouseup   = true;
 		o.init      = function()
 		{
 			o.scrollbar.style.height = o.scrollbox.clientHeight + "px";
@@ -1168,7 +1148,7 @@ wtsplayer.elementsController = function()
 		{
 			thumbElem.onmousedown = function( e )
 			{
-				mouseup = false;
+				mouseup               = false;
 				scrollbar.onmousedown = null;
 
 				var thumbCoords = getCoords( thumbElem );
@@ -1198,9 +1178,16 @@ wtsplayer.elementsController = function()
 
 				document.onmouseup = function()
 				{
-					mouseup = true;
-					_mouseOnChat = false;
-					_chatTimeout = setTimeout(function(){if (!_mouseOnChat) { _chatParent.className = ""; _scrollbar.toTop(); }},350)
+					mouseup               = true;
+					_mouseOnChat          = false;
+					_chatTimeout          = setTimeout( function()
+					{
+						if ( !_mouseOnChat )
+						{
+							_chatParent.className = "";
+							_scrollbar.toTop();
+						}
+					}, 350 )
 					scrollbar.onmousedown = function( e )
 					{
 						var scrollbarCoords = getCoords( scrollbar );
@@ -1228,7 +1215,7 @@ wtsplayer.elementsController = function()
 			{
 				return false;
 			};
-			
+
 			o.toTop = function()
 			{
 				scrollbox.scrollTop = 0;
@@ -1244,7 +1231,6 @@ wtsplayer.elementsController = function()
 			};
 
 		}
-		
 
 		return o;
 	}
@@ -1302,11 +1288,11 @@ wtsplayer.elementsController = function()
 		__peerController.getRoomID( function( id )
 		{
 			_roomIdInput.value = id;
-		},function(err)
+		}, function( err )
 		{
-			alert("Ошибка получения идентификатора комнаты\n"+err.toString());
+			alert( "Ошибка получения идентификатора комнаты\n" + err.toString() );
 			location.reload();
-		})
+		} )
 	}
 
 	//what -- peerController.sending enum
@@ -1373,12 +1359,12 @@ wtsplayer.elementsController = function()
 				newPeerSrc( from, data );
 				break;
 			case __peerController.sending.NICK:
-				_self.outputSystemMessage(_peers[ from ][ _peerVars.NICK ] + " теперь известен как " + data);
+				_self.outputSystemMessage( _peers[ from ][ _peerVars.NICK ] + " теперь известен как " + data );
 				_peers[ from ][ _peerVars.NICK ]               = data;
 				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data;
 				break;
 			case __peerController.sending.INITIAL_INFO:
-				_self.outputSystemMessage("В комнату зашел " + data[ 0 ]);
+				_self.outputSystemMessage( "В комнату зашел " + data[ 0 ] );
 				_peers[ from ][ _peerVars.NICK ]               = data[ 0 ];
 				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data[ 0 ];
 				newPeerSrc( from, data[ 1 ] );
@@ -1424,7 +1410,7 @@ wtsplayer.elementsController = function()
 	//SPECIAL
 	this.onPeerDeleted = function( id )
 	{
-		_self.outputSystemMessage(_peers[id][_peerVars.NICK] + " вышел");
+		_self.outputSystemMessage( _peers[ id ][ _peerVars.NICK ] + " вышел" );
 		if ( _peers[ id ] )
 		{
 			if ( _peers[ id ][ _peerVars.AUDIO ] )
@@ -1480,7 +1466,7 @@ wtsplayer.elementsController = function()
 		var img                                        = document.createElement( "img" );
 		img.style                                      = "width : 20px;";
 		img.src                                        = "/volume.svg";
-		img.style.verticalAlign = "bottom";
+		img.style.verticalAlign                        = "bottom";
 		img.onclick                                    = function( event )
 		{
 			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
@@ -1489,15 +1475,15 @@ wtsplayer.elementsController = function()
 		_peers[ peer ][ _peerVars.ROW ][ 2 ].innerHTML = '';
 		_peers[ peer ][ _peerVars.ROW ][ 2 ].appendChild( img );
 
-		_peers[ peer ][ _peerVars.RANGE ]         = document.createElement( "input" );
-		_peers[ peer ][ _peerVars.RANGE ].type    = "range";
-		_peers[ peer ][ _peerVars.RANGE ].className  = "volume volume_crutch";
-		_peers[ peer ][ _peerVars.RANGE ].id      = "range_" + peer;
-		_peers[ peer ][ _peerVars.RANGE ].value   = "1";
-		_peers[ peer ][ _peerVars.RANGE ].min     = "0";
-		_peers[ peer ][ _peerVars.RANGE ].max     = "1";
-		_peers[ peer ][ _peerVars.RANGE ].step    = "0.01";
-		_peers[ peer ][ _peerVars.RANGE ].oninput = function( event )
+		_peers[ peer ][ _peerVars.RANGE ]           = document.createElement( "input" );
+		_peers[ peer ][ _peerVars.RANGE ].type      = "range";
+		_peers[ peer ][ _peerVars.RANGE ].className = "volume volume_crutch";
+		_peers[ peer ][ _peerVars.RANGE ].id        = "range_" + peer;
+		_peers[ peer ][ _peerVars.RANGE ].value     = "1";
+		_peers[ peer ][ _peerVars.RANGE ].min       = "0";
+		_peers[ peer ][ _peerVars.RANGE ].max       = "1";
+		_peers[ peer ][ _peerVars.RANGE ].step      = "0.01";
+		_peers[ peer ][ _peerVars.RANGE ].oninput   = function( event )
 		{
 			_peers[ peer ][ _peerVars.AUDIO ].volume = event.target.value;
 		};
@@ -1516,7 +1502,7 @@ wtsplayer.elementsController = function()
 
 		var send = function( audio )
 		{
-			console.log( "Отправка аудио-потока" );
+			console.log( "Sending audioStream" );
 			__peerController.joinVoiceChat( audio );
 			_audioStream = audio;
 		};
@@ -1581,15 +1567,15 @@ wtsplayer.elementsController = function()
 
 	function connectionProblems()
 	{
-		_self.outputSystemMessage("Подключение выполняется дольше обычного");
+		_self.outputSystemMessage( "Подключение выполняется дольше обычного" );
 	}
-	
-	function joinRoomError(err)
+
+	function joinRoomError( err )
 	{
-		alert("Ошибка при подключении к комнате\n"+err.toString());
+		alert( "Ошибка при подключении к комнате\n" + err.toString() );
 		location.reload();
 	}
-	
+
 	function joinRoomWithPassword()
 	{
 		_wrongPassword.className = "close"; //закрыть надпись о неверном пароле
@@ -1608,7 +1594,7 @@ wtsplayer.elementsController = function()
 				{
 					__peerController.dropAllConnections( start );
 				}
-			},joinRoomError )
+			}, joinRoomError )
 	}
 
 	function createRoom()
@@ -1616,7 +1602,7 @@ wtsplayer.elementsController = function()
 		processInputs();
 		_wrongId.className = "close"; //закрыть надпись о неверном idRoom
 		_title.innerHTML = "Создать комнату";
-		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom,connectionProblems,
+		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], enterRoom, connectionProblems,
 			function()//unexpected response
 			{
 				_wrongId.className = ""; //вывод надписи о неверном idRoom
@@ -1654,7 +1640,7 @@ wtsplayer.elementsController = function()
 				{
 					_session.type_src = "youtubeID_embedded";
 				}
-				else 
+				else
 				{
 					_session.type_src = "globalURL";
 				}
@@ -1675,15 +1661,15 @@ wtsplayer.elementsController = function()
 		}
 		else
 		{
-			if ( _peersSrc.value && ( _session.video_src !== _peersSrc.value || _session.video_info === "" ))
+			if ( _peersSrc.value && ( _session.video_src !== _peersSrc.value || _session.video_info === "" ) )
 			{
-				var data            = document.querySelector( "#peersSrc option:checked" );
+				var data = document.querySelector( "#peersSrc option:checked" );
 				if ( _session.video_src !== _peersSrc.value )
 					_videoSrcChange = true;
 				_session.video_src  = _peersSrc.value;
 				_session.type_src   = data.dataset.type;
 				_session.video_info = data.dataset.peer;
-				
+
 			}
 		}
 
@@ -1712,14 +1698,14 @@ wtsplayer.elementsController = function()
 
 		if ( _session.video_src === '' )
 		{
-			var enabledOption = document.querySelector("#peersSrc option:not(:disabled)");
-			var disabledOption = document.querySelector("#peersSrc option:disabled");
-			if (enabledOption)
+			var enabledOption  = document.querySelector( "#peersSrc option:not(:disabled)" );
+			var disabledOption = document.querySelector( "#peersSrc option:disabled" );
+			if ( enabledOption )
 			{
 				document.querySelector( "span[data-type='peers']" ).click();
 				_peersSrc.value = enabledOption.value;
 			}
-			else if (disabledOption)
+			else if ( disabledOption )
 			{
 				document.querySelector( "span[data-type='localURL']" ).click();
 			}
@@ -1821,9 +1807,9 @@ wtsplayer.elementsController = function()
 			{
 				document.querySelector( "span[data-type='localURL']" ).click();
 			}
-			
+
 		}
-		
+
 		constructVideoContent_dummy();
 		if ( window.location.hash === '' )
 		{
@@ -1836,11 +1822,11 @@ wtsplayer.elementsController = function()
 				_title.innerHTML     = "Создание комнаты";
 				_joinButton.onclick  = createRoom;
 				_overlay.className   = "create";
-			},function(err)
+			}, function( err )
 			{
-				alert("Ошибка получения идентификатора комнаты\n"+err.toString());
+				alert( "Ошибка получения идентификатора комнаты\n" + err.toString() );
 				location.reload();
-			});
+			} );
 		}
 		else
 		{
@@ -1870,7 +1856,7 @@ wtsplayer.elementsController = function()
 				{
 					if ( status === __peerController.responses.PUBLIC_ROOM )
 					{
-						__peerController.joinRoom( desiredRoomID, '', [ __peerController.responses.JOINED ], enterRoom,	connectionProblems,
+						__peerController.joinRoom( desiredRoomID, '', [ __peerController.responses.JOINED ], enterRoom, connectionProblems,
 							function( response )//unexpected response
 							{
 								if ( response === __peerController.responses.WRONG_PASSWORD )
@@ -1883,7 +1869,7 @@ wtsplayer.elementsController = function()
 								{
 									__peerController.dropAllConnections( start );
 								}
-							},joinRoomError	)
+							}, joinRoomError )
 					}
 					else if ( status === __peerController.responses.PRIVATE_ROOM )
 					{
@@ -1896,14 +1882,13 @@ wtsplayer.elementsController = function()
 					{
 						error404();
 					}
-				} , function(err)
+				}, function( err )
 				{
-					alert("Не удалось получить статус комнаты\n"+err.toString());
+					alert( "Не удалось получить статус комнаты\n" + err.toString() );
 					location.reload();
-				})
+				} )
 			}
 		}
-		//console.log(window.location.hash);
 	}
 
 	if ( window.name ) //Session has been set before
@@ -2006,16 +1991,16 @@ wtsplayer.elementsController = function()
 	function tabs()
 	{
 		var a = document.querySelectorAll( ".korpus1 > span" );
-		for ( var i = a.length-1; i >= 0; i-- )
+		for ( var i = a.length - 1; i >= 0; i-- )
 		{
 			a[ i ].onclick = function()
 			{
-				var n = parseInt(this.dataset.num);
-				_videoSrcTabs = this.dataset.type;
-				document.querySelector(".korpus1 div:nth-of-type("+n+")").style.visibility = "visible";
-				for (var j = n+1; j <= a.length; j++ )
+				var n                                                                            = parseInt( this.dataset.num );
+				_videoSrcTabs                                                                    = this.dataset.type;
+				document.querySelector( ".korpus1 div:nth-of-type(" + n + ")" ).style.visibility = "visible";
+				for ( var j = n + 1; j <= a.length; j++ )
 				{
-					document.querySelector(".korpus1 div:nth-of-type("+j+")").style.visibility = "hidden";
+					document.querySelector( ".korpus1 div:nth-of-type(" + j + ")" ).style.visibility = "hidden";
 				}
 			};
 		}
@@ -2026,16 +2011,16 @@ wtsplayer.elementsController = function()
 	{
 
 		clear();
-		__peerController.connectToServer( init, function(err)
+		__peerController.connectToServer( init, function( err )
 		{
-			if (_noReload)
+			if ( _noReload )
 			{
 				alert( "Ошибка соединения с сервером\n" + err.toString() );
 				location.reload();
 			}
-		});
+		} );
 	}
-	
+
 	window.onbeforeunload = function()
 	{
 		_noReload = false;
@@ -2051,7 +2036,7 @@ wtsplayer.elementsController = function()
 		_volumeButton.src            = "volume.svg";
 		_seekRange.value             = 0;
 		_currentTimeOutput.innerHTML = "00:00";
-		_videoSrcTabs 				 = 'inputLink';
+		_videoSrcTabs                = 'inputLink';
 	}
 
 	window.onload = start;
@@ -2074,9 +2059,9 @@ wtsplayer.elementsController = function()
 	{
 		_scrollbar.init();
 	}
-	
+
 	//Initializing _playPauseButton object
 	switchToWaiting();
-	
+
 };
 //TODO: make sure that everything deletes properly

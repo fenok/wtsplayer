@@ -106,14 +106,11 @@ wtsplayer.stateController = function()
 		else //state.name === 'waiting'
 		{
 			supposedTime = state.playerTime;
-			//__elementsController.seek( supposedTime );
-			//return ( 0 );
 		}
 
 		var diff = Math.abs( supposedTime - __elementsController.getPlayerCurrentTime() );
 		if ( diff > _desyncInterval )
 		{
-			//__elementsController.outputSystemMessage( "Desync: " + diff + " ms" );
 			if ( state.name !== 'pause' || state.previousStateName !== 'play' )
 			{
 				__elementsController.seek( supposedTime );
@@ -122,7 +119,6 @@ wtsplayer.stateController = function()
 		}
 		else
 		{
-			//__elementsController.outputSystemMessage( "Sync: " + diff + " ms" );
 			return ( supposedTime - __elementsController.getPlayerCurrentTime() );
 		}
 	}
@@ -143,8 +139,6 @@ wtsplayer.stateController = function()
 		{
 			if ( _waitingStates[ prop ] === true )
 			{
-				//__elementsController.outputSystemMessage( "Tried to switch from waiting, denied (not all peers ready)" );
-				console.log( _waitingStates );
 				return;
 			}
 		}
@@ -154,9 +148,6 @@ wtsplayer.stateController = function()
 		{
 			if ( __peerController.get( __peerController.getting.SELF_IS_SUPER_PEER ) )
 			{
-				console.log( "Updating from onWaitingStatusChanged:" );
-				console.log( "Name: " + _currentState.name );
-
 				updateCurrentState(
 					{
 						name              : _currentState.lastAction,
@@ -180,16 +171,8 @@ wtsplayer.stateController = function()
 	{
 		if ( state.timestamp <= _currentState.timestamp )
 		{
-			console.log( "Denied:" );
-			console.log( state );
-			console.log( "currentState timestamp: ", _currentState.timestamp );
 			return;
 		}
-
-		console.log( "Accepted:" );
-		console.log( state );
-
-		//__elementsController.outputSystemMessage( state.name );
 
 		//New state is being applied, so we need to clear the timeout to prevent unexpected changes
 		clearTimeout( _delayedPlayPauseTimeout );
@@ -233,7 +216,6 @@ wtsplayer.stateController = function()
 					{
 						__elementsController.pause();
 					}
-					//__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
 				}, offset );
 			}
 			else // magic delay was less than latency
@@ -247,7 +229,6 @@ wtsplayer.stateController = function()
 				{
 					__elementsController.pause();
 				}
-				//__elementsController.outputSystemMessage( "pause at " + __peerController.currentTimestamp() );
 			}
 		}
 		else //state.name === 'waiting'
@@ -264,15 +245,9 @@ wtsplayer.stateController = function()
 				}
 			}
 			_waitingStates[ __peerController.get( __peerController.getting.SELF_ID ) ] = true;
-
-			/*if (timeCorrection !== false)
-			 {
-			 _self.onPlayerCanPlay();
-			 }*/
 		}
 
 		_currentState = state;
-		console.log( "_currentState updated" );
 
 	}
 
@@ -282,8 +257,6 @@ wtsplayer.stateController = function()
 		{
 			return;
 		}
-		console.log( "Updating from recieved:" );
-		//console.log( stateData.state );
 
 		if ( _joinedRoom )
 		{
@@ -307,7 +280,6 @@ wtsplayer.stateController = function()
 		switch ( what )
 		{
 			case __peerController.sending.WAITING_STATUS:
-				console.log( "updating status from onWaitingStatusRecieved" );
 				updateWaitingStatus( from, data );
 				break;
 			case __peerController.sending.STATE:
@@ -322,11 +294,7 @@ wtsplayer.stateController = function()
 	//SPECIAL
 	this.onPeerDeleted = function( id )
 	{
-		//if ( _waitingStates[ id ] )
-		//{
-		console.log( "updating status from onPeerDeleted" );
 		updateWaitingStatus( id, false );
-		//}
 	};
 
 	//SPECIAL
@@ -334,9 +302,6 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'play' && _joinedRoom )
 		{
-			console.log( "Updating from onPlayerPlay:" );
-			//console.log( stateData.state );
-
 			updateCurrentState(
 				{
 					name              : "play",
@@ -354,9 +319,6 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'pause' && _joinedRoom )
 		{
-			console.log( "Updating from onPlayerPause:" );
-			//console.log( stateData.state );
-
 			updateCurrentState(
 				{
 					name              : "pause",
@@ -372,9 +334,6 @@ wtsplayer.stateController = function()
 	//SPECIAL
 	this.onPlayerSeek = function( playerTime )
 	{
-		console.log( "Updating from onPlayerSeek:" );
-		//console.log( stateData.state );
-
 		if ( _joinedRoom )
 		{
 			updateCurrentState(
@@ -394,8 +353,6 @@ wtsplayer.stateController = function()
 	{
 		if ( _currentState.name !== 'waiting' )
 		{
-			console.log( "Updating from onPlayerWaiting:" );
-
 			updateCurrentState(
 				{
 					name              : "waiting",
@@ -411,8 +368,6 @@ wtsplayer.stateController = function()
 	//SPECIAL
 	this.onPlayerCanPlay = function()
 	{
-		console.log( "updating status from onPlayerCanPlay" );
-
 		if ( _joinedRoom )
 		{
 			sendWaitingStatus( false );
@@ -429,18 +384,19 @@ wtsplayer.stateController = function()
 					name              : 'waiting',
 					timestamp         : __peerController.currentTimestamp(),
 					playerTime        : __elementsController.getPlayerCurrentTime(),
-					lastAction        : _currentState.lastAction,//'pause',
+					lastAction        : _currentState.lastAction,
 					previousStateName : 'waiting'
 				} );
 			sendCurrentState();
 		}
-	}
+	};
 
 	//SPECIAL
 	this.onJoinedRoom = function()
 	{
 		_joinedRoom = true;
 		var offset  = null;
+		//TODO: make this nicer
 		if ( _currentState === 'waiting' )
 		{
 			offset = 0;
