@@ -2031,8 +2031,9 @@ wtsplayer.elementsController = function()
 		{
 			if ( _noReload )
 			{
-				alert( "Ошибка соединения с сервером\n" + err.toString() );
-				location.reload();
+				//TODO: inspect error with audiostream
+				//alert( "Ошибка соединения с сервером\n" + err.toString() );
+				//location.reload();
 			}
 		} );
 	}
