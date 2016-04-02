@@ -389,44 +389,35 @@ wtsplayer.elementsController = function()
 			_video.changeQuality( this.value );
 		};
 
-		function parse( d ) //TODO: придумать что с этим делать
+		var parse = function(text)
 		{
-			var res, i$, ref$, len$, a, ref1$;
-			if ( d.startsWith( "http" ) )
+			if (text.indexOf('url_encoded_fmt_stream_map=') !== -1)
 			{
-				return d;
-			} else if ( d.indexOf( "," ) != -1 )
-			{
-				return d.split( "," ).map( parse );
-			} else if ( d.indexOf( "&" ) != -1 )
-			{
-				res = {};
-				for ( i$ = 0, len$ = (ref$ = d.split( "&" )).length; i$ < len$; ++i$ )
+				text       = text.substr( text.indexOf( 'url_encoded_fmt_stream_map=' ) );
+				text       = text.substring( text.indexOf( '=' ) + 1, text.indexOf( '&' ) === -1 ? text.length : text.indexOf( '&' ) );
+				text       = decodeURIComponent( text );
+				var links  = text.split( ',' );
+				var url;
+				var quality;
+				var result = new Array();
+				for ( var ind = 0; ind < links.length; ++ind )
 				{
-					a = ref$[ i$ ];
-					a = a.split( "=" );
-					if ( res[ a[ 0 ] ] )
-					{
-						if ( !$.isArray( res[ a[ 0 ] ] ) )
-						{
-							res[ a[ 0 ] ] = [ res[ a[ 0 ] ] ];
-						}
-						(ref1$ = res[ a[ 0 ] ])[ ref1$.length ] = parse( unescape( a[ 1 ] ) );
-					} else
-					{
-						res[ a[ 0 ] ] = parse( unescape( a[ 1 ] ) );
-					}
+					url = links[ ind ].substr( links[ ind ].indexOf( 'url=' ) );
+					url = url.substring( url.indexOf( '=' ) + 1, url.indexOf( '&' ) === -1 ? url.length : url.indexOf( '&' ) );
+					url = decodeURIComponent( url );
+
+					quality = links[ ind ].substr( links[ ind ].indexOf( 'quality=' ) );
+					quality = quality.substring( quality.indexOf( '=' ) + 1, quality.indexOf( '&' ) === -1 ? quality.length : quality.indexOf( '&' ) );
+					quality = decodeURIComponent( quality );
+
+					result.push( { url : url, quality : quality } );
 				}
-				return res;
-			} else if ( !isNaN( d ) )
+
+				return (result);
+			}
+			else
 			{
-				return +d;
-			} else if ( d === 'True' || d === 'False' )
-			{
-				return d === 'True';
-			} else
-			{
-				return d;
+				return null;
 			}
 		};
 
@@ -435,13 +426,13 @@ wtsplayer.elementsController = function()
 			var obj            = parse( text );
 			_quality.innerHTML = "";
 			_quality.removeAttribute( 'disabled' );
-			if ( obj.url_encoded_fmt_stream_map )
+			if ( obj )
 			{
-				for ( var i = 0; i < obj.url_encoded_fmt_stream_map.length; i++ )
+				for ( var i = 0; i < obj.length; i++ )
 				{
 					var opt       = document.createElement( "option" );
-					opt.innerHTML = obj.url_encoded_fmt_stream_map[ i ].quality;
-					opt.value     = obj.url_encoded_fmt_stream_map[ i ].url;
+					opt.innerHTML = obj[ i ].quality;
+					opt.value     = obj[ i ].url;
 					_quality.appendChild( opt );
 				}
 
