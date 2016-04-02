@@ -709,6 +709,8 @@ wtsplayer.elementsController = function()
 		var ended             = false;
 		var formedQualityList = false;
 
+		var initialized = false;
+
 		var initialMuted       = _video.muted;
 		var initialVolume      = _video.volume;
 		var initialCurrentTime = _video.currentTime;
@@ -725,7 +727,7 @@ wtsplayer.elementsController = function()
 			}
 			else if ( (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) && buffering === true )
 			{
-				if ( !emittedCanplay )
+				if ( !initialized )
 				{
 					//TODO: have no idea how, but it seems to work. Understand and optimize maybe?
 					player.pauseVideo();
@@ -766,8 +768,13 @@ wtsplayer.elementsController = function()
 
 						formedQualityList = true;
 					}
+					setTimeout( function()
+					{
+						_video.wait();
+					}, 200 );
+					initialized = true;
 				}
-				if ( !ended )
+				else if ( !ended )
 				{
 					_video.dispatchEvent( new Event( 'canplay' ) );
 					buffering      = false;
@@ -1671,7 +1678,9 @@ wtsplayer.elementsController = function()
 			{
 				var data = document.querySelector( "#peersSrc option:checked" );
 				if ( _session.video_src !== _peersSrc.value )
+				{
 					_videoSrcChange = true;
+				}
 				_session.video_src  = _peersSrc.value;
 				_session.type_src   = data.dataset.type;
 				_session.video_info = data.dataset.peer;
