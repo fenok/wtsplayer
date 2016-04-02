@@ -771,7 +771,7 @@ wtsplayer.elementsController = function()
 					setTimeout( function()
 					{
 						_video.wait();
-					}, 200 );
+					}, 1 ); //TODO: initial sync is not perfect =(
 					initialized = true;
 				}
 				else if ( !ended )
