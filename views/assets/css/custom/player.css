@@ -1,3 +1,5 @@
+
+
 /*
  The MIT License
 
@@ -58,7 +60,7 @@ input:focus, select:focus {
     overflow: hidden;
 }
 
-/* Р­Р»РµРјРµРЅС‚С‹ СѓРїСЂР°РІР»РµРЅРёСЏ */
+/* Элементы управления */
 #videoControls input[type="image"] {
     height: 25px;
     -moz-user-select: none;
@@ -189,7 +191,7 @@ td{
     }
 }
 
-/* РЎС‚РёР»РёР·Р°С†РёСЏ СЃР»Р°Р№РґРµСЂРѕРІ */
+/* Стилизация слайдеров */
 #playerSeekRange::-moz-range-track {
     border-radius: 8px;
     height: 9px;
@@ -226,7 +228,7 @@ td{
     cursor: pointer;
 }
 
-/* РљРЅРѕРїРєР° РіСЂРѕРјРєРѕСЃС‚Рё */
+/* Кнопка громкости */
 .vrange {
     position: absolute;
     padding: 0;
@@ -300,7 +302,7 @@ td{
     display: block !important;
 }
 
-/* Р­Р»РµРјРµРЅС‚С‹ Р°СѓРґРёРѕ-С‡Р°С‚Р° */
+/* Элементы аудио-чата */
 .volume_crutch{
     vertical-align: bottom;
     display: inline-block;
@@ -339,7 +341,7 @@ td{
     text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;
 }
 
-/* Р’РІРѕРґ СЃРѕРѕР±С‰РµРЅРёР№ */
+/* Ввод сообщений */
 #send {
     margin-left: 10%;
     position: absolute;
@@ -369,15 +371,15 @@ td{
 	box-shadow: -2px 0 0px 0px #444, -3px 0 0px 0px #fff, -5px 0 0px 0px #555;
 }
 
-#player #send:hover #messageInput,
+#send:hover #messageInput,
 #chatParent:hover + #send #messageInput {
     box-shadow: 0 0 1px 1px #333, 0 0 0 2px #fff, 0 0 1px 3px #333;
-    border-radius: 5px;
 }
 
 #messageInput {
     padding-right: 40px;
     box-sizing: border-box;
+	border-radius: 5px;
     width: 100%;
     background: none;
     border: none;
@@ -385,11 +387,11 @@ td{
     font-size: 20px;
     text-align: center;
     text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;
-    transition: all 0s ease-out 0.35s;
+    transition: box-shadow 0s ease-out 0.35s;
     height: 28px;
 }
 
-/* Р­Р»РµРјРµРЅС‚С‹ С‡Р°С‚Р° */
+/* Элементы чата */
 #chatParent {
     height: 25%;
     min-height: 30px;
