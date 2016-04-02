@@ -389,7 +389,7 @@ wtsplayer.elementsController = function()
 			_video.changeQuality( this.value );
 		};
 
-		function parse( d )
+		function parse( d ) //TODO: придумать что с этим делать
 		{
 			var res, i$, ref$, len$, a, ref1$;
 			if ( d.startsWith( "http" ) )
