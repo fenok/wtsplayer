@@ -1193,6 +1193,7 @@ wtsplayer.elementsController = function()
 				{
 					mouseup               = true;
 					_mouseOnChat          = false;
+					clearTimeout(_chatTimeout);
 					_chatTimeout          = setTimeout( function()
 					{
 						if ( !_mouseOnChat )
