@@ -10,27 +10,27 @@
 <body bgcolor="black">
 <div id="overlay" class="closeContent">
     <div id="overlayContent">
-		
-		<h1 id="logo">
-			<a href="#">
-				<img src="wtsplayerlogo.svg">
-				<span>W</span>
-				<span>T</span>
-				<span>S</span>
-				<span>P</span>
-				<span>l</span>
-				<span>a</span>
-				<span>y</span>
-				<span>e</span>
-				<span>r</span>
-			</a>
-		</h1>
+
+        <h1 id="logo">
+            <a href="#">
+                <img src="wtsplayerlogo.svg">
+                <span>W</span>
+                <span>T</span>
+                <span>S</span>
+                <span>P</span>
+                <span>l</span>
+                <span>a</span>
+                <span>y</span>
+                <span>e</span>
+                <span>r</span>
+            </a>
+        </h1>
         <h1 id="title">Подключение к серверу</h1>
         <div>
             <h3>Источник видео:</h3>
 
             <div class="korpus1">
-                <span data-type="inputLink" data-num="1">Ссылка</span><span data-type="localURL" data-num="2">Локальный файл</span><span 
+                <span data-type="inputLink" data-num="1">Ссылка</span><span data-type="localURL" data-num="2">Локальный файл</span><span
                     data-type="peers" data-num="3">Источники пиров</span>
                 <div>
                     <input type="text" id="inputLink" style="width:95%">
@@ -81,11 +81,14 @@
     <div id="videoControls">
         <table>
             <td><input id="playerPlayPauseButton" type="image" src="wait.svg" disabled="disabled"></td>
-            <td width="100%"><input id="playerSeekRange" class="playerSliders video-sensitive" type="range" value="0" step="0.01"></td>
+            <td width="100%"><input id="playerSeekRange" class="playerSliders video-sensitive" type="range" value="0"
+                                    step="0.01"></td>
             <td><span id="playerCurrentTimeOutput">00:00</span></td>
-			<td><input id="addOffsetButton" class="video-sensitive" type="image" src="prev.svg"><span class="under">-0.1c</span></td>
-            <td><span  id="delOffsetButtonParent"><span id="delOffsetButton" class="video-sensitive">0</span></span></td>
-            <td><input id="subOffsetButton" class="video-sensitive" type="image" src="next.svg"><span class="under">+0.1с</span></td>
+            <td><input id="addOffsetButton" class="video-sensitive" type="image" src="prev.svg"><span class="under">-0.1c</span>
+            </td>
+            <td><span id="delOffsetButtonParent"><span id="delOffsetButton" class="video-sensitive">0</span></span></td>
+            <td><input id="subOffsetButton" class="video-sensitive" type="image" src="next.svg"><span class="under">+0.1с</span>
+            </td>
             <td>
                 <div id="vol">
                     <div id="volume_area">
@@ -95,8 +98,10 @@
                 </div>
             </td>
             <td>
-				<select id="quality"><option>Качество</option></select>
-			</td>
+                <select id="quality">
+                    <option>Качество</option>
+                </select>
+            </td>
             <td><input id="peerListButton" type="image" src="people.svg"></td>
             <td><input id="fullscreen" type="image" src="full.svg"></td>
             <td><input id="backOverlayBut" type="image" src="back.svg"></td>
@@ -110,18 +115,14 @@
     </div>
     <div id="send">
         <input id="messageInput" type="text"/>
-		<div   id="leftBorder"></div>
+        <div id="leftBorder"></div>
         <input id="sendMessageButton" type="image" src="send.svg">
     </div>
 </div>
-<!-- TODO: make perfect package.json and include assets from node_modules  -->
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="/jquery.min.js"></script>
-<script src="/webtorrent.min.js"></script>
-<script src="/peer.peerjs_fork_firefox40.min.js"></script>
-<!--<script src="/peer.js"></script>-->
-<script src="/timesync/timesync.js"></script>
-
+<script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
+<script src="/peer.min.js"></script>
+<script src="/timesync/timesync.min.js"></script>
 <script src="/elementsController.js"></script>
 <script src="/peerController.js"></script>
 <script src="/stateController.js"></script>

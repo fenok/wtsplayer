@@ -1,3 +1,9 @@
+/*
+ The MIT License
+
+ Copyright (c) 2016 Leonid Fenko aka Fen-ok <fenok2112@gmail.com>, Georgy Kosturov aka Geosins <geosins@yandex.ru>
+ */
+
 var events = require( 'events' );
 var util   = require( 'util' );
 
@@ -11,11 +17,9 @@ function initServer()
 	var express = require( 'express' );
 	var app     = express();
 
-	//TODO: update paths and corresponding html
+	app.use( express.static( './node_modules/peerjs_fork_firefox40/dist' ) );
 	app.use( express.static( './views' ) );
-	app.use( express.static( './views/assets/js/original' ) );
 	app.use( express.static( './views/assets/js/custom' ) );
-	app.use( express.static( './views/assets/css/original' ) );
 	app.use( express.static( './views/assets/css/custom' ) );
 	app.use( express.static( './views/assets/svg/custom' ) );
 

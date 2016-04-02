@@ -1,3 +1,9 @@
+/*
+ The MIT License
+
+ Copyright (c) 2016 Leonid Fenko aka Fen-ok <fenok2112@gmail.com>, Georgy Kosturov aka Geosins <geosins@yandex.ru>
+ */
+
 var wtsplayer = wtsplayer || {};
 //TODO: clean code
 wtsplayer.elementsController = function()

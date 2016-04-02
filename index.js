@@ -1,3 +1,9 @@
+/*
+ The MIT License
+
+ Copyright (c) 2016 Leonid Fenko aka Fen-ok <fenok2112@gmail.com>, Georgy Kosturov aka Geosins <geosins@yandex.ru>
+ */
+
 var server = require( "./server" );
 var uuid   = require( 'node-uuid' );
 
