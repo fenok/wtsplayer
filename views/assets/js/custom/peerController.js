@@ -208,7 +208,16 @@ wtsplayer.peerController = function()
 			_peer.on( 'error', function( err )
 			{
 				console.error( err.toString() );
-				failCallback( err );
+				switch (err.type)
+				{
+					case 'webrtc':
+						failCallback( err, false );
+						break;
+					default:
+						//fatal error
+						failCallback( err, true );
+						break;
+				}
 			} );
 
 			_peer.on( 'connection', function( conn )
@@ -245,7 +254,7 @@ wtsplayer.peerController = function()
 		}
 		else
 		{
-			failCallback( new Error( "Can't connect to server: already connected or connecting" ) );
+			failCallback( new Error( "Can't connect to server: already connected or connecting" ), false );
 		}
 	};
 

@@ -664,6 +664,7 @@ wtsplayer.elementsController = function()
 
 	//TODO:{NOT CRITICAL} it is possible to set time to 0:00 with positive offset. Not affects the playback though.
 	//TODO:{NOT CRITICAL} frequent clicks may set time beyond bounds. Not affects the playback though.
+	//TODO: normal playback to the end causes infinite waiting after seek. It fixes itself on the second seek though.
 	function constructVideoContent_youtubeIframe( videoLink )
 	{
 		constructVideoContent_dummy();
@@ -2027,13 +2028,20 @@ wtsplayer.elementsController = function()
 	{
 
 		clear();
-		__peerController.connectToServer( init, function( err )
+		__peerController.connectToServer( init, function( err, isFatal )
 		{
 			if ( _noReload )
 			{
-				//TODO: inspect error with audiostream
-				//alert( "Ошибка соединения с сервером\n" + err.toString() );
-				//location.reload();
+				var message = "Ошибка сети: " + err.toString();
+				if (isFatal)
+				{
+					alert( message );
+					location.reload();
+				}
+				else
+				{
+					_self.outputSystemMessage("Возможны проблемы с подключением...");
+				}
 			}
 		} );
 	}
