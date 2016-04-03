@@ -389,6 +389,7 @@ wtsplayer.elementsController = function()
 			_video.changeQuality( this.value );
 		};
 
+		//TODO: make it nicer
 		var parse = function(text)
 		{
 			if (text.indexOf('url_encoded_fmt_stream_map=') !== -1)
