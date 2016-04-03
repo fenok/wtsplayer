@@ -887,7 +887,7 @@ wtsplayer.elementsController = function()
 						{
 							_video.dispatchEvent( new Event( 'timeupdate' ) );
 						}, 1 );
-						//no need to set initialCurrentTime;
+						initialCurrentTime = n;//not actually initial from this point
 					},
 					get          : function()
 					{
@@ -920,12 +920,13 @@ wtsplayer.elementsController = function()
 			};
 			_video.wait  = function()
 			{
-				if ( !ended && player.getCurrentTime() !== player.getDuration() )
+				if ( !ended && (initialCurrentTime - _video.offset) / 1000 < player.getDuration()/* && player.getCurrentTime() !== player.getDuration()*/ )
 				{
 					switch ( player.getPlayerState() )
 					{
 						case YT.PlayerState.PLAYING:
 							player.pauseVideo();
+						case YT.PlayerState.ENDED:
 						case YT.PlayerState.PAUSED:
 							//buffering = false; //weird //TODO: setting buffering to false causes infinite waiting on frequent seek. Also, IT IS POSSIBLE THAT IT IS TRUE AT THIS POINT. WHY.
 							setTimeout( function()
@@ -937,7 +938,6 @@ wtsplayer.elementsController = function()
 							}, 300 ); //Actual buffering should start within this delay (if any)
 							break;
 						case YT.PlayerState.BUFFERING:
-						case YT.PlayerState.ENDED:
 						default:
 							break;
 					}
