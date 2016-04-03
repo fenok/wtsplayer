@@ -1,6 +1,23 @@
-WTS Player description.
-//TODO: check licenses, especially svgs, especially 'people.svg'
-Licenses in node_modules:
+##WTS Player
+
+Description
+
+##License
+
+#WTS Player itself
+
+The MIT License
+
+Copyright (c) 2016 Leonid Fenko aka Fen-ok <fenok2112@gmail.com>, Georgy Kosturov aka Geosins <geosins@yandex.ru>
+
+#Icons
+
+DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+
+Copyright (C) 2016 Georgy Kosturov aka Geosins <geosins@yandex.ru>
+
+#Licenses in node_modules
+
 MIT
 Apache-2.0
 ISC
