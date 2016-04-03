@@ -191,13 +191,17 @@ wtsplayer.elementsController = function()
 		__stateController.onPlayerWaiting();
 	} );
 
-	_video.addEventListener( 'canplay', function()
+	_video.addEventListener('loaded', function()
 	{
 		if ( !_videoLoaded )
 		{
 			_videoLoaded = true;
 			onVideoLoaded();
 		}
+	});
+
+	_video.addEventListener( 'canplay', function()
+	{
 		__stateController.onPlayerCanPlay();
 	} );
 
@@ -536,6 +540,10 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'canplay', function()
 		{
+			if (!emittedCanPlay)
+			{
+				_video.dispatchEvent(new Event('loaded'));
+			}
 			if ( !ended )
 			{
 				_video.dispatchEvent( new Event( 'canplay' ) );
@@ -724,7 +732,7 @@ wtsplayer.elementsController = function()
 				{
 					//TODO: have no idea how, but it seems to work. Understand and optimize maybe?
 					player.pauseVideo();
-					player.seekTo( initialCurrentTime / 1000 );
+					_video.currentTime = initialCurrentTime;
 
 					player.setVolume( initialVolume * 100 );
 					if ( initialMuted === true )
@@ -764,6 +772,7 @@ wtsplayer.elementsController = function()
 					setTimeout( function()
 					{
 						_video.wait();
+						_video.dispatchEvent(new Event('loaded'));
 					}, 1 ); //TODO: initial sync is not perfect =(
 					initialized = true;
 				}
@@ -776,8 +785,10 @@ wtsplayer.elementsController = function()
 			}
 			else if ( event.data === YT.PlayerState.ENDED )
 			{
+				//player.seekTo(player.getDuration());
 				if ( !ended )
 				{
+					//buffering = false;//yup?
 					ended = true;
 					player.pauseVideo();
 					_video.dispatchEvent( new Event( 'ended' ) );
@@ -861,6 +872,7 @@ wtsplayer.elementsController = function()
 						else if ( n - _video.offset >= player.getDuration() * 1000 )
 						{
 							player.pauseVideo();
+							//player.seekTo(player.getDuration());
 							ended = true;
 							setTimeout( function()
 							{
@@ -915,6 +927,7 @@ wtsplayer.elementsController = function()
 						case YT.PlayerState.PLAYING:
 							player.pauseVideo();
 						case YT.PlayerState.PAUSED:
+							//buffering = false; //weird //TODO: setting buffering to false causes infinite waiting on frequent seek. Also, IT IS POSSIBLE THAT IT IS TRUE AT THIS POINT. WHY.
 							setTimeout( function()
 							{
 								if ( !buffering )
