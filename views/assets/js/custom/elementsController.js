@@ -1347,12 +1347,21 @@ wtsplayer.elementsController = function()
 				{
 					opt.disabled = false;
 				}
-				if ( _follow.checked && _session.video_info == peerId )
+				if (_session.video_info == peerId )
 				{
-					_session.type_src  = data[ 0 ];
-					_session.video_src = data[ 1 ];
-					_videoSrcChange    = true;
-					enterRoom();
+					if ( _follow.checked )
+					{
+						_session.type_src  = data[ 0 ];
+						_session.video_src = data[ 1 ];
+						_videoSrcChange    = true;
+						enterRoom();
+					}
+					else
+					{
+						document.querySelector( "span[data-type='inputLink']" ).click();
+						_inputLink.value = _session.video_src;
+						_session.video_info = "";
+					}
 				}
 			}
 		}
@@ -1361,6 +1370,12 @@ wtsplayer.elementsController = function()
 			opt.value     = "";
 			opt.disabled  = true;
 			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
+			if(_session.video_info === peerId)
+			{
+				document.querySelector( "span[data-type='inputLink']" ).click();
+				_inputLink.value = _session.video_src;
+				_session.video_info = "";
+			}
 		}
 		if ( newopt )
 		{
@@ -1447,6 +1462,12 @@ wtsplayer.elementsController = function()
 			}
 			document.querySelector( "#peersSrc option[data-peer='" + id + "']" ).remove();
 			delete _peers[ id ];
+			if(_session.video_info === id)
+			{
+				document.querySelector( "span[data-type='inputLink']" ).click();
+				_inputLink.value = _session.video_src;
+				_session.video_info = "";
+			}
 			if ( !_peerTable.children[ 0 ] )
 			{
 				_noteEmptyRoom.innerHTML = "&#160;Комната пуста!&#160;";
