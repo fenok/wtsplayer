@@ -61,7 +61,7 @@ h3 {
 	box-sizing: border-box;
 	border-top: 2px solid orange;
 }
-@media screen and (max-height: 650px) {
+@media screen and (max-height: 680px) {
     .create #overlayContent {
         width: 800px;
     }
@@ -80,28 +80,28 @@ h3 {
     }
 }
 
-@media screen and (max-height: 486px) {
+@media screen and (max-height: 540px) {
 
     #overlay.create{
 		min-width:  800px!important;
-		min-height: 486px!important;
+		min-height: 520px!important;
 	}
 	#overlay.join {
-		min-height: 430px!important;
+		min-height: 485px!important;
     }
 	#overlay.password {
-		min-height: 290px!important;
+		min-height: 320px!important;
     }
 	#overlay.error {
-		min-height: 250px!important;
+		min-height: 282px!important;
     }
 	#overlay.closeContent {
-		min-height: 200px!important;
+		min-height: 230px!important;
     }
 
     @media screen and (min-width: 1205px) {
         #overlay.create {
-            min-height: 420px!important;
+            min-height: 455px!important;
         }
 
         .create #overlayContent {

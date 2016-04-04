@@ -1372,9 +1372,12 @@ wtsplayer.elementsController = function()
 			opt.innerHTML = _peers[ peerId ][ _peerVars.NICK ] + " - локальный файл";
 			if(_session.video_info === peerId)
 			{
-				document.querySelector( "span[data-type='inputLink']" ).click();
 				_inputLink.value = _session.video_src;
-				_session.video_info = "";
+				if (!_follow.checked)
+				{
+					document.querySelector( "span[data-type='inputLink']" ).click();
+					_session.video_info = "";
+				}
 			}
 		}
 		if ( newopt )
