@@ -712,6 +712,8 @@ wtsplayer.elementsController = function()
 
 		var initialized = false;
 
+		var waitingTimeout = null;
+
 		var initialMuted       = _video.muted;
 		var initialVolume      = _video.volume;
 		var initialCurrentTime = _video.currentTime;
@@ -720,6 +722,7 @@ wtsplayer.elementsController = function()
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
 			{
+				clearTimeout(waitingTimeout);
 				if ( emittedCanplay )
 				{
 					_video.dispatchEvent( new Event( 'waiting' ) );
@@ -929,12 +932,11 @@ wtsplayer.elementsController = function()
 						case YT.PlayerState.ENDED:
 						case YT.PlayerState.PAUSED:
 							//buffering = false; //weird //TODO: setting buffering to false causes infinite waiting on frequent seek. Also, IT IS POSSIBLE THAT IT IS TRUE AT THIS POINT. WHY.
-							setTimeout( function()
+							clearTimeout(waitingTimeout);
+							waitingTimeout = setTimeout( function()
 							{
-								if ( !buffering )
-								{
-									_video.dispatchEvent( new Event( 'canplay' ) );
-								}
+								buffering = true;
+								onPlayerStateChange({data:player.getPlayerState()});
 							}, 300 ); //Actual buffering should start within this delay (if any)
 							break;
 						case YT.PlayerState.BUFFERING:
