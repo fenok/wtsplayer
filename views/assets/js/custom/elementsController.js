@@ -512,7 +512,7 @@ wtsplayer.elementsController = function()
 
 		videoElement.volume      = _video.volume;
 		videoElement.muted       = _video.muted;
-		videoElement.currentTime = _video.currentTime / 1000;
+		var initialCurrentTime = _video.currentTime;
 
 		var emittedCanPlay = false;
 		var ended          = false;
@@ -523,6 +523,7 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'ended', function()
 		{
+			videoElement.pause(); //TODO: check whether that's correct
 			if ( !ended )
 			{
 				ended = true;
@@ -532,6 +533,7 @@ wtsplayer.elementsController = function()
 
 		videoElement.addEventListener( 'waiting', function()
 		{
+			videoElement.pause(); //TODO: check whether that's correct
 			if ( emittedCanPlay )
 			{
 				_video.dispatchEvent( new Event( 'waiting' ) );
@@ -659,6 +661,8 @@ wtsplayer.elementsController = function()
 			_video.currentTime = _video.currentTime - ( tempOffset );
 		};
 
+		_video.currentTime = initialCurrentTime;
+		
 		return videoElement;
 	}
 
@@ -722,6 +726,7 @@ wtsplayer.elementsController = function()
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
 			{
+				//player.pauseVideo();
 				clearTimeout(waitingTimeout);
 				if ( emittedCanplay )
 				{
@@ -928,8 +933,8 @@ wtsplayer.elementsController = function()
 					switch ( player.getPlayerState() )
 					{
 						case YT.PlayerState.PLAYING:
-							player.pauseVideo();
 						case YT.PlayerState.ENDED:
+							player.pauseVideo();
 						case YT.PlayerState.PAUSED:
 							//buffering = false; //weird //TODO: setting buffering to false causes infinite waiting on frequent seek. Also, IT IS POSSIBLE THAT IT IS TRUE AT THIS POINT. WHY.
 							clearTimeout(waitingTimeout);
