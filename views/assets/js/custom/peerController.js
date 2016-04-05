@@ -113,6 +113,9 @@ wtsplayer.peerController = function()
 
 	var _activeRequests;
 
+	var _pingingRate = 3000000; //ms -- 50 min
+	var _pingingInterval = null;
+
 	function init()
 	{
 		_connectedToServer  = false;
@@ -134,6 +137,13 @@ wtsplayer.peerController = function()
 		_calls       = {};
 
 		_activeRequests = [];
+
+		clearInterval(_pingingInterval);
+		_pingingInterval = setInterval(function()
+		{
+			//TODO: change server code so that it doesn't throw error 'Message unrecognized'
+			_peer.socket.send({type: 'ping'});
+		}, _pingingRate);
 	}
 
 	/*
