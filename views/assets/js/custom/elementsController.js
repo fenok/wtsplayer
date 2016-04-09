@@ -726,7 +726,7 @@ wtsplayer.elementsController = function()
 		{
 			if ( event.data === YT.PlayerState.BUFFERING )
 			{
-				//player.pauseVideo();
+				if ( initialized ) player.pauseVideo();
 				clearTimeout(waitingTimeout);
 				if ( emittedCanplay )
 				{
