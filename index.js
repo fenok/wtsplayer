@@ -120,7 +120,7 @@ server.on( 'getPeers', function( req, res )
 		res.json( null );
 	}
 } );
-
+//TODO: wait, we can just drop the connection client-side!
 server.on( 'leaveRoom', function( req, res )
 {
 	console.log( 'leaveRoom' );
