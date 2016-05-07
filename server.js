@@ -82,6 +82,10 @@ function initServer()
 	{
 		self.emit( 'leaveRoom', req, res );
 	} );
+	app.get( '/getTime', function( req, res )
+	{
+		self.emit( 'getTime', req, res );
+	} );
 
 	var ExpressPeerServer = require( 'peer' ).ExpressPeerServer;
 	var server            = require( 'http' ).createServer( app );

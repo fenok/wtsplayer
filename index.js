@@ -80,6 +80,11 @@ server.on( 'getYoutubeVideoInfo', function( req, res )
 	http.request( options, callback ).end();
 } );
 
+server.on( 'getTime', function( req, res )
+{
+	res.json( Date.now() );
+} );
+
 server.on( 'getRoomStatus', function( req, res )
 {
 	if ( passwords[ req.query.roomID ] === undefined )

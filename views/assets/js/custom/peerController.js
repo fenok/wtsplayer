@@ -73,6 +73,7 @@ wtsplayer.peerController = function()
 		ANSWER  : 1
 	} );
 
+	var _accurateTimeSync     = false;
 	var _serverTimeSync       = true;
 	var _reliableDataChannels = false;
 
@@ -138,12 +139,12 @@ wtsplayer.peerController = function()
 
 		_activeRequests = [];
 
-		clearInterval(_pingingInterval);
-		_pingingInterval = setInterval(function()
+		clearInterval( _pingingInterval );
+		_pingingInterval = setInterval( function()
 		{
 			//TODO: change server code so that it doesn't throw error 'Message unrecognized'
-			_peer.socket.send({type: 'ping'});
-		}, _pingingRate);
+			_peer.socket.send( { type : 'ping' } );
+		}, _pingingRate );
 	}
 
 	/*
@@ -218,7 +219,7 @@ wtsplayer.peerController = function()
 			_peer.on( 'error', function( err )
 			{
 				console.error( err.toString() );
-				switch (err.type)
+				switch ( err.type )
 				{
 					case 'webrtc':
 						failCallback( err, false );
@@ -737,15 +738,33 @@ wtsplayer.peerController = function()
 
 	function syncTime_Server( callback )
 	{
-		_ts.on( 'sync', function( state )
+		if ( _accurateTimeSync )
 		{
-			if ( state === 'end' )
+			_ts.on( 'sync', function( state )
 			{
-				callback();
-			}
-		} );
+				if ( state === 'end' )
+				{
+					callback();
+				}
+			} );
 
-		_ts.sync();
+			_ts.sync();
+		}
+		else
+		{
+			var timestamp = Date.now();
+			GETFromServer( '/getTime',
+				function( data )
+				{
+					var offset = Date.now() - (data + (Date.now() - timestamp) / 2);
+					_ts.now    = function()
+					{
+						return Date.now() - offset
+					};
+					console.log( "Detected offset: ", offset );
+					callback();
+				}, callback );
+		}
 	}
 
 	function syncTime_Peers( callback )
