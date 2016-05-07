@@ -73,7 +73,7 @@ wtsplayer.peerController = function()
 		ANSWER  : 1
 	} );
 
-	var _accurateTimeSync     = true;
+	var _accurateTimeSync     = false;
 	var _serverTimeSync       = true;
 	var _reliableDataChannels = false;
 
@@ -756,12 +756,8 @@ wtsplayer.peerController = function()
 			GETFromServer( '/getTime',
 				function( data )
 				{
-					var offset = Date.now() - (data + (Date.now() - timestamp) / 2);
-					_ts.now    = function()
-					{
-						return Date.now() - offset
-					};
-					console.log( "Detected offset: ", offset );
+					_ts.offset = -(Date.now() - (data + (Date.now() - timestamp) / 2));
+					console.log( "Detected offset: ", _ts.offset );
 					callback();
 				}, callback );
 		}
