@@ -73,7 +73,7 @@ wtsplayer.peerController = function()
 		ANSWER  : 1
 	} );
 
-	var _accurateTimeSync     = false;
+	var _accurateTimeSync     = true;
 	var _serverTimeSync       = true;
 	var _reliableDataChannels = false;
 
