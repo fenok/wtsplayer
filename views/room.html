@@ -14,63 +14,70 @@
 </head>
 <body bgcolor="black">
 <div id="overlay" class="closeContent">
-    <div id="overlayContent">
+    <div id="float">
+        <div id="overlayContent">
 
-        <h1 id="logo">
-            <a href="#">
-                <img src="wtsplayerlogo.svg">
-                <span>W</span>
-                <span>T</span>
-                <span>S</span>
-                <span>P</span>
-                <span>l</span>
-                <span>a</span>
-                <span>y</span>
-                <span>e</span>
-                <span>r</span>
-            </a>
-        </h1>
-        <h1 id="title">Подключение к серверу</h1>
-        <div>
-            <h3>Источник видео:</h3>
-
-            <div class="korpus1">
-                <span data-type="inputLink" data-num="1">Ссылка</span><span data-type="localURL" data-num="2">Локальный файл</span><span
-                    data-type="peers" data-num="3">Источники пиров</span>
-                <div>
-                    <input type="text" id="inputLink" style="width:95%">
-                    Введите ссылку на видео. На данный момент поддерживаются: magnet-ссылки WebTorrent, ссылки на
-                    youtube и прямые ссылки.
-                </div>
-                <div><input type="file" id="localURL"></div>
-                <div>
-                    <select id="peersSrc" size="4" style="width:95%"></select>
-                    <input type="checkbox" id="follow" checked="checked"><label for="follow">Динамическое изменение видео вслед за
-                    пиром</label>
+            <h1 id="logo">
+                <a href="#">
+                    <img src="wtsplayerlogo.svg">
+                    <span>W</span>
+                    <span>T</span>
+                    <span>S</span>
+                    <span>P</span>
+                    <span>l</span>
+                    <span>a</span>
+                    <span>y</span>
+                    <span>e</span>
+                    <span>r</span>
+                </a>
+            </h1>
+            <h1 id="title">Подключение к серверу</h1>
+            <div id="roomURL"> <!--class="widthCopy"-->
+                <h3>Данные для подключения к комнате:</h3>
+                <p>Для того, чтобы ваши друзья смогли к ней подключиться и посмотреть это видео вместе с вами отправьте им ссылку с адресом этой комнаты</p>
+                URL: <div class="shell"><input id="roomURLtext" readonly><input type="image" id="copyURL" src="/copy.svg"></div>
+                Пароль: <div class="shell"><input id="roomURLpass" readonly><input type="image" id="copyPass" src="/copy.svg"></div>
+            </div>
+            <div>
+                <h3>Источник видео:</h3>
+                <div class="korpus1">
+                    <span data-type="inputLink" data-num="1">Ссылка</span><span data-type="localURL" data-num="2">Локальный файл</span><span
+                        data-type="peers" data-num="3">Источники пиров</span>
+                    <div>
+                        <input type="text" id="inputLink" style="width:95%">
+                        Введите ссылку на видео для совместного просмотра. На данный момент поддерживаются: magnet-ссылки WebTorrent, ссылки на
+                        youtube и прямые ссылки.
+                    </div>
+                    <div><input type="file" id="localURL"></div>
+                    <div>
+                        <select id="peersSrc" size="4" style="width:95%"></select>
+                        <input type="checkbox" id="follow" checked="checked"><label for="follow">Динамическое изменение видео вслед за пиром</label>
+                    </div>
                 </div>
             </div>
+            <div id="typeRoom">
+                <h3>Идентификатор комнаты:</h3>
+                <input id="roomId"><input type="button" id="generateId" value="Сменить ID">
+                <span id="wrongId" class="close">Неверный идентификатор!</span>
+                <h3>Выберите тип комнаты:</h3>
+                <input type="radio" id="but_5" name="b" checked>
+                <label id="adress_5" for="but_5">Открытая комната</label>
+                <input type="radio" id="but_6" name="b">
+                <label for="but_6">Частная комната</label>
+                <input id="passwordInput" type="password" placeholder=" Введите пароль">
+                <span id="wrongPassword" class="close">Неверный пароль!</span>
+            </div>
+            <div>
+                <input type="checkbox" id="audioChatStatus">
+                <label for="audioChatStatus">Использование аудио-чата</label>
+                <br><br>
+                <label for="nick">Введите ник для чата:</label>
+                <input id="nick" maxlength="20">
+                <br>
+            </div>
+            <input id="joinButton" type="button" value="Join room">
         </div>
-        <div id="typeRoom">
-            <h3>Идентификатор комнаты:</h3>
-            <input id="roomId"><input type="button" id="generateId" value="Сменить ID">
-            <span id="wrongId" class="close">Неверный идентификатор!</span>
-            <h3>Выберите тип комнаты:</h3>
-            <input type="radio" id="but_5" name="b" checked>
-            <label id="adress_5" for="but_5">Открытая комната</label>
-            <input type="radio" id="but_6" name="b">
-            <label for="but_6">Частная комната</label>
-            <input id="passwordInput" type="password" placeholder=" Введите пароль">
-            <span id="wrongPassword" class="close">Неверный пароль!</span>
-        </div>
-        <div>
-            <input type="checkbox" id="audioChatStatus">
-            <label for="audioChatStatus">Использование аудио-чата</label>
-            <br><br>
-            <label for="nick">Введите ник для чата:</label>
-            <input id="nick" maxlength="20">
-            <br>
-        </div>
-        <input id="joinButton" type="button" value="Join room">
+        <div style="height:50px; width:100%;"></div>
     </div>
 	<div id="footer">© Fen-ok, Geosins, 2016</div>
 </div>
