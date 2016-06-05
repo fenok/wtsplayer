@@ -1645,7 +1645,7 @@ wtsplayer.elementsController = function()
                     }
             }
         else
-            _overlay.onclick = "";
+            _overlay.onmousedown = "";
     }
     
     _showPass.onclick = function()
@@ -1730,8 +1730,9 @@ wtsplayer.elementsController = function()
 	function createRoom()
 	{
 		processInputs();
-		_wrongId.className = "close"; //закрыть надпись о неверном idRoom
-		
+		_wrongId.className  = "close"; //закрыть надпись о неверном idRoom
+		_joinButton.onclick = "";
+        
 		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], 
             function(roomId)
             {
