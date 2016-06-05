@@ -73,6 +73,8 @@ wtsplayer.peerController = function()
 		ANSWER  : 1
 	} );
 
+	var _localRoomIDGeneration = true;
+
 	var _serverTimeSync       = true;
 	var _reliableDataChannels = false;
 
@@ -504,19 +506,26 @@ wtsplayer.peerController = function()
 
 	this.getRoomID = function( successCallback, failCallback )
 	{
-		if ( _connectedToServer )
+		if ( _localRoomIDGeneration )
 		{
-			GETFromServer( '/getRoomID',
-				function( data )
-				{
-					successCallback( data );
-				}, failCallback );
+			successCallback( generateNextRandomString() );
 		}
 		else
 		{
-			var err = new Error( "You must be connected to server" );
-			console.error( err.toString() );
-			failCallback( err );
+			if ( _connectedToServer )
+			{
+				GETFromServer( '/getRoomID',
+					function( data )
+					{
+						successCallback( data );
+					}, failCallback );
+			}
+			else
+			{
+				var err = new Error( "You must be connected to server" );
+				console.error( err.toString() );
+				failCallback( err );
+			}
 		}
 	};
 
@@ -939,6 +948,11 @@ wtsplayer.peerController = function()
 		};
 
 		_activeRequests.push( xhr );
+	}
+
+	function generateNextRandomString()
+	{
+		return Math.random().toString( 36 ).substr( 2, 10 );
 	}
 
 	//GENERIC
