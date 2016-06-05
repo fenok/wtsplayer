@@ -73,7 +73,6 @@ wtsplayer.peerController = function()
 		ANSWER  : 1
 	} );
 
-	var _accurateTimeSync     = false;
 	var _serverTimeSync       = true;
 	var _reliableDataChannels = false;
 
@@ -126,6 +125,10 @@ wtsplayer.peerController = function()
 
 		currentRoomID   = '';
 		currentPassword = '';
+
+		_ts.off( 'sync' );
+		_ts.off( 'change' );
+		_ts.off( 'error' );
 
 		if ( !_serverTimeSync )
 		{
@@ -205,10 +208,7 @@ wtsplayer.peerController = function()
 
 				if ( _serverTimeSync )
 				{
-					syncTime_Server( function()
-					{
-						onConnected();
-					} );
+					syncTime_Server( onConnected, failCallback );
 				}
 				else
 				{
@@ -222,11 +222,11 @@ wtsplayer.peerController = function()
 				switch ( err.type )
 				{
 					case 'webrtc':
-						failCallback( err, false );
+						failCallback( err, true );
 						break;
 					default:
 						//fatal error
-						failCallback( err, true );
+						failCallback( err ); //TODO: update elementsController
 						break;
 				}
 			} );
@@ -271,7 +271,7 @@ wtsplayer.peerController = function()
 
 	this.dropAllConnections = function( callback )
 	{
-		_self.abortActiveRequests();
+		abortActiveRequests();
 
 		var onDropped = function()
 		{
@@ -736,31 +736,35 @@ wtsplayer.peerController = function()
 		}
 	}
 
-	function syncTime_Server( callback )
+	function syncTime_Server( callback, failCallback )
 	{
-		if ( _accurateTimeSync )
-		{
-			_ts.on( 'sync', function( state )
-			{
-				if ( state === 'end' )
-				{
-					callback();
-				}
-			} );
+		var fastSynced = false;
 
-			_ts.sync();
-		}
-		else
+		_ts.on( 'sync', function( state )
 		{
-			var timestamp = Date.now();
-			GETFromServer( '/getTime',
-				function( data )
-				{
-					_ts.offset = -(Date.now() - (data + (Date.now() - timestamp) / 2));
-					console.log( "Detected offset: ", _ts.offset );
-					callback();
-				}, callback );
-		}
+			if ( state === 'end' )
+			{
+				console.log( "Full sync offset: ", _ts.offset );
+				__elementsController.outputSystemMessage( "Точная синхронизация времени завершена" );
+			}
+		} );
+
+		_ts.on( 'change', function( offset )
+		{
+			if ( !fastSynced )
+			{
+				fastSynced = true;
+				console.log( "Fast sync offset: ", offset );
+				callback();
+			}
+		} );
+
+		_ts.on( 'error', function( error )
+		{
+			failCallback( error );
+		} );
+
+		_ts.sync();
 	}
 
 	function syncTime_Peers( callback )
