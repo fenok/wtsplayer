@@ -8,6 +8,11 @@
     display: none !important;
 }
 
+input[type="text"],input[type="password"]{
+    height: 23px;
+    box-sizing: border-box;
+}
+
 #overlay {
     position: absolute;
     min-width: 500px !important;
