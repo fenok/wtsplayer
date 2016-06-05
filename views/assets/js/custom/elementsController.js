@@ -1854,10 +1854,7 @@ wtsplayer.elementsController = function()
 			{
 				document.querySelector( "span[data-type='localURL']" ).click();
 			}
-			_title.innerHTML    = "";
-            joinButtonClick(inputAndEnter);
-			_joinButton.value   = "Вернуться";
-			_overlay.className  = "close"; //"join";
+            inputAndEnter();
 		}
 		else
 		{
