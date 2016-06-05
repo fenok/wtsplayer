@@ -1326,7 +1326,12 @@ wtsplayer.elementsController = function()
             if(document.execCommand('copy'))
             {
                 el.style.backgroundColor = "gray";
-                setTimeout(function(){el.removeAttribute("style")},100);
+                _showPass.style.backgroundColor = "gray";
+                setTimeout(function()
+                {
+                    el.removeAttribute("style");
+                    _showPass.removeAttribute("style");
+                },100);
             }
             else
                 console.log("Ошибка при копировании");

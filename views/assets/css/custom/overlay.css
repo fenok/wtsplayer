@@ -195,7 +195,7 @@ h3 {
     width: 190px;
 }
 #roomURLpass{
-    width: 85px;
+    width: 90px;
 }
 #roomURLpassArea{
     display: inline-block;
@@ -206,12 +206,13 @@ h3 {
     top: 1px;
     display: inline-block;
     height: 19px;
-    width: 84px;
+    width: 89px;
     background-color: white;
     cursor: pointer;
+    font-style: italic;
 }
 .widthCopy #showPass{
-    width: 64px;
+    width: 69px;
 }
 .widthCopy  #roomURLtext, .widthCopy #roomURLpass{
     padding-right: 20px;
