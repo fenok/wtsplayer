@@ -2035,14 +2035,28 @@ wtsplayer.elementsController = function()
 		}
 	}
 
-	if ( window.name ) //Session has been set before
-	{
-		_session = JSON.parse( window.name );
-	}
-	else //New session
+	function initSession()
 	{
 		_session    = [ '', '', '', '', '', '', '' ];
 		window.name = JSON.stringify( _session );
+	}
+
+	if ( window.name ) //Session has been set before
+	{
+		try
+		{
+			_session = JSON.parse( window.name );
+		}
+		catch (e)
+		{
+			console.error( e.toString());
+			console.error( "Unable to restore session, clearing..." );
+			initSession();
+		}
+	}
+	else //New session
+	{
+		initSession();
 	}
 
 	_session.rewrite = function()
