@@ -1348,6 +1348,14 @@ wtsplayer.elementsController = function()
         copy(_roomURLpass);
     }
     
+    function selectText(event)
+    {
+        event.target.focus();
+        event.target.select();
+    }
+    _roomURLtext.onclick = selectText;    
+    _roomURLpass.onclick = selectText;    
+    
 	_generateId.onclick = function()
 	{
 		__peerController.getRoomID( function( id )
@@ -1847,13 +1855,9 @@ wtsplayer.elementsController = function()
 				document.querySelector( "span[data-type='localURL']" ).click();
 			}
 			_title.innerHTML    = "";
-			_joinButton.value   = "Войти в комнату";
-			joinButtonClick(function()
-			{
-				processInputs();
-				enterRoom();
-			});
-			_overlay.className  = "join";
+            joinButtonClick(inputAndEnter);
+			_joinButton.value   = "Вернуться";
+			_overlay.className  = "close"; //"join";
 		}
 		else
 		{
@@ -1905,17 +1909,21 @@ wtsplayer.elementsController = function()
 			}
 
 			//отображение плеера
-			joinButtonClick(function()
-			{
-				processInputs();
-				enterRoom();
-			});
-			_joinButton.value   = "Вернуться";
-			_title.innerHTML    = "";
+            if (_joinButton.value != "Вернуться")
+            {
+                joinButtonClick(inputAndEnter);
+                _joinButton.value   = "Вернуться";
+                _title.innerHTML    = "";
+            }
 			_overlay.className  = "close";
             _showPass.className = "";
 		}
 	}
+    function inputAndEnter()
+    {
+        processInputs();
+        enterRoom();
+    }
 
 	function init( id )
 	{
