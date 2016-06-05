@@ -57,7 +57,9 @@ wtsplayer.elementsController = function()
 	var _roomURL         = document.getElementById( "roomURL" );
 	var _roomURLtext     = document.getElementById( "roomURLtext" );
 	var _copyURL         = document.getElementById( "copyURL" );
+	var _roomURLpassArea = document.getElementById( "roomURLpassArea" );
 	var _roomURLpass     = document.getElementById( "roomURLpass" );
+	var _showPass        = document.getElementById( "showPass" );
 	var _copyPass        = document.getElementById( "copyPass" );
 	var _generateId      = document.getElementById( "generateId" );
 	var _roomIdInput     = document.getElementById( "roomId" );
@@ -1620,12 +1622,34 @@ wtsplayer.elementsController = function()
     function joinButtonClick(func)
     {
         if (func)
-            _overlay.onclick = function(event)
+            _overlay.onmousedown = function(event)
             {
-                if(event.target==_overlay||event.target==_joinButton) func();
+                if(event.target==_overlay||event.target==_joinButton) 
+                    _overlay.onmouseup = function(event)
+                    {
+                        func();
+                        _overlay.onmouseup = "";
+                    }
             }
         else
             _overlay.onclick = "";
+    }
+    
+    _showPass.onclick = function()
+    {
+        _showPass.className = "close";
+    }
+    
+    function showRoomDate()
+    {
+        _roomURLtext.value = location.hostname+location.pathname+location.search+location.hash;
+        if (_passwordInput.value)
+        {
+            _roomURLpassArea.className = "";
+            _roomURLpass.value = _passwordInput.value;
+        }
+        else
+            _roomURLpassArea.className = "close";
     }
 
 	function error404()
@@ -1701,8 +1725,7 @@ wtsplayer.elementsController = function()
                 _session.room_id     = roomId;
                 window.location.hash = '#' + roomId;
                 _wrongId.className   = "close";
-                _roomURLtext.value   = location.hostname+location.pathname+location.search+location.hash;
-                _roomURLpass.value   = _passwordInput.value;
+                showRoomDate();
                 _overlay.className   = "copy";
                 _title.innerHTML     = "Комната создана";
                 _joinButton.value    = "Закрыть"
@@ -1800,9 +1823,10 @@ wtsplayer.elementsController = function()
 			}
 			_wrongPassword.className = "close";
 			_wrongId.className       = "close";
+            
+            showRoomDate();
 		}
-        _roomURLtext.value = location.hostname+location.pathname+location.search+location.hash;
-        _roomURLpass.value = _passwordInput.value;
+        
 
 		if ( _session.video_src === '' )
 		{
@@ -1884,6 +1908,7 @@ wtsplayer.elementsController = function()
 			_joinButton.value   = "Вернуться";
 			_title.innerHTML    = "";
 			_overlay.className  = "close";
+            _showPass.className = "";
 		}
 	}
 
@@ -1928,7 +1953,7 @@ wtsplayer.elementsController = function()
 				_joinButton.value    = "Создать комнату";
 				_roomIdInput.value   = potentialRoomID;
 				_title.innerHTML     = "Создание комнаты";
-				joinButtonClick(createRoom);
+				_joinButton.onclick  = createRoom;
 				_overlay.className   = "create";
 			}, function( err )
 			{

@@ -188,11 +188,30 @@ h3 {
     display: inline;
 }
 
+#roomURL{
+    padding: 5px;
+}
 #roomURLtext{
     width: 190px;
 }
 #roomURLpass{
     width: 85px;
+}
+#roomURLpassArea{
+    display: inline-block;
+}
+#showPass{
+    position: absolute;
+    left: 1px;
+    top: 1px;
+    display: inline-block;
+    height: 19px;
+    width: 84px;
+    background-color: white;
+    cursor: pointer;
+}
+.widthCopy #showPass{
+    width: 64px;
 }
 .widthCopy  #roomURLtext, .widthCopy #roomURLpass{
     padding-right: 20px;
@@ -205,8 +224,11 @@ h3 {
     right: 1px;
     display: none;
 }
-#roomURL.widthCopy  input[type="image"]{
+#roomURL.widthCopy input[type="image"]{
     display: inline;
+}
+#roomURL.widthCopy input[type='image']:active{
+    transform: scale(0.9);
 }
 .shell{
     position: relative;
