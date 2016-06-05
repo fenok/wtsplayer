@@ -2119,19 +2119,19 @@ wtsplayer.elementsController = function()
 	{
 		clear();
         if(document.execCommand) _roomURL.className = "widthCopy";
-		__peerController.connectToServer( init, function( err, isFatal )
+		__peerController.connectToServer( init, function( err, isNotFatal )
 		{
 			if ( _noReload )
 			{
 				var message = "Ошибка сети: " + err.toString();
-				if (isFatal)
+				if (isNotFatal)
 				{
-					alert( message );
-					location.reload();
+					_self.outputSystemMessage("Возможны проблемы с подключением...");
 				}
 				else
 				{
-					_self.outputSystemMessage("Возможны проблемы с подключением...");
+					alert( message );
+					location.reload();
 				}
 			}
 		} );

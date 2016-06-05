@@ -226,7 +226,7 @@ wtsplayer.peerController = function()
 						break;
 					default:
 						//fatal error
-						failCallback( err ); //TODO: update elementsController
+						failCallback( err );
 						break;
 				}
 			} );
