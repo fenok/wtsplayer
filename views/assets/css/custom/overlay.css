@@ -11,6 +11,7 @@
 input[type="text"],input[type="password"]{
     height: 23px;
     box-sizing: border-box;
+    padding: 0 3px;
 }
 
 #overlay {
