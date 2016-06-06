@@ -2236,6 +2236,7 @@ wtsplayer.elementsController = function()
 		var newHash = window.location.hash.substr( 1 );
 		if ( newHash !== _session.room_id )
 		{
+            showPass.className = "";
 			joinButtonClick();
 			__peerController.fakeReload( function()
 			{
