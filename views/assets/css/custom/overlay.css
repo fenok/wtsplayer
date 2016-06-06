@@ -63,6 +63,10 @@ h3 {
 .join h3 {
     margin-top: 5px;
 }
+#audioChatStatus, #audioChatStatus + label{
+    position: relative;
+    top: 10px;
+}
 
 #footer{
 	position: absolute;
@@ -76,30 +80,28 @@ h3 {
 	box-sizing: border-box;
 	border-top: 2px solid orange;
 }
-@media screen and (max-height: 650px) {
+@media screen and (max-height: 565px) {
     .create #overlayContent {
         width: 800px;
     }
-
     .create #overlayContent > div {
         display: inline-block;
         width: 49%;
     }
-
     .create #overlayContent > div:last-of-type {
-        width: 100%;
+        position: absolute;
+        right: 0;
+        top: 225px;
     }
-
     #overlay.create {
         min-width: 800px !important;
     }
 }
 
 @media screen and (max-height: 490px) {
-
     #overlay.create{
 		min-width:  800px!important;
-		min-height: 490px!important;
+		min-height: 420px!important;
 	}
 	#overlay.join {
 		min-height: 490px!important;
@@ -116,21 +118,6 @@ h3 {
 	#overlay.closeContent {
 		min-height: 230px!important;
     }
-
-    @media screen and (min-width: 1205px) {
-        #overlay.create {
-            min-height: 430px!important;
-        }
-
-        .create #overlayContent {
-            width: 1200px;
-        }
-
-        .create #overlayContent > div {
-            width: 33% !important;
-        }
-
-    }  
 }
 
 #overlayContent > div {
@@ -175,7 +162,7 @@ h3 {
 }
 /*.craete .join .password .error*/
 .password #overlayContent > *:not(h1):not(#joinButton):not(#typeRoom), 
-.password #typeRoom *:not(#wrongPassword),
+.password #typeRoom  > *:not(.shell), .password #typeRoom  > .shell *:not(#wrongPassword),
 .error #overlayContent > *:not(h1):not(#joinButton),
 .closeContent #overlayContent > *:not(h1), .join #typeRoom ,
 .copy #overlayContent > *:not(h1):not(#joinButton):not(#roomURL), .copy #overlayContent #roomURL h3,
@@ -188,9 +175,10 @@ h3 {
 .closeContent #overlayContent{
 	top: 0;
 }
-.password #typeRoom #passwordInput {
+.password #typeRoom .shell #passwordInput {
     opacity: 1;
-    margin: 20px 0 0 0;
+    margin: 5px 0 0 0;
+    width: 105px;
     display: inline;
 }
 
@@ -222,7 +210,6 @@ h3 {
 }
 .widthCopy  #roomURLtext, .widthCopy #roomURLpass{
     padding-right: 20px;
-    box-sizing: border-box;
 }
 #roomURL input[type="image"]{
     height: 18px;
@@ -242,6 +229,68 @@ h3 {
     display: inline-block;
 }
 
+#typeRoom input[type="image"]{
+    height: 18px;
+    position: absolute;
+    top: 2px;
+    right: 1px;
+}
+#passwordCheck+ label + .shell{
+    position: relative;
+    width: 250px; /*standard width*/
+    right: 20px;
+    transition: all 0.5s ease-out 0s;
+}
+#roomId{
+    width: 100%;
+}
+#passwordCheck, #passwordCheck + label{
+    position: relative;
+    left: 255px;
+}
+#passwordInput{
+    width: 0;
+    opacity: 0;
+    transition: all 0.5s ease-out 0s;
+}
+
+#passwordCheck + label{
+    display: inline-block;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.5s ease-out 0s;
+}
+#passwordCheck[type="checkbox"] {
+    display: none;
+}
+#passwordCheck + label:before {
+    content: "";
+    background-image: url("unlocked.svg");
+    background-size: 20px 20px;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: baseline;
+    transition: all 0.5s ease-out 0s;
+}
+#passwordCheck:checked + label:before {
+    background-image: url("locked.svg");
+}
+#passwordCheck:checked + label + .shell + #passwordInput{
+    width: 105px;
+    opacity: 1;
+    transition: all 0.5s ease-out 0s;
+}
+#passwordCheck:checked + label + .shell{
+    width: 150px;
+    transition: all 0.5s ease-out 0s;
+}
+#passwordCheck:checked, #passwordCheck:checked + label{
+    left: 156px;
+    transition: all 0.5s ease-out 0s;
+}
+
+
 #joinButton {
     position: relative;
     top: 25px;
@@ -255,26 +304,13 @@ h3 {
     cursor: pointer;
 }
 
-#but_6:checked + label + input {
-    opacity: 1 !important;
-}
-
 #wrongPassword {
     display: inline-block;
-    margin: 0 0 1.25% 45.5%;
+    margin: 0 0 1% 1%;
     color: red;
 }
-
-#passwordInput {
-    margin: 0 0 1.25% 45.5%;
-    width: 132px;
-    border: none;
-    border-radius: 5px;
-    background: skyblue;
-    opacity: 0;
-}
-#passwordInput::-webkit-input-placeholder {
-    color: #777;
+#wrongId{
+    color: red;
 }
 
 .korpus1 {

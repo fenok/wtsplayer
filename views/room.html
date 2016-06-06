@@ -59,15 +59,14 @@
             </div>
             <div id="typeRoom">
                 <h3>Идентификатор комнаты:</h3>
-                <input type="text" id="roomId"><input type="button" id="generateId" value="Сменить ID">
-                <span id="wrongId" class="close">Неверный идентификатор!</span>
-                <h3>Выберите тип комнаты:</h3>
-                <input type="radio" id="but_5" name="b" checked>
-                <label id="adress_5" for="but_5">Открытая комната</label>
-                <input type="radio" id="but_6" name="b">
-                <label for="but_6">Частная комната</label>
-                <input id="passwordInput" type="password" placeholder=" Введите пароль">
-                <span id="wrongPassword" class="close">Неверный пароль!</span>
+                <div class="shell">
+                    <span>Название:</span> 
+                    <input id="passwordCheck" type="checkbox" name="passwordCheck"><label for="passwordCheck"></label>
+                    <div class="shell"><input type="text" id="roomId"><input id="generateId" type="image" src="/refresh.svg"></div>
+                    <input id="passwordInput" type="password" placeholder="Введите пароль">
+                    <span id="wrongId" class="close">Неверный идентификатор!</span>
+                    <span id="wrongPassword" class="close">Неверный пароль!</span>
+                </div>
             </div>
             <div>
                 <input type="checkbox" id="audioChatStatus">
