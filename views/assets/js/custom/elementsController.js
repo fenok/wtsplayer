@@ -1321,7 +1321,7 @@ wtsplayer.elementsController = function()
     
     _passwordCheck.onclick = function()
     {
-        _wrongPassword.className = "fakeClose";
+        _passwordInput.className = "";
     }
 
     function copy(el)
@@ -1368,6 +1368,8 @@ wtsplayer.elementsController = function()
 		__peerController.getRoomID( function( id )
 		{
 			_roomIdInput.value = id;
+            _roomIdInput.className = "";
+            _wrongId.className = "fakeClose";
 		}, function( err )
 		{
 			alert( "Ошибка получения идентификатора комнаты\n" + err.toString() );
@@ -1376,10 +1378,19 @@ wtsplayer.elementsController = function()
 	}
     _generatePass.onclick = function()
 	{
-        _wrongPassword.className = "fakeClose";
+        _passwordInput.className = "";
         _passwordInput.value = " ";
         setTimeout(function(){_passwordInput.value = Math.random().toString( 36 ).substr( 2, 6 );},30)
 	}
+    
+    _passwordInput.onblur = _roomIdInput.onblur = _inputLink.onblur = _nick.onblur = function(event)
+    {
+        if (event.target.value !== "") event.target.className = "";
+    }
+    _localURL.onchange = function()
+    {
+        _localURL.className = "";
+    }
 
 	//what -- peerController.sending enum
 	//from -- peerID

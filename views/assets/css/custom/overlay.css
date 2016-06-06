@@ -256,7 +256,7 @@ h3 {
     right: 20px;
     transition: all 0.5s ease-out 0s;
 }
-#passwordCheck+ label + .shell + .shell{
+.create #passwordCheck+ label + .shell + .shell{
     width: 0;
     opacity: 0;
     overflow: hidden;
