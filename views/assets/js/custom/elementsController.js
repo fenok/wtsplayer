@@ -1742,20 +1742,56 @@ wtsplayer.elementsController = function()
 
 	function createRoom()
 	{
-		processInputs();
-		_wrongId.className  = "fakeClose"; //закрыть надпись о неверном idRoom
-        _wrongPassword.className = "fakeClose";
+        var good = true;
+		_wrongId.className = "fakeClose"; //закрыть надпись о неверном idRoom
+        _roomIdInput.className = "";
+        _inputLink.className = "";
+        _localURL.className = "";
+        _passwordInput.className = "";
+        _nick.className = "";
+        
+        if ( _roomIdInput.value == "" )
+        {
+            _roomIdInput.className = "redBorders";
+            good = false;
+        }
+        
+        if ( _nick.value == "" )
+        {
+            _nick.className = "redBorders";
+            good = false;
+        }
+        
+        if ( _videoSrcTabs == "inputLink" )
+		{
+			if ( _inputLink.value == "" ) 
+            {
+                _inputLink.className = "redBorders";
+                good = false;
+            }
+        }
+        else
+        {
+            if ( _localURL.value == "" ) 
+            {
+                _localURL.className = "redBorders";
+                good = false;
+            }
+        }
         
         if ( _passwordCheck.checked ) 
         {
             if ( _passwordInput.value == "" )
             {
-                _wrongPassword.className = "";
-                return;
+                _passwordInput.className = "redBorders";
+                good = false;
             }
         }
         else _passwordInput.value = "";
         
+        if (good == false) return;
+        
+        processInputs();
 		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], 
             function(roomId)
             {
