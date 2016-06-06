@@ -1477,6 +1477,20 @@ wtsplayer.elementsController = function()
 				_self.outputSystemMessage( _peers[ from ][ _peerVars.NICK ] + " теперь известен как " + data );
 				_peers[ from ][ _peerVars.NICK ]               = data;
 				_peers[ from ][ _peerVars.ROW ][ 1 ].innerHTML = data;
+                
+                var opt = document.querySelector( "#peersSrc option[data-peer='" + from + "']" );
+                if ( _peers[ from ][ _peerVars.VIDEO_SRC ][0] === "" )
+                {
+                    opt.innerHTML = data + " - источник не выбран";
+                }
+                else if ( _peers[ from ][ _peerVars.VIDEO_SRC ][0] !== "localURL" )
+                {
+                    opt.innerHTML = data + " - " + _peers[ from ][_peerVars.VIDEO_SRC][1];
+                }
+                else
+                {
+                    opt.innerHTML = data + " - локальный файл";
+                }
 				break;
 			case __peerController.sending.INITIAL_INFO:
 				_self.outputSystemMessage( "В комнату зашел " + data[ 0 ] );
@@ -1584,11 +1598,12 @@ wtsplayer.elementsController = function()
 		_peers[ peer ][ _peerVars.AUDIO ].autoplay = "autoplay";
 		_peers[ peer ][ _peerVars.MUTED ]          = false;
 
-		var img                                        = document.createElement( "img" );
-		img.style                                      = "width : 20px;";
-		img.src                                        = "/volume.svg";
-		img.style.verticalAlign                        = "bottom";
-		img.onclick                                    = function( event )
+		var img                  = document.createElement( "img" );
+		img.style                = "width : 20px;";
+		img.src                  = "/volume.svg";
+		img.style.verticalAlign  = "bottom";
+        
+		img.onclick = function( event )
 		{
 			mute( _peers[ peer ][ _peerVars.MUTED ], event.target, _peers[ peer ][ _peerVars.AUDIO ] );
 			_peers[ peer ][ _peerVars.MUTED ] = !_peers[ peer ][ _peerVars.MUTED ];
@@ -1926,7 +1941,18 @@ wtsplayer.elementsController = function()
 			{
 				document.querySelector( "span[data-type='localURL']" ).click();
 			}
-            inputAndEnter();
+            
+            if (document.querySelector( "#peersSrc option:checked" ))
+            {
+                inputAndEnter();
+            }
+            else
+            {
+                joinButtonClick(inputAndEnter);
+                _joinButton.value   = "Войти в комнату";
+                _title.innerHTML    = "";
+                _overlay.className  = "join";
+            }
 		}
 		else
 		{
