@@ -1731,11 +1731,11 @@ wtsplayer.elementsController = function()
 	{
 		processInputs();
 		_wrongId.className  = "close"; //закрыть надпись о неверном idRoom
-		_joinButton.onclick = "";
         
 		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], 
             function(roomId)
             {
+                _joinButton.onclick = "";
                 _session.room_id     = roomId;
                 window.location.hash = '#' + roomId;
                 _wrongId.className   = "close";

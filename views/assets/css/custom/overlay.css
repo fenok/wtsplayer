@@ -12,6 +12,7 @@ input[type="text"],input[type="password"]{
     height: 23px;
     box-sizing: border-box;
     padding: 0 3px;
+    border: 1px solid #aaa;
 }
 
 #overlay {
@@ -81,8 +82,12 @@ h3 {
 	border-top: 2px solid orange;
 }
 @media screen and (max-height: 565px) {
+    #overlay.create{
+		min-width:  800px!important;
+		min-height: 420px!important;
+	}
     .create #overlayContent {
-        width: 800px;
+        width: 790px;
     }
     .create #overlayContent > div {
         display: inline-block;
@@ -99,10 +104,6 @@ h3 {
 }
 
 @media screen and (max-height: 490px) {
-    #overlay.create{
-		min-width:  800px!important;
-		min-height: 420px!important;
-	}
 	#overlay.join {
 		min-height: 490px!important;
     }
@@ -250,6 +251,8 @@ h3 {
 }
 #passwordInput{
     width: 0;
+    padding: 0;
+    border-width: 0;
     opacity: 0;
     transition: all 0.5s ease-out 0s;
 }
@@ -277,16 +280,18 @@ h3 {
     background-image: url("locked.svg");
 }
 #passwordCheck:checked + label + .shell + #passwordInput{
-    width: 105px;
+    width: 110px;
+    padding: 0 3px;
+    border-width: 1px;
     opacity: 1;
     transition: all 0.5s ease-out 0s;
 }
 #passwordCheck:checked + label + .shell{
-    width: 150px;
+    width: 140px;
     transition: all 0.5s ease-out 0s;
 }
 #passwordCheck:checked, #passwordCheck:checked + label{
-    left: 156px;
+    left: 146px;
     transition: all 0.5s ease-out 0s;
 }
 
