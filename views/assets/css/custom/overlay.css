@@ -7,6 +7,13 @@
 .close {
     display: none !important;
 }
+.fakeClose {
+    opacity: 0;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none; 
+    cursor: default;
+}
 
 input[type="text"],input[type="password"]{
     height: 23px;
@@ -252,18 +259,14 @@ h3 {
     overflow: hidden;
     transition: all 0.5s ease-out 0s;
 }
-#roomId{
+#roomId, #passwordInput{
     width: 100%;
+    padding-right: 19px;
 }
 #passwordCheck, #passwordCheck + label{
     position: relative;
     left: 275px;
 }
-#passwordInput{
-    width: 100%;
-    padding-right: 19px;
-}
-
 #passwordCheck + label{
     display: inline-block;
     cursor: pointer;
@@ -315,8 +318,8 @@ h3 {
 }
 
 #wrongPassword {
+    width: 120px;
     display: inline-block;
-    margin: 0 0 1% 1%;
     color: red;
 }
 #wrongId{

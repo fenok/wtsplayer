@@ -1321,7 +1321,7 @@ wtsplayer.elementsController = function()
     
     _passwordCheck.onclick = function()
     {
-        _wrongPassword.className = "close";
+        _wrongPassword.className = "fakeClose";
     }
 
     function copy(el)
@@ -1376,7 +1376,7 @@ wtsplayer.elementsController = function()
 	}
     _generatePass.onclick = function()
 	{
-        _wrongPassword.className = "close";
+        _wrongPassword.className = "fakeClose";
         _passwordInput.value = " ";
         setTimeout(function(){_passwordInput.value = Math.random().toString( 36 ).substr( 2, 6 );},30)
 	}
@@ -1721,7 +1721,7 @@ wtsplayer.elementsController = function()
 
 	function joinRoomWithPassword()
 	{
-		_wrongPassword.className = "close"; //закрыть надпись о неверном пароле
+		_wrongPassword.className = "fakeClose"; //закрыть надпись о неверном пароле
 		__peerController.joinRoom( window.location.hash.substr( 1 ), _passwordInput.value, [ __peerController.responses.JOINED ], enterRoom, connectionProblems,
 			function( response )//unexpected response
 			{
@@ -1743,8 +1743,8 @@ wtsplayer.elementsController = function()
 	function createRoom()
 	{
 		processInputs();
-		_wrongId.className  = "close"; //закрыть надпись о неверном idRoom
-        _wrongPassword.className = "close";
+		_wrongId.className  = "fakeClose"; //закрыть надпись о неверном idRoom
+        _wrongPassword.className = "fakeClose";
         
         if ( _passwordCheck.checked ) 
         {
@@ -1762,7 +1762,7 @@ wtsplayer.elementsController = function()
                 _joinButton.onclick = "";
                 _session.room_id     = roomId;
                 window.location.hash = '#' + roomId;
-                _wrongId.className   = "close";
+                _wrongId.className   = "fakeClose";
                 showRoomDate();
                 _overlay.className   = "copy";
                 _title.innerHTML     = "Комната создана";
@@ -1859,8 +1859,8 @@ wtsplayer.elementsController = function()
 			{
 				window.location.hash = '#' + roomId;
 			}
-			_wrongPassword.className = "close";
-			_wrongId.className       = "close";
+			_wrongPassword.className = "fakeClose";
+			_wrongId.className       = "fakeClose";
             
             showRoomDate();
 		}
@@ -1955,14 +1955,12 @@ wtsplayer.elementsController = function()
 		_videoLoaded    = false;
 		if ( id )
 		{
-			if ( _session.nick !== '' )
+			if ( _session.nick == '' )
 			{
-				_nick.value = _session.nick;
-			} else
-			{
-				_session.nick = id;
-				_nick.value   = id;
-			}
+				_session.nick = id.replace(/[^a-z]+/g, '').substr(0,6);
+                if (_session.nick == "") _session.nick = id.substr(0,6);
+			} 
+            _nick.value = _session.nick;
 		}
 		if ( _session.type_src !== '' )
 		{
