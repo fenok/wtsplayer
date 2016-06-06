@@ -343,7 +343,11 @@ h3 {
 	overflow: hidden;
 }
 
-.korpus1 > span:last-of-type {
+.create .korpus1 > span {
+    width: 192.5px;
+}
+
+.korpus1 > span:last-of-type, .create .korpus1 > span:nth-last-of-type(2) {
     border-right: 1px solid #aaa;
 }
 
@@ -370,9 +374,17 @@ h3 {
     top: -1px;
     width: 128px;
 }
+.create .korpus1 > div:before {
+    width: 193px;
+}
 
 .korpus1 > div:nth-of-type(2):before {
     left: 129px;
+}
+
+.create .korpus1 > div:nth-of-type(2):before {
+    width: 192px;
+    left: 194px;
 }
 
 .korpus1 > div:nth-of-type(3):before {
