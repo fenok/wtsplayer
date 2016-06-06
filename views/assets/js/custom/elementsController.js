@@ -61,7 +61,9 @@ wtsplayer.elementsController = function()
 	var _roomURLpass     = document.getElementById( "roomURLpass" );
 	var _showPass        = document.getElementById( "showPass" );
 	var _copyPass        = document.getElementById( "copyPass" );
+	var _passwordCheck   = document.getElementById( "passwordCheck" );
 	var _generateId      = document.getElementById( "generateId" );
+	var _generatePass    = document.getElementById( "generatePass" );
 	var _roomIdInput     = document.getElementById( "roomId" );
 	var _wrongId         = document.getElementById( "wrongId" );
 	var _wrongPassword   = document.getElementById( "wrongPassword" );
@@ -1316,6 +1318,11 @@ wtsplayer.elementsController = function()
 
 		} );
 	}
+    
+    _passwordCheck.onclick = function()
+    {
+        _wrongPassword.className = "close";
+    }
 
     function copy(el)
     {
@@ -1366,6 +1373,12 @@ wtsplayer.elementsController = function()
 			alert( "Ошибка получения идентификатора комнаты\n" + err.toString() );
 			location.reload();
 		} )
+	}
+    _generatePass.onclick = function()
+	{
+        _wrongPassword.className = "close";
+        _passwordInput.value = " ";
+        setTimeout(function(){_passwordInput.value = Math.random().toString( 36 ).substr( 2, 6 );},30)
 	}
 
 	//what -- peerController.sending enum
@@ -1731,6 +1744,17 @@ wtsplayer.elementsController = function()
 	{
 		processInputs();
 		_wrongId.className  = "close"; //закрыть надпись о неверном idRoom
+        _wrongPassword.className = "close";
+        
+        if ( _passwordCheck.checked ) 
+        {
+            if ( _passwordInput.value == "" )
+            {
+                _wrongPassword.className = "";
+                return;
+            }
+        }
+        else _passwordInput.value = "";
         
 		__peerController.joinRoom( _roomIdInput.value, _passwordInput.value, [ __peerController.responses.CREATED ], 
             function(roomId)

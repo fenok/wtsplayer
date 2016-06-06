@@ -163,7 +163,7 @@ h3 {
 }
 /*.craete .join .password .error*/
 .password #overlayContent > *:not(h1):not(#joinButton):not(#typeRoom), 
-.password #typeRoom  > *:not(.shell), .password #typeRoom  > .shell *:not(#wrongPassword),
+.password #typeRoom  *:not(.shell):not(#wrongPassword), .password #typeRoom  > .shell > .shell:first-of-type,
 .error #overlayContent > *:not(h1):not(#joinButton),
 .closeContent #overlayContent > *:not(h1), .join #typeRoom ,
 .copy #overlayContent > *:not(h1):not(#joinButton):not(#roomURL), .copy #overlayContent #roomURL h3,
@@ -179,8 +179,10 @@ h3 {
 .password #typeRoom .shell #passwordInput {
     opacity: 1;
     margin: 5px 0 0 0;
-    width: 105px;
+    width: 120px;
     display: inline;
+    padding: 0 3px;
+    
 }
 
 #roomURL{
@@ -229,6 +231,9 @@ h3 {
     position: relative;
     display: inline-block;
 }
+.shell *{
+    vertical-align: top;
+}
 
 #typeRoom input[type="image"]{
     height: 18px;
@@ -238,8 +243,14 @@ h3 {
 }
 #passwordCheck+ label + .shell{
     position: relative;
-    width: 250px; /*standard width*/
+    width: 270px; /*standard width*/
     right: 20px;
+    transition: all 0.5s ease-out 0s;
+}
+#passwordCheck+ label + .shell + .shell{
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
     transition: all 0.5s ease-out 0s;
 }
 #roomId{
@@ -247,14 +258,11 @@ h3 {
 }
 #passwordCheck, #passwordCheck + label{
     position: relative;
-    left: 255px;
+    left: 275px;
 }
 #passwordInput{
-    width: 0;
-    padding: 0;
-    border-width: 0;
-    opacity: 0;
-    transition: all 0.5s ease-out 0s;
+    width: 100%;
+    padding-right: 19px;
 }
 
 #passwordCheck + label{
@@ -279,19 +287,17 @@ h3 {
 #passwordCheck:checked + label:before {
     background-image: url("locked.svg");
 }
-#passwordCheck:checked + label + .shell + #passwordInput{
-    width: 110px;
-    padding: 0 3px;
-    border-width: 1px;
+#passwordCheck:checked + label + .shell + .shell{
+    width: 120px;
     opacity: 1;
     transition: all 0.5s ease-out 0s;
 }
 #passwordCheck:checked + label + .shell{
-    width: 140px;
+    width: 150px;
     transition: all 0.5s ease-out 0s;
 }
 #passwordCheck:checked, #passwordCheck:checked + label{
-    left: 146px;
+    left: 156px;
     transition: all 0.5s ease-out 0s;
 }
 
