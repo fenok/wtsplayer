@@ -102,11 +102,11 @@ h3 {
 }
 #footer a:nth-of-type(2) img{
     left: 34px;
-    transform: scale(0.89);
+    transform: scale(0.88);
 }
 #footer a:nth-of-type(3) img{
     left: 64px;
-    transform: scale(0.84);
+    transform: scale(0.82);
 }
 #footer a:nth-of-type(4) img:first-of-type {
     right: 2px;

@@ -4,6 +4,10 @@
  Copyright (c) 2016 Leonid Fenko aka Fen-ok <fenok2112@gmail.com>, Georgy Kosturov aka Geosins <geosins@yandex.ru>
 */
 
+.userColor {
+    color: #fff;
+}
+
 .green {
     color: darkorange;
 }
@@ -425,7 +429,7 @@ td{
     height: 100%;
     width: 100%;
     overflow-y: scroll;
-    color: #fff;
+    color: #aaa;
     font-size: 20px;
     text-align: center;
     text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, -1px 1px 0 #333, 1px -1px 0 #333;

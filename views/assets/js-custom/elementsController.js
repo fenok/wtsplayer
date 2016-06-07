@@ -1128,7 +1128,7 @@ wtsplayer.elementsController = function()
 
 	function formMessage( messageData )
 	{
-		_self.outputSystemMessage( messageData.nick + ": " + messageData.message );
+		_self.outputSystemMessage( messageData.nick + ": " + messageData.message, "userColor" );
 	};
 
 	_chatParent.onmouseover = function( event )
@@ -1274,9 +1274,10 @@ wtsplayer.elementsController = function()
 	_scrollbar = scrollbarTop( _chatParent );
 
 	//SPECIAL
-	this.outputSystemMessage = function( message )
+	this.outputSystemMessage = function( message, className )
 	{
 		var div         = document.createElement( 'div' );
+		if (className) div.className = className;
 		var chat        = document.getElementById( "chat" );
 		div.textContent = message;
 		chat.insertBefore( div, chat.firstChild );
