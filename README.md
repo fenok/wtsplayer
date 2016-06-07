@@ -10,7 +10,11 @@ The MIT License
 
 Copyright (c) 2016 Leonid Fenko aka Fen-ok <fenok2112@gmail.com>, Georgy Kosturov aka Geosins <geosins@yandex.ru>
 
-#Icons
+#Browser and GitHub logos
+
+All browser and GitHub logos are the property of their respective owners!
+
+#Other icons and images
 
 DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
 
