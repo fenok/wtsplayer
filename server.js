@@ -19,11 +19,11 @@ function initServer()
 
 	app.use( express.static( './node_modules/peerjs_fork_firefox40/dist' ) );
 	app.use( express.static( './views' ) );
-	app.use( express.static( './views/assets/js/custom' ) );
-	app.use( express.static( './views/assets/css/custom' ) );
-	app.use( express.static( './views/assets/svg/custom' ) );
+	app.use( express.static( './views/assets/js-custom' ) );
+	app.use( express.static( './views/assets/css-custom' ) );
+	app.use( express.static( './views/assets/svg-custom' ) );
 	app.use( express.static( './views/assets/svg-origin' ) );
-	app.use( express.static( './views/assets/ico/custom' ) );
+	app.use( express.static( './views/assets/ico-custom' ) );
 
 	app.engine( '.html', require( 'ejs' ).renderFile );
 	app.enable( 'trust proxy' );
