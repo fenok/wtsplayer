@@ -79,7 +79,7 @@ wtsplayer.peerController = function()
 	var _reliableDataChannels = false;
 
 	//Timeout after which peers gets refreshed from the server
-	var _joinTimeout = 3000; //ms
+	var _joinTimeout = 5500; //ms
 	//--
 
 	var _connectedToServer;
@@ -574,12 +574,7 @@ wtsplayer.peerController = function()
 						}
 					};
 
-					if ( peersToConnect.length === 0 )
-					{
-						onConnectedToAllPeers();
-					}
-
-					peers.forEach( function( peer )
+					var controlConnectionToPeer = function( peer )
 					{
 						connectToPeer( peer, function()
 						{
@@ -603,38 +598,57 @@ wtsplayer.peerController = function()
 								onConnectedToAllPeers();
 							}
 						} );
-					} );
-					setInterval( function()
+					};
+
+					if ( peersToConnect.length === 0 )
 					{
+						onConnectedToAllPeers();
+					}
+
+					peers.forEach( controlConnectionToPeer );
+
+					var retryConnection = function()
+					{console.log("retry");
 						if ( peersToConnect.length !== 0 )
 						{
 							getPeers( function( actualPeers )
 							{
 								if ( actualPeers !== null )
 								{
-									peersToConnect.forEach( function( peerToConnect )
+									peersToConnect = peersToConnect.filter(function(e)
 									{
-										if ( actualPeers.indexOf( peerToConnect ) === -1 )
+										if (actualPeers.indexOf( e ) === -1)
 										{
-											peersToConnect = peersToConnect.filter( function( e )
-											{
-												return e !== peer;
-											} );
 											--initialStatesToGet;
-											if ( peersToConnect.length === 0 )
-											{
-												onConnectedToAllPeers();
-											}
+											return false;
 										}
 										else
 										{
-											connectionProblemsCallback();
+											return true;
 										}
-									} );
+									});
+									if ( peersToConnect.length === 0 )
+									{
+										onConnectedToAllPeers();
+									}
+									else
+									{
+										peersToConnect.forEach(function(peer)
+										{
+											_dataConnections[ peer ].close();
+											delete _dataConnections[ peer ];
+
+											controlConnectionToPeer( peer );
+										});
+
+										connectionProblemsCallback();
+									}
 								}
 							}, failCallback );
+							setTimeout( retryConnection, _joinTimeout );
 						}
-					}, _joinTimeout );
+					};
+					setTimeout( retryConnection, _joinTimeout );
 				}
 				else
 				{
