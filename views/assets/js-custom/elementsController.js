@@ -1849,11 +1849,10 @@ wtsplayer.elementsController = function()
 		{
             if (_nick.value == "") 
             {
-                _nick.className = "redBorders";
+                _nick.value = _session.nick;
             }
             else
             {
-                _nick.className = "";
                 _session.nick = _nick.value;
                 __peerController.send( __peerController.sending.NICK, _session.nick );//sending on creation/joining/return. sending on creation does nothing.
             }
@@ -1864,29 +1863,36 @@ wtsplayer.elementsController = function()
 		}
 		if ( _videoSrcTabs == "inputLink" )
 		{
-			if ( _inputLink.value !== "" && _session.video_src !== _inputLink.value )
-			{
-				_videoSrcChange     = true;
-				_inputLink.value    = _inputLink.value.trim();
-				_session.video_src  = _inputLink.value;
-				_session.video_info = "";
-				if ( _inputLink.value.indexOf( "magnet:?" ) === 0 )
-				{
-					_session.type_src = "magnet";
-				}
-				else if ( _inputLink.value.indexOf( "pull:" ) === 0 )
-				{
-					_session.type_src = "youtubeID_direct";
-				}
-				else if ( parseYoutubeLinkIntoID( _inputLink.value ) )
-				{
-					_session.type_src = "youtubeID_embedded";
-				}
-				else
-				{
-					_session.type_src = "globalURL";
-				}
-			}
+			if ( _inputLink.value !== "") 
+            {
+                if( _session.video_src !== _inputLink.value )
+                {
+                    _videoSrcChange     = true;
+                    _inputLink.value    = _inputLink.value.trim();
+                    _session.video_src  = _inputLink.value;
+                    _session.video_info = "";
+                    if ( _inputLink.value.indexOf( "magnet:?" ) === 0 )
+                    {
+                        _session.type_src = "magnet";
+                    }
+                    else if ( _inputLink.value.indexOf( "pull:" ) === 0 )
+                    {
+                        _session.type_src = "youtubeID_direct";
+                    }
+                    else if ( parseYoutubeLinkIntoID( _inputLink.value ) )
+                    {
+                        _session.type_src = "youtubeID_embedded";
+                    }
+                    else
+                    {
+                        _session.type_src = "globalURL";
+                    }
+                }
+            }
+            else
+            {
+                _inputLink.value = _session.video_src;
+            }
 		}
 		else if ( _videoSrcTabs == "localURL" )
 		{
@@ -1924,7 +1930,6 @@ wtsplayer.elementsController = function()
 		{
 			_session.audiochat_status = _audioChatStatus.checked;
 		}
-        return true;
 	}
 
 	function enterRoom( roomId )
