@@ -608,7 +608,7 @@ wtsplayer.peerController = function()
 					peers.forEach( controlConnectionToPeer );
 
 					var retryConnection = function()
-					{console.log("retry");
+					{
 						if ( peersToConnect.length !== 0 )
 						{
 							getPeers( function( actualPeers )
@@ -620,6 +620,10 @@ wtsplayer.peerController = function()
 										if (actualPeers.indexOf( e ) === -1)
 										{
 											--initialStatesToGet;
+
+											_dataConnections[ e ].close();
+											delete _dataConnections[ e ];
+
 											return false;
 										}
 										else
