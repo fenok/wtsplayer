@@ -16,7 +16,8 @@ wtsplayer.stateController = function()
 			pause                : null,
 			wait                 : null,
 			getPlayerCurrentTime : null,
-			outputSystemMessage  : null
+			outputSystemMessage  : null,
+			getNickFromID        : null
 		},
 		peerController     : {
 			send             : null,
@@ -173,11 +174,16 @@ wtsplayer.stateController = function()
 		onWaitingStatusChanged()
 	}
 
-	function updateCurrentState( state )
+	function updateCurrentState( state, from )
 	{
 		if ( state.timestamp <= _currentState.timestamp )
 		{
 			return;
+		}
+
+		if ( from )
+		{
+			__elementsController.outputSystemMessage( __elementsController.getNickFromID( from ) + ": " + state.name );
 		}
 
 		//New state is being applied, so we need to clear the timeout to prevent unexpected changes
@@ -257,7 +263,7 @@ wtsplayer.stateController = function()
 
 	}
 
-	function onStateRecieved( state )
+	function onStateRecieved( state, from )
 	{
 		if ( state === null )
 		{
@@ -266,7 +272,7 @@ wtsplayer.stateController = function()
 
 		if ( _joinedRoom )
 		{
-			updateCurrentState( state );
+			updateCurrentState( state, from );
 		}
 		else
 		{
@@ -289,7 +295,7 @@ wtsplayer.stateController = function()
 				updateWaitingStatus( from, data );
 				break;
 			case __peerController.sending.STATE:
-				onStateRecieved( data );
+				onStateRecieved( data, from );
 				break;
 			default:
 				alert( "stateController.onRecieved: unrecognized 'what'" );
