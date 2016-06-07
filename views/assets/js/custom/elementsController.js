@@ -1465,7 +1465,7 @@ wtsplayer.elementsController = function()
     
     this.getNickFromID = function(id)
     {
-        return _peers[ id ][ _peerVars.NICK ];
+        return id ? _peers[ id ][ _peerVars.NICK ] : _session.nick;
     }
 
 	this.onRecieved = function( what, from, data )

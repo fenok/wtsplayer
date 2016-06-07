@@ -181,11 +181,6 @@ wtsplayer.stateController = function()
 			return;
 		}
 
-		if ( from )
-		{
-			__elementsController.outputSystemMessage( __elementsController.getNickFromID( from ) + ": " + state.name );
-		}
-
 		//New state is being applied, so we need to clear the timeout to prevent unexpected changes
 		clearTimeout( _delayedPlayPauseTimeout );
 
@@ -261,6 +256,28 @@ wtsplayer.stateController = function()
 
 		_currentState = state;
 
+		reportStateChange( state.name, from );
+	}
+
+	function reportStateChange( name, from )
+	{
+		var message = "";
+		switch (name)
+		{
+			case 'waiting':
+				message = "Ожидание";
+				break;
+			case 'play':
+				message = "Воспроизведение";
+				break;
+			case 'pause':
+				message = "Пауза";
+				break;
+			default:
+				alert( "Unrecognized state.name" );
+		}
+
+		__elementsController.outputSystemMessage( __elementsController.getNickFromID( from )  + ": " + message );
 	}
 
 	function onStateRecieved( state, from )
