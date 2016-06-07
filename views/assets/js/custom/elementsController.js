@@ -1462,6 +1462,11 @@ wtsplayer.elementsController = function()
 			_peersSrc.appendChild( opt );
 		}
 	}
+    
+    this.getNickFromID = function(id)
+    {
+        return _peers[ id ][ _peerVars.NICK ];
+    }
 
 	this.onRecieved = function( what, from, data )
 	{
