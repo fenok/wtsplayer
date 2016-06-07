@@ -1847,8 +1847,16 @@ wtsplayer.elementsController = function()
 	{
 		if ( _nick.value !== _session.nick )
 		{
-			_session.nick = _nick.value;
-			__peerController.send( __peerController.sending.NICK, _session.nick );//sending on creation/joining/return. sending on creation does nothing.
+            if (_nick.value == "") 
+            {
+                _nick.className = "redBorders";
+            }
+            else
+            {
+                _nick.className = "";
+                _session.nick = _nick.value;
+                __peerController.send( __peerController.sending.NICK, _session.nick );//sending on creation/joining/return. sending on creation does nothing.
+            }
 		}
 		if ( _session.password !== _passwordInput.value && _passwordInput.value !== '' )
 		{
@@ -1916,6 +1924,7 @@ wtsplayer.elementsController = function()
 		{
 			_session.audiochat_status = _audioChatStatus.checked;
 		}
+        return true;
 	}
 
 	function enterRoom( roomId )
