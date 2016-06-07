@@ -318,6 +318,7 @@ td{
 #peerListParent {
     right: -3px;
     position: absolute;
+    min-width: 100px;
     bottom: 35px;
 }
 

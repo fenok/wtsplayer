@@ -1569,7 +1569,7 @@ wtsplayer.elementsController = function()
 			}
 			if ( !_peerTable.children[ 0 ] )
 			{
-				_noteEmptyRoom.innerHTML = "&#160;Комната пуста!&#160;";
+				_noteEmptyRoom.innerHTML = "&#160;Кроме вас в комнате никого нет&#160;";
 			}
 		}
 	};
