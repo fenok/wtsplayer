@@ -41,6 +41,8 @@ wtsplayer.elementsController = function()
 
 	var _self = this;
 
+	var _resetVideoCurrentTimeOnSourceChange = true;
+
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
 	var _volume            = document.getElementById( "volume" );
@@ -189,7 +191,14 @@ wtsplayer.elementsController = function()
 				return n < 10 ? "0" + n : n;
 			}
 
-			_seekRange.value             = ( 100 / _video.duration ) * _video.currentTime;
+			if (_video.duration)
+			{
+				_seekRange.value = ( 100 / _video.duration ) * _video.currentTime;
+			}
+			else
+			{
+				_seekRange.value = 0;
+			}
 			var time                     = _video.currentTime / 1000 >> 0;
 			_currentTimeOutput.innerHTML = (time < 3600 ? (time / 60 >> 0) : ((time / 3600 >> 0) + ":" + val( time % 3600 / 60 >> 0 ))) + ":" + val( time % 60 );
 		}
@@ -300,9 +309,18 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
-		volume      = _video.volume || volume || 1;
+		volume      = _video.volume !== undefined ? _video.volume : ( volume !== undefined ? volume : 1 );
 		muted       = _video.muted || muted || false;
 		currentTime = _video.currentTime || currentTime || 0;
+
+		if ( _resetVideoCurrentTimeOnSourceChange )
+		{
+			//Program seek to 0
+			currentTime = 0;
+			_video.dispatchEvent( new Event( 'timeupdate' ) );
+			__stateController.onPlayerSeek( 0 );
+		}
+
 
 		_videoLoaded = false;
 		onVideoLoading();
