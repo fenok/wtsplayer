@@ -358,6 +358,10 @@ h3 {
     color: red;
 }
 
+#localURL{
+    max-width: 375px;
+}
+
 .korpus1 {
     position: relative;
     height: 128px;
