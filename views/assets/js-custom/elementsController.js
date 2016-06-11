@@ -235,7 +235,7 @@ wtsplayer.elementsController = function()
 	{
 		__stateController.onPlayerSeek( _video.offset );
 	} );
-
+    
 	function onVideoClick()
 	{
         var go = true;
@@ -248,9 +248,11 @@ wtsplayer.elementsController = function()
         {
             if ( go && _playPauseButton.state != 'waiting' ) _playPauseButton.click();
             _video.onclick = onVideoClick;            
-        },10)
+        },250)
 	}
     _video.onclick = onVideoClick;
+    
+    
 
 	function showOffset()
 	{
@@ -1364,7 +1366,7 @@ wtsplayer.elementsController = function()
             if(document.execCommand('copy'))
             {
                 el.style.backgroundColor = "gray";
-                _showPass.style.backgroundColor = "gray";
+                if ( el == _roomURLpass ) _showPass.style.backgroundColor = "gray";
                 setTimeout(function()
                 {
                     el.removeAttribute("style");
@@ -1937,7 +1939,7 @@ wtsplayer.elementsController = function()
 					_session.type_src   = "localURL";
 					_videoSrcChange     = true;
                     
-                    if (_seedLocal)
+                    if (_seedLocal.checked)
                     {
                         if (!_client) _client = new WebTorrent();
                         _client.seed(_localURL.files[0], function (torrent) 
@@ -1964,12 +1966,12 @@ wtsplayer.elementsController = function()
 			}
 		}
 
-		if ( _videoSrcChange || ( _torrent && !_seedLocal )) //creation/joining/return. even local sources (to tell that to other peers)
+		if ( _videoSrcChange || ( _torrent && !_seedLocal.checked )) //creation/joining/return. even local sources (to tell that to other peers)
 		{
 			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
             if (deleteTorrent)
             {
-                if ( _seedLocal && _session.type_src == "localURL" )
+                if ( _seedLocal.checked && _session.type_src == "localURL" )
                 {
                     _client.remove(deleteTorrent);
                 }
