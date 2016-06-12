@@ -2345,9 +2345,9 @@ wtsplayer.elementsController = function()
 		_scrollbar.init();
 	}
 
-	_darkThemeCheckbox.addEventListener('change', function()
+	function applyTheme()
 	{
-		if (this.checked)
+		if (_darkThemeCheckbox.checked)
 		{
 			_darkCSS.disabled = false;
 		}
@@ -2355,7 +2355,14 @@ wtsplayer.elementsController = function()
 		{
 			_darkCSS.disabled = true;
 		}
+	}
+
+	_darkThemeCheckbox.addEventListener('change', function()
+	{
+		applyTheme();
 	});
+
+	applyTheme();
 
 	//Initializing _playPauseButton object
 	switchToWaiting();
