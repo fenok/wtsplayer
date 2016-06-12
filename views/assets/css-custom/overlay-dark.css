@@ -1,0 +1,72 @@
+#overlay *::selection {
+    background: black;
+    color: ghostwhite;
+}
+
+#overlay {
+    font-family: Arial;
+    font-size: 15px;
+}
+
+#showPass {
+    font-size: 13px;
+    height: 18px;
+    top:3px;
+    left: 2px;
+}
+
+#overlay , #footer, #overlayContent, #overlay input, #overlay select, .korpus1 > div, #showPass{
+    background-color: #222;
+    color: #9d9d9d;
+}
+
+#logo {
+    background-image: none;
+    border-bottom: 1px solid orange;
+    height: 76px;
+}
+
+#overlay
+{
+    background-color: rgba(0,0,0,0.7);
+}
+
+#logo img{
+    position: relative;
+    top: 4px;
+}
+
+#joinButton {
+    border: 1px solid orange;
+}
+
+#joinButton:hover {
+    color: ghostwhite;
+}
+
+#overlayContent {
+    border-radius: 5px;
+    border-width: 1px;
+}
+
+#overlay input {
+    border-radius: 5px;
+}
+
+#logo span {
+    color: whitesmoke;
+}
+
+select option:checked {
+    background: #222;
+    color: #9d9d9d;
+    box-shadow: inset 20px 20px rgba(0,0,0,1)
+}
+
+select option:disabled {
+    color: #000;
+}
+
+select option:not(:disabled):hover {
+    color: ghostwhite;
+}
