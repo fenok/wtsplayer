@@ -91,6 +91,9 @@ wtsplayer.elementsController = function()
 	var _peerListButton  = document.getElementById( "peerListButton" );
 	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
 
+	var _darkThemeCheckbox = document.getElementById( "darkThemeCheckbox" );
+	var _darkCSS           = document.getElementById("darkCSS" );
+
 	var _videoLoaded;
 	var _seekRangeIsDragged = false;
 	var _muteVideo;
@@ -2403,6 +2406,25 @@ wtsplayer.elementsController = function()
 	{
 		_scrollbar.init();
 	}
+
+	function applyTheme()
+	{
+		if (_darkThemeCheckbox.checked)
+		{
+			_darkCSS.disabled = false;
+		}
+		else
+		{
+			_darkCSS.disabled = true;
+		}
+	}
+
+	_darkThemeCheckbox.addEventListener('change', function()
+	{
+		applyTheme();
+	});
+
+	applyTheme();
 
 	//Initializing _playPauseButton object
 	switchToWaiting();
