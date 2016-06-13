@@ -41,6 +41,8 @@ wtsplayer.elementsController = function()
 
 	var _self = this;
 
+	var _resetVideoCurrentTimeOnSourceChange = false;//true;
+
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
 	var _volume            = document.getElementById( "volume" );
@@ -78,6 +80,7 @@ wtsplayer.elementsController = function()
 
 	var _inputLink = document.getElementById( "inputLink" );
 	var _localURL  = document.getElementById( "localURL" );
+	var _seedLocal = document.getElementById( "seedLocal" );
 	var _peersSrc  = document.getElementById( "peersSrc" );
 	var _follow    = document.getElementById( "follow" );
 
@@ -101,6 +104,8 @@ wtsplayer.elementsController = function()
 	var _audioStream;
 	var _scrollbar;
 	var _videoSrcChange;
+    var _client             = null;
+    var _torrent            = null;
 	var _videoSrcTabs       = 'inputLink';
 	var _peers              = {};
 	var _peerVars           = Object.freeze( {
@@ -192,7 +197,14 @@ wtsplayer.elementsController = function()
 				return n < 10 ? "0" + n : n;
 			}
 
-			_seekRange.value             = ( 100 / _video.duration ) * _video.currentTime;
+			if (_video.duration)
+			{
+				_seekRange.value = ( 100 / _video.duration ) * _video.currentTime;
+			}
+			else
+			{
+				_seekRange.value = 0;
+			}
 			var time                     = _video.currentTime / 1000 >> 0;
 			_currentTimeOutput.innerHTML = (time < 3600 ? (time / 60 >> 0) : ((time / 3600 >> 0) + ":" + val( time % 3600 / 60 >> 0 ))) + ":" + val( time % 60 );
 		}
@@ -227,13 +239,21 @@ wtsplayer.elementsController = function()
 		__stateController.onPlayerSeek( _video.offset );
 	} );
 
-	_video.onclick = function()
+	function onVideoClick()
 	{
-		if ( _playPauseButton.state != 'waiting' )
-		{
-			_playPauseButton.click();
-		}
+        var go = true;
+        _video.onclick = function()
+        {
+            _fullscreenButton.click();
+            go = false;
+        }
+        setTimeout(function()
+        {
+            if ( go && _playPauseButton.state != 'waiting' ) _playPauseButton.click();
+            _video.onclick = onVideoClick;            
+        },10)
 	}
+    _video.onclick = onVideoClick;
 
 	function showOffset()
 	{
@@ -303,9 +323,18 @@ wtsplayer.elementsController = function()
 
 	function constructVideoContent_dummy( muted, volume, currentTime )
 	{
-		volume      = _video.volume || volume || 1;
+		volume      = _video.volume !== undefined ? _video.volume : ( volume !== undefined ? volume : 1 );
 		muted       = _video.muted || muted || false;
 		currentTime = _video.currentTime || currentTime || 0;
+
+		if ( _resetVideoCurrentTimeOnSourceChange )
+		{
+			//Program seek to 0
+			currentTime = 0;
+			_video.dispatchEvent( new Event( 'timeupdate' ) );
+			__stateController.onPlayerSeek( 0 );
+		}
+
 
 		_videoLoaded = false;
 		onVideoLoading();
@@ -479,8 +508,8 @@ wtsplayer.elementsController = function()
 
 		var videoElement = getCleanVideoContent_video();
 
-		var client = new WebTorrent();
-		client.add( magnetLink, function( torrent )
+		if (!_client) _client = new WebTorrent();
+		_client.add( magnetLink, function( torrent )
 		{
 			var file = torrent.files[ 0 ];
 
@@ -490,7 +519,8 @@ wtsplayer.elementsController = function()
 		} );
 		_video.clear = function()
 		{
-			client.destroy();
+			_client.destroy();
+            _client = null;
 			videoElement.pause();
 			videoElement.src = '';
 			videoElement.load();
@@ -1864,6 +1894,8 @@ wtsplayer.elementsController = function()
 		{
 			_session.password = _passwordInput.value;
 		}
+        
+        var deleteTorrent = _torrent;
 		if ( _videoSrcTabs == "inputLink" )
 		{
 			if ( _inputLink.value !== "") 
@@ -1907,6 +1939,16 @@ wtsplayer.elementsController = function()
 					_session.video_info = [ _localURL.files[ 0 ].lastModified, _localURL.files[ 0 ].size ];
 					_session.type_src   = "localURL";
 					_videoSrcChange     = true;
+                    
+                    if (_seedLocal)
+                    {
+                        if (!_client) _client = new WebTorrent();
+                        _client.seed(_localURL.files[0], function (torrent) 
+                        {
+                            _torrent = torrent;
+                            __peerController.send( __peerController.sending.DATA_SOURCE, [ "magnet", torrent.magnetURI ] );
+                        })
+                    }
 				}
 			}
 		}
@@ -1925,9 +1967,27 @@ wtsplayer.elementsController = function()
 			}
 		}
 
-		if ( _videoSrcChange ) //creation/joining/return. even local sources (to tell that to other peers)
+		if ( _videoSrcChange || ( _torrent && !_seedLocal )) //creation/joining/return. even local sources (to tell that to other peers)
 		{
 			__peerController.send( __peerController.sending.DATA_SOURCE, [ _session.type_src, _session.video_src ] );
+            if (deleteTorrent)
+            {
+                if ( _seedLocal && _session.type_src == "localURL" )
+                {
+                    _client.remove(deleteTorrent);
+                }
+                else if(_session.type_src == "magnet")
+                {
+                    _client.remove(_torrent);
+                    _torrent = null;
+                }
+                else
+                {
+                    _client.destroy();
+                    _client  = null;
+                    _torrent = null;
+                }
+            }
 		}
 		if ( _session.audiochat_status != _audioChatStatus.checked )
 		{
