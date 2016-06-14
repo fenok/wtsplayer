@@ -36,7 +36,7 @@
             <h1 id="title">Подключение к серверу</h1>
             <div id="roomURL"> <!--class="widthCopy"-->
                 <h3>Данные для подключения к комнате:</h3>
-                <p>Для того, чтобы ваши друзья смогли к ней подключиться и посмотреть это видео вместе с вами отправьте им ссылку с адресом этой комнаты.</p>
+                <p>Для того, чтобы ваши друзья смогли к ней подключиться и посмотреть это видео вместе с вами, отправьте им ссылку с адресом этой комнаты.</p>
                 URL: <div class="shell"><input type="text" id="roomURLtext" readonly><input type="image" id="copyURL" src="/copy.svg"></div>
                 <div id="roomURLpassArea"> Пароль: <div class="shell">
                     <input id="roomURLpass" type="text" readonly><div id="showPass">Показать</div><input type="image" id="copyPass" src="/copy.svg"></div>
@@ -53,7 +53,7 @@
                     </div>
                     <div>
                         <label id="localURLWrapper"><input type="file" id="localURL"></label><br>
-                        <input type="checkbox" id="seedLocal"><label for="seedLocal">Раздавать файл другим пирам</label><br>
+                        <label style="display: none" for="seedLocal"><input type="checkbox" id="seedLocal">Раздавать файл другим пирам</label>
                         Поддержка ограничена возможностями браузера.
                     </div>
                     <div>
@@ -97,7 +97,7 @@
         <a target="_blank" href="http://www.opera.com/" title="Opera"><img src="/opera.svg"></a>
         <span>© Fen-ok, Geosins, 2016</span>
         <a target="_blank" href="https://github.com/fenok" title="GitHub page (root)"><img src="/github-logo.svg"><img src="/github-mark.svg"></a>
-        <label><input id="darkThemeCheckbox" type="checkbox" />Dark</label>
+        <label style="display: none;" ><input id="darkThemeCheckbox" type="checkbox" />Dark</label>
     </div>
 </div>
 <div id="player">
