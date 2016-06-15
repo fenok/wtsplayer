@@ -1022,7 +1022,8 @@ wtsplayer.elementsController = function()
 
 	_volumeArea.onwheel = _video.onwheel = function( event )
     {
-        _volume.value = parseFloat(_volume.value)+(0.01*(event.deltaY<0?1:(-1)));
+        _video.volume = _volume.value = parseFloat(_volume.value)+(0.01*(event.deltaY<0?1:(-1)));
+        
     }
 	_volume.oninput = function( event )
 	{
@@ -1480,10 +1481,13 @@ wtsplayer.elementsController = function()
 				{
 					if ( _follow.checked && _videoSrcTabs == "peers")
 					{
-						_session.type_src  = data[ 0 ];
-						_session.video_src = data[ 1 ];
-						_videoSrcChange    = true;
-						enterRoom();
+                        if (_session.video_src != data[1])
+                        {
+                            _session.type_src  = data[0];
+                            _session.video_src = data[1];
+                            _videoSrcChange    = true;
+                            enterRoom();
+                        }
 					}
 					else
 					{
@@ -2093,7 +2097,7 @@ wtsplayer.elementsController = function()
 			}
 
 			//аудио-чат
-			if ( _session.audiochat_status )
+			if ( _session.audiochat_status == "true")
 			{
 				if ( !(__peerController.get( __peerController.getting.JOINED_VOICE_CHAT )) )
 				{
@@ -2263,7 +2267,7 @@ wtsplayer.elementsController = function()
     if (!_session.room_id)
     {  
 		_session.clear();
-		_session.audiochat_status = "";
+		_session.audiochat_status = "false";
 	}
 	
 	function tabs()
