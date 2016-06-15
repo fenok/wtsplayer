@@ -45,14 +45,18 @@ wtsplayer.elementsController = function()
 
 	var _video             = document.getElementById( "video" );
 	var _playPauseButton   = document.getElementById( "playerPlayPauseButton" );
+	var _volumeArea        = document.getElementById( "vol" );
 	var _volume            = document.getElementById( "volume" );
 	var _volumeButton      = document.getElementById( "volume_button" );
 	var _seekRange         = document.getElementById( "playerSeekRange" );
 	var _currentTimeOutput = document.getElementById( "playerCurrentTimeOutput" );
-	var _sendMessageButton = document.getElementById( "sendMessageButton" );
+	var _addOffsetButton   = document.getElementById( "addOffsetButton" );
+	var _delOffsetButton   = document.getElementById( "delOffsetButton" );
+	var _subOffsetButton   = document.getElementById( "subOffsetButton" );
+	var _quality           = document.getElementById( "quality" );
 	var _fullscreenButton  = document.getElementById( "fullscreen" );
 	var _backOvervayBut    = document.getElementById( "backOverlayBut" );
-	var _quality           = document.getElementById( "quality" );
+	var _sendMessageButton = document.getElementById( "sendMessageButton" );
 	var _messageInput      = document.getElementById( "messageInput" );
 	var _chatParent        = document.getElementById( "chatParent" );
 
@@ -74,9 +78,6 @@ wtsplayer.elementsController = function()
 	var _passwordInput   = document.getElementById( "passwordInput" );
 	var _overlay         = document.getElementById( "overlay" );
 	var _joinButton      = document.getElementById( "joinButton" );
-	var _addOffsetButton = document.getElementById( "addOffsetButton" );
-	var _delOffsetButton = document.getElementById( "delOffsetButton" );
-	var _subOffsetButton = document.getElementById( "subOffsetButton" );
 
 	var _inputLink = document.getElementById( "inputLink" );
 	var _localURL  = document.getElementById( "localURL" );
@@ -92,7 +93,7 @@ wtsplayer.elementsController = function()
 	var _noteEmptyRoom   = document.getElementById( "noteEmptyRoom" );
 
 	var _darkThemeCheckbox = document.getElementById( "darkThemeCheckbox" );
-	var _darkCSS           = document.getElementById("darkCSS" );
+	var _darkCSS           = document.getElementById( "darkCSS" );
 
 	var _videoLoaded;
 	var _seekRangeIsDragged = false;
@@ -277,18 +278,21 @@ wtsplayer.elementsController = function()
 	{
 		_video.changeOffset( _video.offset + 100 );
 		showOffset();
+        _addOffsetButton.blur();
 	} );
 
 	_delOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( 0 );
 		showOffset();
+        _delOffsetButton.blur();
 	} );
 
 	_subOffsetButton.addEventListener( 'click', function()
 	{
 		_video.changeOffset( _video.offset - 100 );
 		showOffset();
+        _subOffsetButton.blur();
 	} );
 
 	/*
@@ -1011,7 +1015,11 @@ wtsplayer.elementsController = function()
 		}
 	}
 
-	_volume.oninput       = function( event )
+	_volumeArea.onwheel = _video.onwheel = function( event )
+    {
+        _volume.value = parseFloat(_volume.value)-(event.deltaY/100);
+    }
+	_volume.oninput = function( event )
 	{
 		_video.volume = event.target.value;
 	}
@@ -1019,10 +1027,7 @@ wtsplayer.elementsController = function()
 	{
 		mute( _muteVideo, event.target, _video );
 		_muteVideo = !_muteVideo;
-	}
-	_inputLink.onclick    = function( event )
-	{
-		event.target.select();
+        _volumeButton.blur();
 	}
 	function mute( muted, butt, obj )
 	{
@@ -1036,7 +1041,12 @@ wtsplayer.elementsController = function()
 			butt.src  = "/mute.svg";
 		}
 	}
-
+    
+    _inputLink.onclick = function( event )
+	{
+		event.target.select();
+	}
+    
 	_sendMessageButton.addEventListener( 'click', sendMsg );
 
 	_messageInput.onkeydown = function( e )
@@ -1086,7 +1096,7 @@ wtsplayer.elementsController = function()
 		}
 		setTimeout( function()
 		{
-			_messageInput.blur()
+			_messageInput.blur();
 		}, 100 );
 	}
 
@@ -1121,6 +1131,7 @@ wtsplayer.elementsController = function()
 				el.mozRequestFullScreen();
 			}
 		}
+        _fullscreenButton.blur();
 	} );
 
 	_backOvervayBut.addEventListener( 'click', function()
@@ -1462,7 +1473,7 @@ wtsplayer.elementsController = function()
 				}
 				if (_session.video_info == peerId )
 				{
-					if ( _follow.checked )
+					if ( _follow.checked && _videoSrcTabs == "peers")
 					{
 						_session.type_src  = data[ 0 ];
 						_session.video_src = data[ 1 ];
@@ -1553,6 +1564,7 @@ wtsplayer.elementsController = function()
 		{
 			_peerListParent.className = "hidden";
 		}
+        _peerListButton.blur();
 	}
 
 	this.onPeerConnected = function( peerId )
