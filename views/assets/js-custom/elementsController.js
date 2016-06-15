@@ -1753,6 +1753,11 @@ wtsplayer.elementsController = function()
             _roomURLpassArea.className = "";
             _roomURLpass.value = _passwordInput.value;
         }
+        else if (_session.password)
+        {
+            _roomURLpassArea.className = "";
+            _roomURLpass.value = _session.password;
+        }
         else
             _roomURLpassArea.className = "close";
     }
@@ -2018,10 +2023,13 @@ wtsplayer.elementsController = function()
 			{
 				window.location.hash = '#' + roomId;
 			}
+            
 			_wrongPassword.className = "fakeClose";
 			_wrongId.className       = "fakeClose";
             
             showRoomDate();
+            
+            _audioChatStatus.checked = _session.audiochat_status;
 		}
         
 
