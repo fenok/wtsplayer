@@ -539,6 +539,11 @@ wtsplayer.elementsController = function()
 		var videoElement = getCleanVideoContent_video();
 
 		videoElement.src = directSource;
+        videoElement.onerror = function()
+        {
+            _self.outputSystemMessage( "Не удалось загрузить видео" );
+        }
+        
 		_video.clear     = function()
 		{
 			videoElement.pause();
@@ -2235,116 +2240,31 @@ wtsplayer.elementsController = function()
 		}
 	}
 
-	function initSession()
+    _session = new Object;
+    Object.defineProperties( _session, 
+    {
+		"nick":             {set:function(n){localStorage.wtsplayer_nick=n;},               get:function(){return localStorage.wtsplayer_nick;}},
+		"password":         {set:function(n){sessionStorage.wtsplayer_password=n;},         get:function(){return sessionStorage.wtsplayer_password;}},
+		"room_id":          {set:function(n){sessionStorage.wtsplayer_room_id=n;},          get:function(){return sessionStorage.wtsplayer_room_id;}},
+		"type_src":         {set:function(n){sessionStorage.wtsplayer_type_src=n;},         get:function(){return sessionStorage.wtsplayer_type_src;}},
+		"video_src":        {set:function(n){sessionStorage.wtsplayer_video_src=n;},        get:function(){return sessionStorage.wtsplayer_video_src;}},
+		"video_info":       {set:function(n){sessionStorage.wtsplayer_video_info=n;},       get:function(){return sessionStorage.wtsplayer_video_info;}},
+		"audiochat_status": {set:function(n){sessionStorage.wtsplayer_audiochat_status=n;}, get:function(){return sessionStorage.wtsplayer_audiochat_status;}}
+	});
+    _session.clear = function()
 	{
-		_session    = [ '', '', '', '', '', '' ];
-		window.name = JSON.stringify( _session );
-	}
-
-	if ( window.name ) //Session has been set before
-	{
-		try
-		{
-			_session = JSON.parse( window.name );
-		}
-		catch (e)
-		{
-			console.error( e.toString());
-			console.error( "Unable to restore session, clearing..." );
-			initSession();
-		}
-	}
-	else //New session
-	{
-		initSession();
-	}
-
-	_session.rewrite = function()
-	{
-		window.name = JSON.stringify( this );
+		_session.room_id    = "";
+		_session.password   = "";
+		_session.type_src   = "";
+		_session.video_src  = "";
+		_session.video_info = "";
 	};
-	_session.clear   = function()
-	{
-		this[ 0 ] = "";
-		this[ 1 ] = "";
-		this[ 2 ] = "";
-		this[ 3 ] = "";
-		this[ 4 ] = "";
-		this.rewrite();
-	};
-
-	Object.defineProperties( _session, {
-		"nick"             : {
-			set    : function( n )
-			{
-				localStorage.setItem('nick', n);
-			}, get : function()
-			{
-				return localStorage.getItem('nick');
-			}
-		},
-		"password"         : {
-			set    : function( n )
-			{
-				this[ 0 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 0 ]);
-			}
-		},
-		"room_id"          : {
-			set    : function( n )
-			{
-				this[ 1 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 1 ]);
-			}
-		},
-		"type_src"         : {
-			set    : function( n )
-			{
-				this[ 2 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 2 ]);
-			}
-		},
-		"video_src"        : {
-			set    : function( n )
-			{
-				this[ 3 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 3 ]);
-			}
-		},
-		"video_info"       : {
-			set    : function( n )
-			{
-				this[ 4 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 4 ]);
-			}
-		},
-		"audiochat_status" : {
-			set    : function( n )
-			{
-				this[ 5 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 5 ]);
-			}
-		}
-	} );
-
+    if (!_session.room_id)
+    {  
+		_session.clear();
+		_session.audiochat_status = "";
+	}
+	
 	function tabs()
 	{
 		var a = document.querySelectorAll( ".korpus1 > span" );
