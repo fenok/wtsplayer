@@ -2237,7 +2237,7 @@ wtsplayer.elementsController = function()
 
 	function initSession()
 	{
-		_session    = [ '', '', '', '', '', '', '' ];
+		_session    = [ '', '', '', '', '', '' ];
 		window.name = JSON.stringify( _session );
 	}
 
@@ -2267,13 +2267,22 @@ wtsplayer.elementsController = function()
 	{
 		this[ 0 ] = "";
 		this[ 1 ] = "";
+		this[ 2 ] = "";
 		this[ 3 ] = "";
 		this[ 4 ] = "";
-		this[ 5 ] = "";
 		this.rewrite();
 	};
 
 	Object.defineProperties( _session, {
+		"nick"             : {
+			set    : function( n )
+			{
+				localStorage.setItem('nick', n);
+			}, get : function()
+			{
+				return localStorage.getItem('nick');
+			}
+		},
 		"password"         : {
 			set    : function( n )
 			{
@@ -2294,7 +2303,7 @@ wtsplayer.elementsController = function()
 				return (this[ 1 ]);
 			}
 		},
-		"nick"             : {
+		"type_src"         : {
 			set    : function( n )
 			{
 				this[ 2 ] = n;
@@ -2304,7 +2313,7 @@ wtsplayer.elementsController = function()
 				return (this[ 2 ]);
 			}
 		},
-		"type_src"         : {
+		"video_src"        : {
 			set    : function( n )
 			{
 				this[ 3 ] = n;
@@ -2314,7 +2323,7 @@ wtsplayer.elementsController = function()
 				return (this[ 3 ]);
 			}
 		},
-		"video_src"        : {
+		"video_info"       : {
 			set    : function( n )
 			{
 				this[ 4 ] = n;
@@ -2324,7 +2333,7 @@ wtsplayer.elementsController = function()
 				return (this[ 4 ]);
 			}
 		},
-		"video_info"       : {
+		"audiochat_status" : {
 			set    : function( n )
 			{
 				this[ 5 ] = n;
@@ -2332,16 +2341,6 @@ wtsplayer.elementsController = function()
 			}, get : function()
 			{
 				return (this[ 5 ]);
-			}
-		},
-		"audiochat_status" : {
-			set    : function( n )
-			{
-				this[ 6 ] = n;
-				this.rewrite();
-			}, get : function()
-			{
-				return (this[ 6 ]);
 			}
 		}
 	} );
