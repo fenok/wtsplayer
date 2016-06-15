@@ -544,8 +544,9 @@ wtsplayer.elementsController = function()
             _self.outputSystemMessage( "Не удалось загрузить видео" );
         }
         
-		_video.clear     = function()
+		_video.clear = function()
 		{
+            videoElement.onerror = "";
 			videoElement.pause();
 			videoElement.src = "";
 			videoElement.load();
