@@ -2133,7 +2133,7 @@ wtsplayer.elementsController = function()
 		_videoLoaded    = false;
 		if ( id )
 		{
-			if ( _session.nick == '' )
+			if ( !_session.nick )
 			{
 				_session.nick = id.replace(/[^a-z]+/g, '').substr(0,6);
                 if (_session.nick == "") _session.nick = id.substr(0,6);
