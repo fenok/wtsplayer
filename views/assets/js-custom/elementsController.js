@@ -1022,7 +1022,7 @@ wtsplayer.elementsController = function()
 
 	_volumeArea.onwheel = _video.onwheel = function( event )
     {
-        _volume.value = parseFloat(_volume.value)-(event.deltaY/100);
+        _volume.value = parseFloat(_volume.value)+(0.01*(event.deltaY<0?1:(-1)));
     }
 	_volume.oninput = function( event )
 	{
@@ -2243,7 +2243,8 @@ wtsplayer.elementsController = function()
     _session = new Object;
     Object.defineProperties( _session, 
     {
-		"nick":             {set:function(n){localStorage.wtsplayer_nick=n;},               get:function(){return localStorage.wtsplayer_nick;}},
+		//"nick":             {set:function(n){localStorage.wtsplayer_nick=n;},               get:function(){return localStorage.wtsplayer_nick;}},
+		"nick":             {set:function(n){sessionStorage.wtsplayer_nick=n;},             get:function(){return sessionStorage.wtsplayer_nick;}},
 		"password":         {set:function(n){sessionStorage.wtsplayer_password=n;},         get:function(){return sessionStorage.wtsplayer_password;}},
 		"room_id":          {set:function(n){sessionStorage.wtsplayer_room_id=n;},          get:function(){return sessionStorage.wtsplayer_room_id;}},
 		"type_src":         {set:function(n){sessionStorage.wtsplayer_type_src=n;},         get:function(){return sessionStorage.wtsplayer_type_src;}},
