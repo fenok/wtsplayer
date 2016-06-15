@@ -2038,7 +2038,7 @@ wtsplayer.elementsController = function()
             
             showRoomDate();
             
-            _audioChatStatus.checked = _session.audiochat_status;
+            _audioChatStatus.checked = (_session.audiochat_status=="true")?true:false;
 		}
         
 
